@@ -1,0 +1,35 @@
+# Dockerfile.dev
+FROM python:3.11-slim
+
+# Establecer variables de entorno
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+# Instalar dependencias del sistema
+RUN apt-get update \
+    && apt-get install -y \
+        gcc \
+        postgresql-client \
+        libpq-dev \
+        curl \
+        git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Crear directorio de la aplicación
+WORKDIR /app
+
+# Instalar Python dependencies
+COPY requirements.txt requirements-dev.txt ./
+RUN pip install --no-cache-dir -r requirements.txt -r requirements-dev.txt
+
+# Copiar código de la aplicación
+COPY . .
+
+# Crear directorios necesarios
+RUN mkdir -p /app/staticfiles /app/media
+
+# Exponer puerto
+EXPOSE 8000
+
+# Comando por defecto (runserver para desarrollo)
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
