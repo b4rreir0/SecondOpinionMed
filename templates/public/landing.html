@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %}Inicio - Second Opinion Med{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto text-center">
+        <h1 class="display-4 mb-4">Segunda Opinión Oncológica</h1>
+        <p class="lead mb-4">
+            Obtén una segunda opinión médica especializada de los mejores oncólogos
+            para tomar decisiones informadas sobre tu tratamiento.
+        </p>
+        <a href="{% url 'register' %}" class="btn btn-primary btn-lg me-3">Comenzar Ahora</a>
+        <a href="{% url 'como_funciona' %}" class="btn btn-outline-primary btn-lg">Cómo Funciona</a>
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <h5 class="card-title">1. Solicita tu Caso</h5>
+                <p class="card-text">Sube tu historia clínica y documentos médicos de forma segura.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <h5 class="card-title">2. Asignación Automática</h5>
+                <p class="card-text">Tu caso es asignado automáticamente al especialista más adecuado.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <h5 class="card-title">3. Informe Institucional</h5>
+                <p class="card-text">Recibe un informe oficial emitido en nombre de la institución.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

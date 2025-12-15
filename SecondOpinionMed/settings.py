@@ -38,6 +38,11 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "medical",
+    "public",
+    "pacientes",
+    "medicos",
+    "administracion",
+    "core",
 ]
 
 MIDDLEWARE = [
@@ -48,6 +53,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "core.middleware.RoleRedirectMiddleware",
+    "core.middleware.ModuleAccessMiddleware",
 ]
 
 ROOT_URLCONF = "SecondOpinionMed.urls"
@@ -55,7 +62,7 @@ ROOT_URLCONF = "SecondOpinionMed.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / 'templates'],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -116,3 +123,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = "static/"
+
+# URLs de login/logout
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'landing_page'
+LOGOUT_REDIRECT_URL = 'landing_page'

@@ -1,0 +1,15 @@
+flowchart TD
+    A[Caso Nuevo Ingresa<br>Especialidad: Pulmón] --> B{¿Hay responsables<br>para esta especialidad?}
+
+    B -- Sí --> C[Obtener lista ordenada<br>de responsables de Pulmón]
+    C --> D{Verificar estado de carga<br>del próximo en la lista}
+    
+    D -- Disponible --> E[Asignar caso al responsable]
+    E --> F[Rotar lista:<br>Mover responsable al final]
+    F --> G[Asignación Completada]
+
+    D -- No Disponible<br>Ej. Vacaciones --> H[Marcar como temporalmente<br>no disponible]
+    H --> I[Buscar siguiente<br>responsable en lista]
+    I --> D
+
+    B -- No --> J[Estado: Pendiente de Asignación Especialista<br>Notificar a Coordinación]

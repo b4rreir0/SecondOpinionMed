@@ -16,8 +16,34 @@ Including another URLconf
 """
 
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
+from public.views import landing_page
 
 urlpatterns = [
-    path("admin/", admin.site.urls),
+    # Páginas públicas
+    path('', landing_page, name='landing_page'),
+    path('login/', include('public.urls')),
+    path('register/', include('public.urls')),
+
+    # Módulo de pacientes
+    path('paciente/', include('pacientes.urls')),
+
+    # Módulo de médicos
+    path('medico/', include('medicos.urls')),
+
+    # Módulo de administración
+    path('admin/', include('administracion.urls')),
+
+    # Admin de Django (opcional - puedes deshabilitarlo)
+    path('django-admin/', admin.site.urls),
+
+    # API REST (comentado hasta implementar)
+    # path('api/', include('api.urls')),
 ]
+
+# Para servir archivos multimedia en desarrollo
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
