@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elegir Tipo de Cuenta - Segunda Opinión Médica</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #0066cc;
+            --secondary-color: #00a3e0;
+        }
+        
+        body {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .register-choice-container {
+            max-width: 900px;
+            width: 100%;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 50px;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.95;
+        }
+        
+        .choice-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .choice-card {
+            background: white;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            transition: transform 0.3s, box-shadow 0.3s;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        
+        .choice-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 50px rgba(0,0,0,0.3);
+        }
+        
+        .choice-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+        
+        .choice-card h2 {
+            color: var(--primary-color);
+            font-weight: 700;
+            margin-bottom: 15px;
+            font-size: 1.8rem;
+        }
+        
+        .choice-card p {
+            color: #666;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        
+        .choice-features {
+            text-align: left;
+            margin: 20px 0;
+            font-size: 0.95rem;
+        }
+        
+        .choice-features li {
+            color: #333;
+            margin-bottom: 8px;
+        }
+        
+        .choice-features li:before {
+            content: "✓ ";
+            color: #28a745;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+        
+        .choice-button {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            align-self: center;
+            transition: background-color 0.3s;
+        }
+        
+        .choice-button:hover {
+            background-color: #0052a3;
+            text-decoration: none;
+            color: white;
+        }
+        
+        .back-link {
+            text-align: center;
+            color: white;
+            margin-top: 30px;
+        }
+        
+        .back-link a {
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+        
+        @media (max-width: 768px) {
+            .choice-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="register-choice-container">
+        <div class="header">
+            <h1>🏥 Crear Nueva Cuenta</h1>
+            <p>El registro en la plataforma está disponible solo para pacientes. Los médicos son creados por el sistema.</p>
+        </div>
+
+        <div class="choice-container">
+            <a href="{% url 'auth:register_patient' %}" class="choice-card">
+                <div>
+                    <div class="choice-icon">👤</div>
+                    <h2>Registrarse como Paciente</h2>
+                    <p>Solicita una segunda opinión médica de especialistas certificados.</p>
+                    <ul class="choice-features">
+                        <li>Solicita segunda opinión</li>
+                        <li>Sube documentos médicos</li>
+                        <li>Recibe opiniones de expertos</li>
+                        <li>Acceso seguro a tu información</li>
+                    </ul>
+                </div>
+                <button type="button" class="choice-button">Registrarse</button>
+            </a>
+        </div>
+
+        <div class="back-link">
+            <p>¿Ya tienes cuenta? <a href="{% url 'auth:login' %}">Inicia sesión aquí</a></p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

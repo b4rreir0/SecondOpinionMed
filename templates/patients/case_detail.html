@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="card">
+    <div class="card-header">Detalle de la Solicitud <strong>{{ case.case_id }}</strong></div>
+    <div class="card-body">
+      <h5>Diagnóstico</h5>
+      <p>{{ case.primary_diagnosis }}</p>
+
+      <h5>Especialidad requerida</h5>
+      <p>{{ case.specialty_required }}</p>
+
+      <h5>Descripción / Síntomas</h5>
+      <p>{{ case.description }}</p>
+
+      <div class="mt-3">
+        <span class="case-status status-{{ case.status|lower }}">{{ case.get_status_display }}</span>
+        <small class="text-muted ms-2">Creada: {{ case.created_at|date:"d/m/Y H:i" }}</small>
+      </div>
+
+      <hr/>
+      <h5>Documentos asociados</h5>
+      <ul>
+        {% for d in documents %}
+          <li>
+            {{ d.file_name }}
+            {% if d.s3_file_path %} — <a href="{{ d.s3_file_path }}" target="_blank">Ver/Descargar</a>{% endif %}
+          </li>
+        {% empty %}
+          <li>No hay documentos asociados</li>
+        {% endfor %}
+      </ul>
+
+      {% if opinion %}
+      <hr/>
+      <h5>Opinión médica</h5>
+      <p>{{ opinion.opinion_text }}</p>
+      {% endif %}
+
+      <div class="mt-3">
+        <a href="{% url 'cases:patient_dashboard' %}" class="btn btn-outline-secondary">Volver al Panel</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

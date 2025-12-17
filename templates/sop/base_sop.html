@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% load math_filters %}
+
+{% block content %}
+  <div class="dashboard-header">
+    <div class="container-xl">
+      <h2>📋 Solicitud de Segunda Opinión</h2>
+      <p>Completa los pasos para enviar tu solicitud</p>
+    </div>
+  </div>
+
+  <div class="container-xl">
+    <div class="card">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <div>
+            <strong>Paso {{ current_step }} de 4</strong>
+          </div>
+          <div style="width:60%;">
+            <div class="progress">
+              <div class="progress-bar" role="progressbar" style="width:{{ current_step|default:1|add:"0"|mul:25 }}%"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sop-body">
+          {% block sop_body %}{% endblock %}
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

@@ -1,0 +1,36 @@
+/* loading.css: overlay and spinner styles */
+.page-loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(255,255,255,0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+.loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.spinner {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 6px solid rgba(0,0,0,0.08);
+  border-top-color: #0066cc;
+  animation: spin 1s linear infinite;
+}
+.loader-text {
+  font-size: 14px;
+  color: #333;
+}
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+/* Hide overlay when print or reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .spinner { animation: none; }
+}

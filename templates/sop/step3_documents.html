@@ -1,0 +1,32 @@
+{% extends 'sop/base_sop.html' %}
+
+{% block sop_body %}
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="mb-3">{{ form.as_p }}</div>
+    <div class="d-flex justify-content-end mb-3">
+      <button type="submit" class="btn btn-new-case">Agregar documento</button>
+    </div>
+  </form>
+
+  <h5>Documentos añadidos</h5>
+  <div class="list-group mb-3">
+    {% for d in documents %}
+      <div class="list-group-item d-flex justify-content-between align-items-center">
+        <div>
+          <strong>{{ d.name }}</strong>
+          <div class="text-muted small">{{ d.type }}</div>
+        </div>
+        <div>
+          <a href="#" class="btn btn-sm btn-outline-secondary">Descargar</a>
+        </div>
+      </div>
+    {% empty %}
+      <div class="list-group-item text-muted">No hay documentos</div>
+    {% endfor %}
+  </div>
+
+  <div class="d-flex justify-content-end">
+    <a href="{% url 'cases:sop_step4' %}" class="btn btn-new-case">Ir a Revisión y Envío</a>
+  </div>
+{% endblock %}

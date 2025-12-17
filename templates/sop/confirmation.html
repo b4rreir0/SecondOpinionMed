@@ -1,0 +1,9 @@
+{% extends 'sop/base_sop.html' %}
+
+{% block sop_body %}
+  <div class="text-center">
+    <h3>✅ Solicitud enviada</h3>
+    <p class="lead">Tu solicitud <strong>{{ case.case_id }}</strong> ha sido creada y enviada correctamente.</p>
+    <a href="{% url 'cases:patient_dashboard' %}" class="btn btn-new-case">Volver al panel</a>
+  </div>
+{% endblock %}

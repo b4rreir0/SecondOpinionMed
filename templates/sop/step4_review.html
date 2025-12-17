@@ -1,0 +1,128 @@
+{% extends 'sop/base_sop.html' %}
+
+{% block sop_body %}
+  <h3 class="mb-3">Revisión de tu solicitud</h3>
+
+  <form method="post">
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+      <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+    {% endif %}
+
+    <div class="row">
+    <div class="col-md-6">
+      <div class="card mb-3">
+        <div class="card-header">Información del paciente</div>
+        <div class="card-body">
+          {% with p=draft.patient_profile %}
+            {% if p %}
+              <div id="patient-section" class="editable-section">
+                <div class="d-flex justify-content-end mb-2">
+                  <button type="button" class="btn btn-outline-secondary btn-sm btn-edit-section" data-target="#patient-fieldset">Editar</button>
+                </div>
+                <fieldset id="patient-fieldset" disabled>
+                  <div class="mb-2 row">
+                    <label class="col-sm-4 col-form-label">Nombre</label>
+                    <div class="col-sm-8"><input name="patient_full_name" value="{{ p.full_name }}" class="form-control form-control-sm"/></div>
+                  </div>
+                  <div class="mb-2 row">
+                    <label class="col-sm-4 col-form-label">Edad</label>
+                    <div class="col-sm-8"><input name="patient_age" value="{{ p.age }}" class="form-control form-control-sm"/></div>
+                  </div>
+                  <div class="mb-2 row">
+                    <label class="col-sm-4 col-form-label">Email</label>
+                    <div class="col-sm-8"><input name="patient_email" value="{{ p.email }}" class="form-control form-control-sm"/></div>
+                  </div>
+                  <div class="mb-2 row">
+                    <label class="col-sm-4 col-form-label">Teléfono</label>
+                    <div class="col-sm-8"><input name="patient_phone" value="{{ p.phone }}" class="form-control form-control-sm"/></div>
+                  </div>
+                  <div class="mb-2 row">
+                    <label class="col-sm-4 col-form-label">Antecedentes</label>
+                    <div class="col-sm-8"><textarea name="patient_medical_history" class="form-control form-control-sm">{{ p.medical_history }}</textarea></div>
+                  </div>
+                  <div class="mb-2 row">
+                    <label class="col-sm-4 col-form-label">Medicaciones</label>
+                    <div class="col-sm-8"><textarea name="patient_current_medications" class="form-control form-control-sm">{{ p.current_medications }}</textarea></div>
+                  </div>
+                  <div class="mb-0 row">
+                    <label class="col-sm-4 col-form-label">Alergias</label>
+                    <div class="col-sm-8"><textarea name="patient_known_allergies" class="form-control form-control-sm">{{ p.known_allergies }}</textarea></div>
+                  </div>
+                </fieldset>
+              </div>
+            {% else %}
+              <p class="mb-0">Sin datos</p>
+            {% endif %}
+          {% endwith %}
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card mb-3">
+        <div class="card-header">Detalles del caso</div>
+        <div class="card-body">
+          {% with c=draft.case_draft %}
+            {% if c %}
+              <div id="case-section" class="editable-section">
+                <div class="d-flex justify-content-end mb-2">
+                  <button type="button" class="btn btn-outline-secondary btn-sm btn-edit-section" data-target="#case-fieldset">Editar</button>
+                </div>
+                <fieldset id="case-fieldset" disabled>
+                  <div class="mb-2 row">
+                    <label class="col-sm-4 col-form-label">Diagnóstico principal</label>
+                    <div class="col-sm-8"><input name="case_primary_diagnosis" value="{{ c.primary_diagnosis }}" class="form-control form-control-sm"/></div>
+                  </div>
+                  <div class="mb-2 row">
+                    <label class="col-sm-4 col-form-label">Fecha de diagnóstico</label>
+                    <div class="col-sm-8"><input type="date" name="case_diagnosis_date" value="{{ c.diagnosis_date }}" class="form-control form-control-sm"/></div>
+                  </div>
+                  <div class="mb-2 row">
+                    <label class="col-sm-4 col-form-label">Institución remitente</label>
+                    <div class="col-sm-8"><input name="case_referring_institution" value="{{ c.referring_institution }}" class="form-control form-control-sm"/></div>
+                  </div>
+                  <div class="mb-0 row">
+                    <label class="col-sm-4 col-form-label">Síntomas principales</label>
+                    <div class="col-sm-8"><textarea name="case_main_symptoms" class="form-control form-control-sm">{{ c.main_symptoms }}</textarea></div>
+                  </div>
+                </fieldset>
+              </div>
+            {% else %}
+              <p class="mb-0">Sin datos</p>
+            {% endif %}
+          {% endwith %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-header">Documentos</div>
+    <div class="card-body">
+      <ul class="mb-0">
+        {% for d in draft.documents %}
+          <li>{{ d.name }} ({{ d.type }})</li>
+        {% empty %}
+          <li>No hay documentos</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="form-check mb-3">
+          {{ form.explicit_consent }}
+          <label class="form-check-label" for="id_explicit_consent">Acepto el consentimiento informado</label>
+          {% if form.explicit_consent.errors %}
+            <div class="text-danger">{{ form.explicit_consent.errors }}</div>
+          {% endif %}
+        </div>
+
+        <div class="d-flex justify-content-end">
+          <button type="submit" class="btn btn-new-case">Enviar Solicitud</button>
+        </div>
+      </div>
+    </div>
+  </form>
+{% endblock %}

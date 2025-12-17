@@ -1,0 +1,14 @@
+{% extends 'sop/base_sop.html' %}
+
+{% block sop_body %}
+  <form method="post">
+    {% csrf_token %}
+    <div class="mb-3">
+      {{ form.as_p }}
+    </div>
+    <div class="d-flex justify-content-between">
+      <a href="{% url 'cases:sop_start' %}" class="btn btn-outline-secondary">Volver</a>
+      <button type="submit" class="btn btn-new-case">Continuar al Paso 3</button>
+    </div>
+  </form>
+{% endblock %}

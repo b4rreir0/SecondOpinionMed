@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Segunda Opinión Médica - Expertos en tu Salud</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary-color: #0066cc;
+            --secondary-color: #00a3e0;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+        }
+        
+        * {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            line-height: 1.6;
+        }
+        
+        /* Navbar */
+        .navbar {
+            background-color: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            color: var(--primary-color) !important;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .navbar-brand img {
+            height: 40px;
+            width: auto;
+        }
+        
+        .navbar .btn-outline-primary {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+        
+        .navbar .btn-outline-primary:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .navbar .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 100px 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 500px;
+            height: 500px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 50%;
+        }
+        
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            z-index: 1;
+            position: relative;
+        }
+        
+        .hero p {
+            font-size: 1.3rem;
+            margin-bottom: 30px;
+            opacity: 0.95;
+            z-index: 1;
+            position: relative;
+        }
+        
+        .btn-primary-large {
+            padding: 14px 40px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 10px;
+            border-radius: 50px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .btn-primary-large:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        
+        /* Section Styling */
+        section {
+            padding: 80px 20px;
+        }
+        
+        section h2 {
+            font-weight: 700;
+            font-size: 2.5rem;
+            margin-bottom: 50px;
+            text-align: center;
+            color: var(--primary-color);
+        }
+        
+        section h3 {
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+        
+        /* What We Do Section */
+        .what-we-do {
+            background-color: #f8f9fa;
+        }
+        
+        .feature-card {
+            background: white;
+            padding: 40px;
+            margin: 20px 0;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+        
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            color: var(--secondary-color);
+        }
+        
+        .feature-card h4 {
+            color: var(--primary-color);
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+        
+        /* Why Choose Us */
+        .why-us {
+            background: white;
+        }
+        
+        .reason-card {
+            text-align: center;
+            padding: 30px;
+            margin: 20px 0;
+        }
+        
+        .reason-number {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--secondary-color);
+            margin-bottom: 15px;
+        }
+        
+        .reason-card h4 {
+            color: var(--primary-color);
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        /* Requirements Section */
+        .requirements {
+            background: linear-gradient(135deg, #f0f4ff 0%, #e8f1ff 100%);
+        }
+        
+        .requirement-item {
+            background: white;
+            padding: 25px;
+            margin: 15px 0;
+            border-left: 4px solid var(--secondary-color);
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        .requirement-item h5 {
+            color: var(--primary-color);
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .requirement-item ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        
+        .requirement-item li {
+            margin: 8px 0;
+            color: #555;
+        }
+        
+        /* Tutorial Section */
+        .tutorial {
+            background: white;
+        }
+        
+        .step-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+        
+        .step-card {
+            background: #f8f9fa;
+            padding: 40px;
+            border-radius: 10px;
+            text-align: center;
+            border-top: 4px solid var(--secondary-color);
+            transition: all 0.3s;
+        }
+        
+        .step-card:hover {
+            background: white;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+        
+        .step-number {
+            display: inline-block;
+            width: 60px;
+            height: 60px;
+            background: var(--secondary-color);
+            color: white;
+            border-radius: 50%;
+            line-height: 60px;
+            font-weight: 700;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+        }
+        
+        .step-card h5 {
+            color: var(--primary-color);
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+        
+        .step-icon {
+            font-size: 2.5rem;
+            color: var(--secondary-color);
+            margin-bottom: 15px;
+        }
+        
+        /* Security Section */
+        .security-section {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+        }
+        
+        .security-section h2 {
+            color: white;
+        }
+        
+        .security-item {
+            display: flex;
+            align-items: center;
+            margin: 20px 0;
+            font-size: 1.1rem;
+        }
+        
+        .security-item .check {
+            font-size: 1.8rem;
+            margin-right: 15px;
+            color: var(--success-color);
+            font-weight: bold;
+        }
+        
+        /* CTA Section */
+        .cta-section {
+            background: #f0f4ff;
+            text-align: center;
+            padding: 60px 20px;
+        }
+        
+        .cta-section h3 {
+            font-size: 2rem;
+            margin-bottom: 30px;
+            color: var(--primary-color);
+        }
+        
+        /* Footer */
+        footer {
+            background-color: #1a1a1a;
+            color: #ccc;
+            padding: 40px 20px;
+            text-align: center;
+            margin-top: 0;
+        }
+        
+        footer a {
+            color: var(--secondary-color);
+            text-decoration: none;
+        }
+        
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* User Avatar */
+        .user-avatar-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            border-radius: 50px;
+            background: white;
+            color: var(--primary-color);
+            border: 2px solid var(--primary-color);
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .user-avatar-btn:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .avatar-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--secondary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .user-avatar-btn:hover .avatar-icon {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+            
+            .hero p {
+                font-size: 1rem;
+            }
+            
+            section h2 {
+                font-size: 1.8rem;
+            }
+            
+            .step-container {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .feature-card, .step-card, .requirement-item {
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+        
+        .feature-card:nth-child(2) { animation-delay: 0.1s; }
+        .feature-card:nth-child(3) { animation-delay: 0.2s; }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">
+                <img src="/static/images/logo.png" alt="Logo">
+                <span>Segunda Opinión Médica</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#que-hacemos">Plataforma</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#requisitos">Requisitos</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#tutorial">Tutorial</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#seguridad">Seguridad</a>
+                    </li>
+                </ul>
+                <div class="ms-3">
+                    {% if user.is_authenticated %}
+                        <a href="{% if user.is_doctor %}/doctors/dashboard/{% else %}/patients/dashboard/{% endif %}" class="user-avatar-btn">
+                            <div class="avatar-icon">{{ user.email|first|upper }}</div>
+                            <span>{{ user.email }}</span>
+                        </a>
+                    {% else %}
+                        <a href="{% url 'auth:login' %}" class="btn btn-outline-primary me-2">Iniciar Sesión</a>
+                        <a href="{% url 'auth:register_patient' %}" class="btn btn-primary">Registrarse</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section removed as requested -->
+
+    <!-- ¿Qué Hacemos? Section -->
+    <section class="what-we-do" id="que-hacemos">
+        <div class="container">
+            <h2><i class="bi bi-question-circle"></i> ¿Qué Hacemos?</h2>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="bi bi-search-heart"></i></div>
+                        <h4>Análisis Profesional Detallado</h4>
+                        <p>Nuestros médicos especialistas revisan exhaustivamente tu caso, incluyendo todos tus documentos médicos, imágenes diagnósticas y antecedentes clínicos para proporcionar un análisis completo y fundamentado.</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="bi bi-chat-left-quote"></i></div>
+                        <h4>Opinión Médica Experta</h4>
+                        <p>Recibe una opinión profesional detallada que incluye confirmación o alternativas al diagnóstico inicial, opciones de tratamiento innovadoras, y recomendaciones personalizadas basadas en tu situación específica.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="bi bi-globe"></i></div>
+                        <h4>Red de Especialistas Internacionales</h4>
+                        <p>Conectamos usuarios con especialistas certificados de todo el mundo en oncología, cardiología, neurología y muchas otras disciplinas médicas.</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="bi bi-shield-lock"></i></div>
+                        <h4>Privacidad Absoluta</h4>
+                        <p>Todos tus datos médicos están protegidos con cifrado de nivel militar, cumpliendo con regulaciones HIPAA y GDPR. Tu información está completamente segura y confidencial en cada paso del proceso.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ¿Por Qué Nosotros? Section -->
+    <section class="why-us">
+        <div class="container">
+            <h2><i class="bi bi-star"></i> ¿Por Qué Elegir Segunda Opinión Médica?</h2>
+            
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="reason-card">
+                        <div class="reason-number">1</div>
+                        <h4>Confirmación Diagnóstica</h4>
+                        <p>Verifica la precisión de tu diagnóstico con especialistas independientes que no tienen vínculos con tu médico tratante.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="reason-card">
+                        <div class="reason-number">2</div>
+                        <h4>Exploración de Alternativas</h4>
+                        <p>Descubre opciones de tratamiento que podrían no haber sido presentadas, incluyendo terapias innovadoras y protocolos avanzados.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="reason-card">
+                        <div class="reason-number">3</div>
+                        <h4>Tranquilidad y Confianza</h4>
+                        <p>Toma decisiones sobre tu tratamiento con total confianza, basadas en múltiples perspectivas médicas profesionales.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-4">
+                <div class="col-md-4">
+                    <div class="reason-card">
+                        <div class="reason-number">4</div>
+                        <h4>Seguimiento Personalizado</h4>
+                        <p>Recibe seguimiento individualizado del especialista con preguntas de aclaración si es necesario para una mejor comprensión.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="reason-card">
+                        <div class="reason-number">5</div>
+                        <h4>Acceso Global a Expertos</h4>
+                        <p>No importa dónde vivas, accede a médicos especialistas reconocidos internacionalmente en tu área de necesidad médica.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="reason-card">
+                        <div class="reason-number">6</div>
+                        <h4>Proceso 100% Digital</h4>
+                        <p>Todo se gestiona en línea de forma segura: desde la carga de documentos hasta la recepción de la opinión médica.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Requisitos Section -->
+    <section class="requirements" id="requisitos">
+        <div class="container">
+            <h2><i class="bi bi-checklist"></i> ¿Qué Necesitamos Para Tu Segunda Opinión?</h2>
+            
+            <p style="text-align: center; font-size: 1.1rem; margin-bottom: 40px; color: #555;">
+                Para proporcionar la opinión médica más precisa y completa, necesitamos que proporciones los siguientes documentos e información:
+            </p>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="requirement-item">
+                        <h5><i class="bi bi-file-text"></i> Información Personal</h5>
+                        <ul>
+                            <li>Nombre completo y edad</li>
+                            <li>Datos de contacto válidos</li>
+                            <li>Antecedentes médicos personales</li>
+                            <li>Medicamentos actuales que estás tomando</li>
+                            <li>Alergias conocidas</li>
+                        </ul>
+                    </div>
+
+                    <div class="requirement-item">
+                        <h5><i class="bi bi-hospital"></i> Diagnóstico Actual</h5>
+                        <ul>
+                            <li>Diagnóstico primario o sospecha diagnóstica</li>
+                            <li>Fecha de diagnóstico</li>
+                            <li>Médico o institución que realizó el diagnóstico</li>
+                            <li>Síntomas principales que experimentas</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="requirement-item">
+                        <h5><i class="bi bi-images"></i> Documentos Médicos</h5>
+                        <ul>
+                            <li>Informe médico completo</li>
+                            <li>Informe de biopsia (si aplica)</li>
+                            <li>Resultados de laboratorio</li>
+                            <li>Resultados de patología</li>
+                        </ul>
+                    </div>
+
+                    <div class="requirement-item">
+                        <h5><i class="bi bi-image"></i> Imágenes Diagnósticas</h5>
+                        <ul>
+                            <li>Radiografías (formato DICOM o PDF)</li>
+                            <li>TAC / Tomografías</li>
+                            <li>Resonancias magnéticas (RMN)</li>
+                            <li>Ecografías</li>
+                            <li>Otras imágenes relevantes</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert alert-info mt-4" role="alert">
+                <i class="bi bi-info-circle"></i> <strong>Nota Importante:</strong> Todos los documentos deben ser claros y legibles. Si es posible, en formato digital. Nuestro sistema de almacenamiento seguro garantiza que todos tus archivos estén protegidos con cifrado de nivel médico.
+            </div>
+        </div>
+    </section>
+
+    <!-- Tutorial Section -->
+    <section class="tutorial" id="tutorial">
+        <div class="container">
+            <h2><i class="bi bi-book"></i> Tutorial: Cómo Usar la Plataforma</h2>
+            
+            <p style="text-align: center; font-size: 1.1rem; margin-bottom: 40px; color: #555;">
+                Sigue estos sencillos pasos para solicitar tu segunda opinión médica:
+            </p>
+
+            <div class="step-container">
+                <!-- Paso 1 -->
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <div class="step-icon"><i class="bi bi-person-check"></i></div>
+                    <h5>Crear Cuenta</h5>
+                    <p>Completa el formulario de registro proporcionando tu información básica de contacto, nombre y documento de identidad. El proceso toma menos de 3 minutos.</p>
+                </div>
+
+                <!-- Paso 2 -->
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <div class="step-icon"><i class="bi bi-file-earmark-medical"></i></div>
+                    <h5>Completa tu Perfil</h5>
+                    <p>Proporciona información sobre tu diagnóstico actual, síntomas principales, historial médico y medicamentos que estás tomando.</p>
+                </div>
+
+                <!-- Paso 3 -->
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <div class="step-icon"><i class="bi bi-upload"></i></div>
+                    <h5>Sube tus Documentos</h5>
+                    <p>Carga todos los documentos médicos relevantes: informes, resultados de laboratorio, imágenes diagnósticas en formato PDF o DICOM. Nuestro sistema asegura el almacenamiento encriptado.</p>
+                </div>
+
+                <!-- Paso 4 -->
+                <div class="step-card">
+                    <div class="step-number">4</div>
+                    <div class="step-icon"><i class="bi bi-clipboard-check"></i></div>
+                    <h5>Elige Especialidad Requerida</h5>
+                    <p>Selecciona la especialidad médica relevante para tu caso: Oncología, Cardiología, Neurología, etc. Esto asegura que un especialista apropiado revise tu caso.</p>
+                </div>
+
+                <!-- Paso 5 -->
+                <div class="step-card">
+                    <div class="step-number">5</div>
+                    <div class="step-icon"><i class="bi bi-hourglass-split"></i></div>
+                    <h5>Espera la Revisión</h5>
+                    <p>Nuestro equipo asigna tu caso a un especialista certificado. El tiempo de revisión típicamente es de 5-7 días hábiles, dependiendo de la complejidad del caso.</p>
+                </div>
+
+                <!-- Paso 6 -->
+                <div class="step-card">
+                    <div class="step-number">6</div>
+                    <div class="step-icon"><i class="bi bi-file-pdf"></i></div>
+                    <h5>Recibe tu Opinión</h5>
+                    <p>Accede a la opinión médica completa en tu panel. Incluye análisis detallado, confirmación o alternativas diagnósticas, y recomendaciones de tratamiento personalizadas.</p>
+                </div>
+            </div>
+
+            <div class="alert alert-success mt-5" role="alert">
+                <i class="bi bi-check-circle"></i> <strong>¿Preguntas Pendientes?</strong> Después de recibir la opinión, puedes solicitar aclaraciones o información adicional. El especialista te responderá dentro de 48 horas.
+            </div>
+        </div>
+    </section>
+
+    <!-- Security Section -->
+    <section class="security-section" id="seguridad">
+        <div class="container">
+            <h2>🔐 Seguridad y Conformidad</h2>
+            
+            <p style="text-align: center; font-size: 1.1rem; margin-bottom: 40px; opacity: 0.95;">
+                Tu información de salud está protegida bajo los más altos estándares internacionales de seguridad y privacidad.
+            </p>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="security-item">
+                        <span class="check">✓</span>
+                        <span><strong>Cifrado de Extremo a Extremo:</strong> Todos tus datos se cifran durante la transmisión y almacenamiento</span>
+                    </div>
+                    <div class="security-item">
+                        <span class="check">✓</span>
+                        <span><strong>Cumplimiento HIPAA:</strong> Adherimos a la Ley de Portabilidad y Responsabilidad del Seguro de Salud de EE.UU.</span>
+                    </div>
+                    <div class="security-item">
+                        <span class="check">✓</span>
+                        <span><strong>Cumplimiento GDPR:</strong> Respetamos completamente la Regulación General de Protección de Datos de la UE</span>
+                    </div>
+                    <div class="security-item">
+                        <span class="check">✓</span>
+                        <span><strong>Auditoría Inmutable:</strong> Registro completo de quién accede a tus datos y cuándo</span>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="security-item">
+                        <span class="check">✓</span>
+                        <span><strong>Servidores Certificados:</strong> Infraestructura con certificación médica internacional</span>
+                    </div>
+                    <div class="security-item">
+                        <span class="check">✓</span>
+                        <span><strong>Backup Automático:</strong> Tus datos se respaldan automáticamente cada día</span>
+                    </div>
+                    <div class="security-item">
+                        <span class="check">✓</span>
+                        <span><strong>Autenticación de Dos Factores:</strong> Protección adicional para tu cuenta</span>
+                    </div>
+                    <div class="security-item">
+                        <span class="check">✓</span>
+                        <span><strong>Personal Verificado:</strong> Solo médicos certificados tienen acceso a información médica</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="container">
+            <h3>¿Listo para Recibir una Segunda Opinión Médica?</h3>
+            <p style="font-size: 1.1rem; color: #666; margin-bottom: 30px;">
+                Accede a opiniones profesionales que te ayudarán a tomar decisiones informadas sobre tu salud
+            </p>
+            <div>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'cases:sop_start' %}" class="btn btn-primary btn-lg me-3">Crear Solicitud</a>
+                    {% if user.is_doctor %}
+                        <a href="{% url 'cases:doctor_dashboard' %}" class="btn btn-outline-primary btn-lg">Ver mis Solicitudes</a>
+                    {% else %}
+                        <a href="{% url 'cases:patient_dashboard' %}" class="btn btn-outline-primary btn-lg">Ver mis Solicitudes</a>
+                    {% endif %}
+                {% else %}
+                    <a href="{% url 'auth:register_patient' %}" class="btn btn-primary btn-lg me-3">Crear tu Cuenta</a>
+                    <a href="{% url 'auth:login' %}" class="btn btn-outline-primary btn-lg">Ingresa a tu Cuenta</a>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <h5 style="color: var(--secondary-color); margin-bottom: 15px;">Segunda Opinión Médica</h5>
+                    <p>Plataforma segura de telemedicina para segundas opiniones médicas de especialistas certificados.</p>
+                </div>
+                <div class="col-md-4">
+                    <h5 style="color: var(--secondary-color); margin-bottom: 15px;">Enlaces Rápidos</h5>
+                    <ul style="list-style: none; padding: 0;">
+                        <li><a href="#que-hacemos">¿Qué hacemos?</a></li>
+                        <li><a href="#tutorial">Tutorial</a></li>
+                        <li><a href="#seguridad">Seguridad</a></li>
+                        <li><a href="{% url 'auth:login' %}">Iniciar Sesión</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h5 style="color: var(--secondary-color); margin-bottom: 15px;">Contacto</h5>
+                    <p>
+                        Email: <a href="mailto:info@secondopinion.com">info@secondopinion.com</a><br>
+                        Teléfono: <a href="tel:+34912345678">+34 912 34 56 78</a><br>
+                        Soporte 24/7 disponible
+                    </p>
+                </div>
+            </div>
+            <hr style="border-color: #444;">
+            <p>&copy; 2025 Segunda Opinión Médica. Todos los derechos reservados.</p>
+            <p style="font-size: 0.9rem;">
+                <a href="#">Política de Privacidad</a> | 
+                <a href="#">Términos de Servicio</a> | 
+                <a href="#">Cumplimiento HIPAA</a> | 
+                <a href="#">Cumplimiento GDPR</a>
+            </p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Navbar color change on scroll
+        window.addEventListener('scroll', function() {
+            const navbar = document.querySelector('.navbar');
+            if (window.scrollY > 50) {
+                navbar.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+            } else {
+                navbar.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+            }
+        });
+    </script>
+</body>
+</html>
