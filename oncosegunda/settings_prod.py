@@ -93,6 +93,15 @@ DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@oncosegunda.c
 # =============================================================================
 # LOGGING - PRODUCCIÓN
 # =============================================================================
+# Asegurar que exista un directorio de logs utilizable en desarrollo local
+LOG_DIR = os.environ.get('LOG_DIR', str(BASE_DIR / 'logs'))
+try:
+    os.makedirs(LOG_DIR, exist_ok=True)
+except Exception:
+    # Si no se puede crear el directorio, caeremos de nuevo al handler de consola
+    LOG_DIR = None
+
+LOG_FILE = os.environ.get('DJANGO_LOG_FILE', os.path.join(LOG_DIR, 'django.log') if LOG_DIR else None)
 
 LOGGING = {
     'version': 1,
@@ -110,8 +119,8 @@ LOGGING = {
     'handlers': {
         'file': {
             'level': 'INFO',
-            'class': 'logging.FileHandler',
-            'filename': '/var/log/oncosegunda/django.log',
+            'class': 'logging.FileHandler' if LOG_FILE else 'logging.NullHandler',
+            'filename': LOG_FILE,
             'formatter': 'verbose',
         },
         'console': {

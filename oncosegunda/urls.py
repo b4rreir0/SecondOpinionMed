@@ -24,6 +24,7 @@ urlpatterns = [
     
     # Autenticación
     path('auth/', include('authentication.urls')),
+    path('accounts/', include('notifications.urls')),
     
     # Casos y Dashboards (included with application namespace 'cases')
     path('', include('cases.urls', namespace='cases')),

@@ -1,0 +1,11 @@
+Invitación para unirse como médico
+
+Has sido invitado por {{ invited_by }} a unirte al sistema.
+Visita el siguiente enlace para completar tu registro (expira en 72 horas):
+
+{{ register_url }}
+
+Si no solicitaste esta invitación, ignora este email.
+
+Saludos,
+Equipo de Segunda Opinión Médica

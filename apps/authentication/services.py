@@ -80,10 +80,11 @@ class EmailService:
         
         # Enviar email
         try:
+            from django.conf import settings as _settings
             send_mail(
                 subject=subject,
                 message=message,
-                from_email='noreply@secondopinionmedica.com',
+                from_email=getattr(_settings, 'DEFAULT_FROM_EMAIL', 'noreply@secondopinionmedica.com'),
                 recipient_list=[user.email],
                 html_message=html_message,
                 fail_silently=False

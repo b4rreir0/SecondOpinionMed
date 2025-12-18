@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block content %}
+  <div class="container">
+    {% if success %}
+      <h2>Activación completada</h2>
+      <p>{{ message }}</p>
+      <p><a href="{% url 'auth:login' %}">Iniciar sesión</a></p>
+    {% else %}
+      <h2>Activación fallida</h2>
+      <p>{{ message }}</p>
+    {% endif %}
+  </div>
+{% endblock %}

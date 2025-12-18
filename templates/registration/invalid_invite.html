@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block content %}
+  <div class="container">
+    <h2>Invitación inválida</h2>
+    {% if reason == 'expired' %}
+      <p>El enlace ha expirado.</p>
+    {% else %}
+      <p>El token no es válido o ya fue usado.</p>
+    {% endif %}
+    <p>Contacta con soporte para solicitar una nueva invitación.</p>
+  </div>
+{% endblock %}

@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect
+from django.urls import reverse
 from django.views import View
 from django.contrib.auth import login, logout
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -96,8 +97,8 @@ class PatientRegistrationView(View):
                 email_sent = EmailService.send_verification_email(user, request)
                 
                 if email_sent:
-                    # Redirigir a página de confirmación
-                    return redirect('auth:verification_pending', email=user.email)
+                    # Redirigir a página de confirmación (pasar email como query string)
+                    return redirect(f"{reverse('auth:verification_pending')}?email={user.email}")
                 else:
                     # Si no se puede enviar el email, mostrar error
                     form.add_error(None, "No pudimos enviar el email de verificación. Por favor intenta más tarde.")

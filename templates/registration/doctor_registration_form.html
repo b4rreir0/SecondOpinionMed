@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block content %}
+  <div class="container">
+    <h2>Completar registro como médico</h2>
+    <form method="post">
+      {% csrf_token %}
+      <div>
+        <label>Correo</label>
+        <input type="email" value="{{ invite.invited_email }}" disabled />
+      </div>
+      <div>
+        <label>Nombre completo</label>
+        <input name="full_name" required />
+      </div>
+      <div>
+        <label>Password</label>
+        <input name="password" type="password" required />
+      </div>
+      <button type="submit">Crear cuenta</button>
+    </form>
+  </div>
+{% endblock %}

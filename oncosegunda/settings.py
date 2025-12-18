@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     'authentication.apps.AuthConfig',
     'cases.apps.CasesConfig',
     'documents.apps.DocumentsConfig',
+    'notifications.apps.NotificationsConfig',
     
     # Terceros
     'crispy_forms',
@@ -120,6 +121,12 @@ CRISPY_TEMPLATE_PACK = "bootstrap5"
 if DEBUG:
     # En desarrollo, mostrar los emails en la consola
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+    # Desarrollo: ejecutar tareas Celery de forma síncrona (no requiere broker)
+    # Útil para probar sin Redis/Docker en entorno local.
+    CELERY_TASK_ALWAYS_EAGER = True
+    CELERY_TASK_EAGER_PROPAGATES_EXCEPTIONS = True
+    # Broker por defecto en desarrollo si se necesita: memoria (solo funciona en proceso)
+    CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'memory://')
 else:
     # En producción, usar SMTP
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
@@ -129,6 +136,25 @@ else:
     EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
     EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
     DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@secondopinionmedica.com')
+
+# Allow overriding email backend via environment variable (useful to test SMTP in DEBUG)
+EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', globals().get('EMAIL_BACKEND'))
+
+# If an SMTP backend is requested via env, ensure SMTP settings are loaded from env
+if EMAIL_BACKEND == 'django.core.mail.backends.smtp.EmailBackend':
+    EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
+    EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
+    EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
+    EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+    EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+    DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', globals().get('DEFAULT_FROM_EMAIL', 'noreply@secondopinionmedica.com'))
+
+# Celery (colas) - valores por defecto; en producción usar REDIS o broker externo
+CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', CELERY_BROKER_URL)
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
 
 # Logging: controlar la verbosidad desde la variable de entorno LOG_LEVEL (e.g. DEBUG, INFO)
 import logging
