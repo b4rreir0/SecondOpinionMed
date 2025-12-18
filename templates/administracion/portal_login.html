@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block content %}
+  <div class="row justify-content-center">
+    <div class="col-md-5">
+      <div class="card">
+        <div class="card-body">
+          <h4 class="card-title mb-3">Portal Administrador</h4>
+          <form method="post">
+            {% csrf_token %}
+            {% if messages %}
+              {% for m in messages %}
+                <div class="alert alert-{{ m.tags }}">{{ m }}</div>
+              {% endfor %}
+            {% endif %}
+            <div class="mb-3">
+              <label class="form-label">Correo</label>
+              <input name="email" type="email" class="form-control" required />
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Contraseña</label>
+              <input name="password" type="password" class="form-control" required />
+            </div>
+            <div class="d-flex justify-content-end">
+              <button class="btn btn-primary">Entrar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

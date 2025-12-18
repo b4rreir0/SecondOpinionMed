@@ -161,6 +161,10 @@ class AuthenticationService:
         Returns:
             str: URL de redirección
         """
+        # Superusers (administradores de Django) deben ir al admin
+        if getattr(user, 'is_superuser', False):
+            return '/admin/'
+
         if user.is_doctor():
             return '/doctors/dashboard/'
         elif user.is_patient():
@@ -284,3 +288,93 @@ class DoctorRegistrationService:
         )
         
         return user, doctor_profile
+
+
+class DoctorService:
+    """
+    Servicio de gestión de invitaciones y registro de doctores (capa de servicios).
+    Encapsula el flujo: crear usuario invitado (inactivo), generar invitación y enviar email.
+    También orquesta el completado del registro usando el token de invitación.
+    """
+
+    @staticmethod
+    def invite_doctor(invited_email, invited_by_user):
+        from django.core.exceptions import ValidationError
+        from notifications.services import EmailService as NotificationsEmailService
+        # Validaciones básicas
+        if CustomUser.objects.filter(email=invited_email, role='doctor').exists():
+            raise ValidationError('Ya existe un médico registrado con ese email.')
+
+        # Crear usuario invitado (inactivo)
+        from django.utils.crypto import get_random_string
+
+        user = CustomUser.objects.create_user(
+            username=invited_email,
+            email=invited_email,
+            password=get_random_string(12),
+            role='doctor',
+            is_active=False,
+            email_verified=False,
+        )
+
+        # Delegar creación de DoctorInvitation y envío de email a Notifications.EmailService
+        invite = NotificationsEmailService.invite_doctor(invited_email, invited_by_user)
+
+        return user, invite
+
+    @staticmethod
+    def complete_registration(token, password, full_name, medical_license, specialty, phone_number, institution=''):
+        from notifications.models import DoctorInvitation
+        from django.core.exceptions import ValidationError
+        from django.db import transaction
+
+        try:
+            invite = DoctorInvitation.objects.get(token=token)
+        except DoctorInvitation.DoesNotExist:
+            raise ValidationError('Invitación inválida')
+
+        if not invite.is_valid():
+            raise ValidationError('Invitación inválida o expirada')
+
+        email = invite.invited_email
+
+        with transaction.atomic():
+            # Recuperar o crear el usuario
+            user_qs = CustomUser.objects.filter(email=email)
+            if user_qs.exists():
+                user = user_qs.first()
+                # actualizar contraseña y activar
+                user.set_password(password)
+                user.is_active = True
+                user.email_verified = True
+                user.save(update_fields=['password', 'is_active', 'email_verified', 'updated_at'])
+            else:
+                # Crear usuario activo directamente
+                user = CustomUser.objects.create_user(
+                    username=email,
+                    email=email,
+                    password=password,
+                    role='doctor',
+                    is_active=True,
+                    email_verified=True,
+                )
+
+            # Verificar que no exista perfil previo
+            if hasattr(user, 'doctor_profile') and user.doctor_profile is not None:
+                raise ValidationError('El usuario ya tiene un perfil de médico.')
+
+            # Crear DoctorProfile
+            doctor_profile = DoctorProfile.objects.create(
+                user=user,
+                full_name=full_name,
+                medical_license=medical_license,
+                specialty=specialty,
+                phone_number=phone_number,
+                institution=institution
+            )
+
+            # Marcar invitación como usada
+            invite.mark_used()
+
+            # Devolver tupla
+            return user, doctor_profile

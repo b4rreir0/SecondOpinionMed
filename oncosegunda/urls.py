@@ -23,8 +23,11 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     
     # Autenticación
+    path('api/', include('authentication.api_urls')),
     path('auth/', include('authentication.urls')),
     path('accounts/', include('notifications.urls')),
+    # Custom admin portal (not Django admin)
+    path('admin-portal/', include('administracion.urls_portal')),
     
     # Casos y Dashboards (included with application namespace 'cases')
     path('', include('cases.urls', namespace='cases')),

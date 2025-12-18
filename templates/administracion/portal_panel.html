@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block content %}
+  <div class="row">
+    <div class="col-md-3">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="mb-3">Administrador</h5>
+          <ul class="nav flex-column">
+            <li class="nav-item mb-2"><a class="nav-link" href="#">Dashboard</a></li>
+            <li class="nav-item mb-2"><a class="nav-link active" href="{{ request.path }}">Invitar doctores</a></li>
+          </ul>
+          <hr />
+          <a href="{% url 'administracion:portal_logout' %}" class="btn btn-outline-secondary btn-sm">Cerrar sesión</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-9">
+      <div class="card">
+        <div class="card-body">
+          <h4>Invitar doctores</h4>
+          <p>Introduce el correo del doctor que quieres invitar. Se enviará una invitación con enlace de registro.</p>
+
+          {% if messages %}
+            {% for m in messages %}
+              <div class="alert alert-{{ m.tags }}">{{ m }}</div>
+            {% endfor %}
+          {% endif %}
+
+          <form method="post" action="{% url 'administracion:portal_invite' %}">
+            {% csrf_token %}
+            <div class="row g-2 align-items-center">
+              <div class="col-auto" style="flex:1">
+                <input name="email" type="email" placeholder="doctor@example.com" class="form-control" required />
+              </div>
+              <div class="col-auto">
+                <button class="btn btn-primary">Enviar invitación</button>
+              </div>
+            </div>
+          </form>
+
+          <hr />
+          <h6>Notas</h6>
+          <p class="text-muted">Las invitaciones expiran en 72 horas. Este portal utiliza credenciales administradas fuera del panel.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

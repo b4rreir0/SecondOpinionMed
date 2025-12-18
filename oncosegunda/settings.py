@@ -3,6 +3,14 @@ import os
 from pathlib import Path
 from datetime import timedelta
 
+# Cargar variables de entorno desde un archivo .env si existe (opcional)
+try:
+    # python-dotenv es opcional: si no está instalado, no fallamos
+    from dotenv import load_dotenv
+    load_dotenv(os.path.join(Path(__file__).resolve().parent.parent, '.env'))
+except Exception:
+    pass
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-secret-key-aqui'
@@ -31,6 +39,7 @@ INSTALLED_APPS = [
     'notifications.apps.NotificationsConfig',
     
     # Terceros
+    'rest_framework',
     'crispy_forms',
     'crispy_bootstrap5',
     'django_extensions',
@@ -148,6 +157,10 @@ if EMAIL_BACKEND == 'django.core.mail.backends.smtp.EmailBackend':
     EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
     EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
     DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', globals().get('DEFAULT_FROM_EMAIL', 'noreply@secondopinionmedica.com'))
+
+# Public site root used to build absolute URLs in emails (include scheme)
+# Can be overridden with the SITE_ROOT or SITE_URL environment variable.
+SITE_ROOT = os.getenv('SITE_ROOT', os.getenv('SITE_URL', 'http://127.0.0.1:8000'))
 
 # Celery (colas) - valores por defecto; en producción usar REDIS o broker externo
 CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/0')

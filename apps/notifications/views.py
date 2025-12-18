@@ -4,6 +4,8 @@ from django.utils import timezone
 from django.contrib import messages
 from django.urls import reverse
 from authentication.models import CustomUser
+from authentication.services import DoctorService
+from django.core.exceptions import ValidationError
 from .models import DoctorInvitation, PatientVerification
 
 
@@ -36,14 +38,31 @@ class DoctorRegisterView(View):
         email = invite.invited_email
         password = request.POST.get('password')
         full_name = request.POST.get('full_name', '')
+        medical_license = request.POST.get('medical_license', '')
+        specialty = request.POST.get('specialty', '')
+        phone_number = request.POST.get('phone_number', '')
+        institution = request.POST.get('institution', '')
 
         if not password:
             messages.error(request, 'Password requerida')
             return render(request, self.template_name, {'invite': invite})
 
-        user = CustomUser.objects.create_user(username=email, email=email, password=password, role='doctor', is_active=True, email_verified=True)
-        # Minimal profile creation if needed — avoid requiring more fields here
-        invite.mark_used()
+        try:
+            user, profile = DoctorService.complete_registration(
+                token=token,
+                password=password,
+                full_name=full_name,
+                medical_license=medical_license,
+                specialty=specialty,
+                phone_number=phone_number,
+                institution=institution,
+            )
+        except ValidationError as e:
+            messages.error(request, str(e))
+            return render(request, self.template_name, {'invite': invite})
+        except Exception as e:
+            messages.error(request, 'Error al completar el registro')
+            return render(request, self.template_name, {'invite': invite})
 
         messages.success(request, 'Registro completado. Ya puedes iniciar sesión.')
         return redirect(reverse('auth:login'))
