@@ -1,0 +1,24 @@
+<html>
+  <body style="font-family:Arial,Helvetica,sans-serif;color:#333;">
+    <p>Estimado/a {{ paciente.nombre_completo }},</p>
+
+    <p>Su caso <strong>"{{ caso.titulo }}"</strong> ha sido revisado por el Dr./Dra. <strong>{{ revision.medico.nombre_completo }}</strong>.</p>
+
+    <p>
+      <strong>Resultado de la revisión:</strong>
+      {% if revision.coincidencia_diagnostico %}
+        Estamos de acuerdo con el diagnóstico y el tratamiento propuestos.
+      {% else %}
+        No estamos de acuerdo con el diagnóstico y/o tratamiento propuestos.
+      {% endif %}
+    </p>
+
+    <h4>Observaciones del revisor</h4>
+    <p>{{ revision.observaciones|default:'Sin observaciones adicionales.' }}</p>
+
+    <p>Si desea más información o tiene preguntas, puede responder directamente a este correo o ingresar a su panel en la plataforma para ver los detalles del caso.</p>
+
+    <hr/>
+    <p>Saludos cordiales,<br/>Equipo SecondOpinionMed</p>
+  </body>
+</html>

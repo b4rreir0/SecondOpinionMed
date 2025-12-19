@@ -1,12 +1,66 @@
 {% extends 'sop/base_sop.html' %}
 
 {% block sop_body %}
-  <form method="post">
+  <form method="post" novalidate>
     {% csrf_token %}
-    <div class="mb-3">
-      {{ form.as_p }}
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-8">
+            <label class="form-label">{{ form.full_name.label }}</label>
+            {{ form.full_name }}
+            {% if form.full_name.errors %}
+              <div class="text-danger small mt-1">{{ form.full_name.errors.as_text|striptags }}</div>
+            {% endif %}
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">{{ form.age.label }}</label>
+            {{ form.age }}
+            {% if form.age.errors %}
+              <div class="text-danger small mt-1">{{ form.age.errors.as_text|striptags }}</div>
+            {% endif %}
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">{{ form.email.label }}</label>
+            {{ form.email }}
+            {% if form.email.errors %}
+              <div class="text-danger small mt-1">{{ form.email.errors.as_text|striptags }}</div>
+            {% endif %}
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">{{ form.phone.label }}</label>
+            {{ form.phone }}
+            {% if form.phone.errors %}
+              <div class="text-danger small mt-1">{{ form.phone.errors.as_text|striptags }}</div>
+            {% endif %}
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">{{ form.medical_history.label }}</label>
+            {{ form.medical_history }}
+            {% if form.medical_history.errors %}
+              <div class="text-danger small mt-1">{{ form.medical_history.errors.as_text|striptags }}</div>
+            {% endif %}
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">{{ form.current_medications.label }}</label>
+            {{ form.current_medications }}
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">{{ form.known_allergies.label }}</label>
+            {{ form.known_allergies }}
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="d-flex justify-content-end">
+
+    <div class="d-flex justify-content-between align-items-center">
+      <a href="{% url 'cases:patient_dashboard' %}" class="btn btn-outline-secondary">Cancelar</a>
       <button type="submit" class="btn btn-new-case">Continuar al Paso 2</button>
     </div>
   </form>

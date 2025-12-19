@@ -73,6 +73,12 @@ class Case(models.Model):
     description = EncryptedTextField(
         help_text="Descripción detallada del caso"
     )
+    # Fecha del diagnóstico (si fue completada en el formulario)
+    diagnosis_date = models.DateField(null=True, blank=True)
+    # Localidad/territorio representado por la solicitud (opcional)
+    localidad = models.ForeignKey(
+        'medicos.Localidad', on_delete=models.SET_NULL, null=True, blank=True, related_name='cases'
+    )
     
     # Estado
     # FSMField ensures transitions are controlled and auditable

@@ -199,7 +199,12 @@ class DoctorProfile(models.Model):
     
     def current_case_count(self):
         """Retorna el número de casos activos del médico"""
-        return self.doctor_cases.filter(status__in=['paid', 'in_review']).count()
+        qs = self.doctor_cases.filter(status__in=['PAID', 'IN_REVIEW'])
+        try:
+            print(f"[DoctorProfile] {getattr(self.user, 'email', self.user)} current active cases: {qs.count()}")
+        except Exception:
+            pass
+        return qs.count()
     
     def can_accept_case(self):
         """Verifica si el médico puede aceptar un nuevo caso"""

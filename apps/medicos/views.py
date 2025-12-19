@@ -162,8 +162,8 @@ def revision_create(request, caso_uuid):
             caso.estado = 'en_revision'
             caso.save()
             
-            # Notificar al paciente
-            NotificacionService.notificar_paciente_actualizacion(caso)
+            # Notificar al paciente con detalles de la revisión
+            NotificacionService.notificar_paciente_revision(caso, revision)
             
             messages.success(request, 'Revisión guardada exitosamente.')
             return redirect('medicos:caso_detail', uuid=caso.uuid)

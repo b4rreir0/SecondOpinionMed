@@ -1,9 +1,10 @@
 # medicos/models.py
 from django.db import models
-from django.contrib.auth.models import User
+from django.conf import settings
 from django.core.validators import RegexValidator
 from core.models import TimeStampedModel
 import uuid
+from django.utils import timezone
 
 class Especialidad(models.Model):
     """Especialidades médicas"""
@@ -39,7 +40,7 @@ class Medico(TimeStampedModel):
     )
     
     # Información básica
-    usuario = models.OneToOneField(User, on_delete=models.CASCADE, related_name='medico')
+    usuario = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='medico')
     tipo_documento = models.CharField(max_length=20, choices=TIPOS_DOCUMENTO, default='cc')
     numero_documento = models.CharField(max_length=20, unique=True, validators=[
         RegexValidator(regex=r'^\d+$', message='Solo números permitidos')
@@ -107,6 +108,18 @@ class Medico(TimeStampedModel):
     
     def __str__(self):
         return f"Dr. {self.nombre_completo} - {self.registro_medico}"
+
+
+class Localidad(TimeStampedModel):
+    """Localidad/territorio asignado a un médico"""
+    nombre = models.CharField(max_length=200, unique=True)
+    medico = models.ForeignKey(Medico, on_delete=models.SET_NULL, null=True, blank=True, related_name='localidades')
+
+    class Meta:
+        ordering = ['nombre']
+
+    def __str__(self):
+        return self.nombre
 
 class ComiteMultidisciplinario(TimeStampedModel):
     """Comité multidisciplinario para casos complejos"""

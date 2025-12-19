@@ -186,10 +186,15 @@ class CaseService:
         
         Implementa Permisos a Nivel de Objeto (OLP).
         """
-        return Case.objects.filter(
+        qs = Case.objects.filter(
             doctor=doctor,
-            status__in=['paid', 'in_review', 'clarification_needed']
+            status__in=['PAID', 'IN_REVIEW', 'CLARIFICATION_NEEDED']
         )
+        try:
+            print(f"[CaseService] Doctor {getattr(doctor, 'email', doctor)} assigned cases count: {qs.count()}")
+        except Exception:
+            pass
+        return qs
 
     @staticmethod
     @transaction.atomic
@@ -241,8 +246,31 @@ class CaseService:
             primary_diagnosis=case_draft.get('primary_diagnosis', ''),
             specialty_required=case_draft.get('referring_institution', ''),
             description=case_draft.get('main_symptoms', ''),
+            diagnosis_date=case_draft.get('diagnosis_date', None) if case_draft.get('diagnosis_date') else None,
             status='SUBMITTED'
         )
+
+        # If a localidad id was provided in the draft, try to assign the corresponding Medico
+        try:
+            localidad_id = case_draft.get('localidad')
+            if localidad_id:
+                from medicos.models import Localidad
+                loc = Localidad.objects.filter(pk=localidad_id).first()
+                # persist localidad on case for later visibility
+                if loc:
+                    try:
+                        case.localidad = loc
+                        case.save()
+                    except Exception:
+                        pass
+                if loc and loc.medico and getattr(loc.medico, 'usuario', None):
+                    # Assign the case to the medico's user account
+                    try:
+                        CaseService.assign_case_to_doctor(case, loc.medico.usuario)
+                    except Exception:
+                        pass
+        except Exception:
+            pass
 
         # Link documents: create CaseDocument rows if session contains metadata
         for d in documents:
@@ -292,6 +320,10 @@ class CaseService:
         case.status = 'IN_REVIEW'
         case.assigned_at = timezone.now()
         case.save()
+        try:
+            print(f"[CaseService] Case {case.case_id} assigned to doctor {getattr(doctor, 'email', doctor)} and set to IN_REVIEW")
+        except Exception:
+            pass
         
         # Registrar en auditoría
         CaseAuditLog.objects.create(

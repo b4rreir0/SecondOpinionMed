@@ -151,6 +151,36 @@ class NotificacionService:
             logger.error(f"Error enviando notificación al paciente: {str(e)}")
             return False
 
+    @staticmethod
+    def notificar_paciente_revision(caso, revision):
+        """Notifica al paciente sobre el resultado de una revisión individual del médico"""
+        try:
+            subject = f'Revisión de su caso: {caso.titulo}'
+            context = {
+                'caso': caso,
+                'paciente': caso.paciente,
+                'revision': revision,
+            }
+
+            html_message = render_to_string('emails/paciente_revision_result.html', context)
+            plain_message = render_to_string('emails/paciente_revision_result.txt', context)
+
+            send_mail(
+                subject=subject,
+                message=plain_message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[caso.paciente.usuario.email],
+                html_message=html_message,
+                fail_silently=False,
+            )
+
+            logger.info(f"Notificación de revisión enviada a {caso.paciente.usuario.email} para caso {caso.uuid}")
+            return True
+
+        except Exception as e:
+            logger.error(f"Error enviando notificación de revisión al paciente: {str(e)}")
+            return False
+
 class ComiteService:
     """Servicio para gestión de comités multidisciplinarios"""
     

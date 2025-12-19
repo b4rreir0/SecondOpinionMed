@@ -1,0 +1,14 @@
+Estimado/a {{ paciente.nombre_completo }},
+
+Su caso "{{ caso.titulo }}" ha sido revisado por el Dr./Dra. {{ revision.medico.nombre_completo }}.
+
+Resultado de la revisión: {% if revision.coincidencia_diagnostico %}Estamos de acuerdo con el diagnóstico y el tratamiento propuestos.{% else %}No estamos de acuerdo con el diagnóstico y/o tratamiento propuestos.{% endif %}
+
+Observaciones del revisor:
+
+{{ revision.observaciones|default:'Sin observaciones adicionales.' }}
+
+Si desea más información o tiene preguntas, por favor responda a este correo o visite su panel en la plataforma.
+
+Saludos cordiales,
+Equipo SecondOpinionMed

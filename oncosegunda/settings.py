@@ -35,6 +35,9 @@ INSTALLED_APPS = [
     # Apps personalizadas - Autenticación y Gestión de Casos
     'authentication.apps.AuthConfig',
     'cases.apps.CasesConfig',
+    'core.apps.CoreConfig',
+    'pacientes.apps.PacientesConfig',
+    'medicos.apps.MedicosConfig',
     'documents.apps.DocumentsConfig',
     'notifications.apps.NotificationsConfig',
     

@@ -6,6 +6,9 @@ from .forms import PatientProfileForm, CaseDraftForm, CaseDocumentForm, ReviewCo
 from .services import CaseService
 from django.conf import settings
 import datetime
+from django.apps import apps as django_apps
+from django.utils import timezone
+from django.core.files.uploadedfile import InMemoryUploadedFile
 
 
 def _serialize_for_session(value):
@@ -54,6 +57,22 @@ def sop_step1(request):
             draft.update({'patient_profile': _serialize_for_session(form.cleaned_data)})
             request.session[SESSION_KEY] = draft
             request.session.modified = True
+            # Persist patient profile immediately so doctors can see updated info
+            try:
+                PatientProfile = django_apps.get_model('authentication', 'PatientProfile')
+                profile, created = PatientProfile.objects.get_or_create(user=user)
+                pdata = form.cleaned_data
+                if pdata.get('full_name'):
+                    profile.full_name = pdata.get('full_name')
+                if pdata.get('phone'):
+                    profile.phone_number = pdata.get('phone')
+                if pdata.get('medical_history'):
+                    profile.medical_history = pdata.get('medical_history')
+                if pdata.get('current_medications'):
+                    profile.current_treatment = pdata.get('current_medications')
+                profile.save()
+            except Exception:
+                pass
             return redirect('cases:sop_step2')
     else:
         form = PatientProfileForm(initial=initial)
@@ -67,9 +86,44 @@ def sop_step2(request):
         form = CaseDraftForm(request.POST)
         if form.is_valid():
             draft = request.session.get(SESSION_KEY, {})
-            draft.update({'case_draft': _serialize_for_session(form.cleaned_data)})
+            # copy cleaned_data and serialize non-serializable objects (Localidad -> pk)
+            cleaned = dict(form.cleaned_data)
+            loc = cleaned.get('localidad')
+            cleaned['localidad'] = loc.pk if loc else None
+            draft.update({'case_draft': _serialize_for_session(cleaned)})
             request.session[SESSION_KEY] = draft
             request.session.modified = True
+            # Persist or update a draft Case so uploaded documents can be attached
+            try:
+                Case = django_apps.get_model('cases', 'Case')
+                # Check for existing draft case pk in session
+                case_pk = draft.get('case_pk')
+                if case_pk:
+                    case = Case.objects.filter(pk=case_pk, patient=request.user).first()
+                    if case:
+                        case.primary_diagnosis = cleaned.get('primary_diagnosis')
+                        case.diagnosis_date = cleaned.get('diagnosis_date') or None
+                        case.specialty_required = cleaned.get('referring_institution')
+                        case.description = cleaned.get('main_symptoms')
+                        case.status = 'DRAFT'
+                        case.save()
+                else:
+                    import uuid
+                    case_id = f"CASO-{uuid.uuid4().hex[:12].upper()}"
+                    case = Case.objects.create(
+                        patient=request.user,
+                        case_id=case_id,
+                        primary_diagnosis=cleaned.get('primary_diagnosis', ''),
+                        diagnosis_date=cleaned.get('diagnosis_date') or None,
+                        specialty_required=cleaned.get('referring_institution', ''),
+                        description=cleaned.get('main_symptoms', ''),
+                        status='DRAFT'
+                    )
+                    draft['case_pk'] = case.pk
+                    request.session[SESSION_KEY] = draft
+                    request.session.modified = True
+            except Exception:
+                pass
             return redirect('cases:sop_step3')
     else:
         draft = request.session.get(SESSION_KEY, {})
@@ -89,11 +143,35 @@ def sop_step3(request):
             draft = request.session.get(SESSION_KEY, {})
             docs = draft.get('documents', [])
             f = request.FILES['document']
-            # For direct-to-s3 flow we would request a presigned URL; here we store temp metadata
-            docs.append({'name': f.name, 'content_type': f.content_type, 'type': form.cleaned_data['document_type']})
-            draft['documents'] = docs
-            request.session[SESSION_KEY] = draft
-            request.session.modified = True
+            # Persist the uploaded file into CaseDocument if a draft Case exists
+            try:
+                CaseDocument = django_apps.get_model('cases', 'CaseDocument')
+                Case = django_apps.get_model('cases', 'Case')
+                case_pk = draft.get('case_pk')
+                case = Case.objects.filter(pk=case_pk, patient=request.user).first() if case_pk else None
+                if case:
+                    # save file to media storage and create CaseDocument
+                    cd = CaseDocument.objects.create(
+                        case=case,
+                        document_type=form.cleaned_data['document_type'],
+                        file=f,
+                        file_name=f.name,
+                        uploaded_by=request.user
+                    )
+                    # keep metadata in session for display in review
+                    docs.append({'name': cd.file_name, 'type': cd.get_document_type_display(), 'id': cd.pk})
+                else:
+                    # fallback: keep metadata only
+                    docs.append({'name': f.name, 'content_type': f.content_type, 'type': form.cleaned_data['document_type']})
+                draft['documents'] = docs
+                request.session[SESSION_KEY] = draft
+                request.session.modified = True
+            except Exception:
+                # fallback to session-only metadata
+                docs.append({'name': f.name, 'content_type': f.content_type, 'type': form.cleaned_data['document_type']})
+                draft['documents'] = docs
+                request.session[SESSION_KEY] = draft
+                request.session.modified = True
             return redirect('cases:sop_step3')
     else:
         form = CaseDocumentForm()
@@ -140,7 +218,44 @@ def sop_step4(request):
 
             # finalize: create PatientProfile and Case atomically in service
             explicit = form.cleaned_data.get('explicit_consent', False)
-            case = CaseService.finalize_submission(request.user, draft, explicit_consent=explicit)
+            # If we have a draft case persisted, update it and finalize instead of creating a duplicate
+            try:
+                Case = django_apps.get_model('cases', 'Case')
+                case_pk = draft.get('case_pk')
+                if case_pk:
+                    case = Case.objects.filter(pk=case_pk, patient=request.user).first()
+                    if case:
+                        # Update from draft
+                        c = draft.get('case_draft', {}) or {}
+                        case.primary_diagnosis = c.get('primary_diagnosis', case.primary_diagnosis)
+                        case.diagnosis_date = c.get('diagnosis_date', case.diagnosis_date)
+                        case.specialty_required = c.get('referring_institution', case.specialty_required)
+                        case.description = c.get('main_symptoms', case.description)
+                        # ensure it's submitted
+                        case.status = 'SUBMITTED'
+                        case.save()
+                        # Ensure localidad is linked if present
+                        loc_id = c.get('localidad')
+                        if loc_id:
+                            from medicos.models import Localidad
+                            loc = Localidad.objects.filter(pk=loc_id).first()
+                            if loc:
+                                case.localidad = loc
+                                case.save()
+                                # If the localidad has a medico assigned, assign case to that medico's user
+                                try:
+                                    if getattr(loc, 'medico', None) and getattr(loc.medico, 'usuario', None):
+                                        CaseService.assign_case_to_doctor(case, loc.medico.usuario)
+                                except Exception:
+                                    pass
+                        final_case = case
+                    else:
+                        final_case = CaseService.finalize_submission(request.user, draft, explicit_consent=explicit)
+                else:
+                    final_case = CaseService.finalize_submission(request.user, draft, explicit_consent=explicit)
+                case = final_case
+            except Exception:
+                case = CaseService.finalize_submission(request.user, draft, explicit_consent=explicit)
             # Audit log of creation
             CaseService.log_case_access(case, request.user, action='create')
             # Clean session

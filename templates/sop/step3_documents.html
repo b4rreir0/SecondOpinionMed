@@ -1,11 +1,32 @@
 {% extends 'sop/base_sop.html' %}
 
 {% block sop_body %}
-  <form method="post" enctype="multipart/form-data">
+  <form method="post" enctype="multipart/form-data" novalidate>
     {% csrf_token %}
-    <div class="mb-3">{{ form.as_p }}</div>
-    <div class="d-flex justify-content-end mb-3">
-      <button type="submit" class="btn btn-new-case">Agregar documento</button>
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="row g-3 align-items-end">
+          <div class="col-md-8">
+            <label class="form-label">{{ form.document.label }}</label>
+            {{ form.document }}
+            {% if form.document.errors %}
+              <div class="text-danger small mt-1">{{ form.document.errors.as_text|striptags }}</div>
+            {% endif %}
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">{{ form.document_type.label }}</label>
+            {{ form.document_type }}
+            {% if form.document_type.errors %}
+              <div class="text-danger small mt-1">{{ form.document_type.errors.as_text|striptags }}</div>
+            {% endif %}
+          </div>
+
+          <div class="col-12 d-flex justify-content-end">
+            <button type="submit" class="btn btn-new-case">Agregar documento</button>
+          </div>
+        </div>
+      </div>
     </div>
   </form>
 
@@ -18,7 +39,11 @@
           <div class="text-muted small">{{ d.type }}</div>
         </div>
         <div>
-          <a href="#" class="btn btn-sm btn-outline-secondary">Descargar</a>
+          {% if d.id %}
+            <a href="{% url 'cases:download_document' d.id %}" class="btn btn-sm btn-outline-primary">Ver / Descargar</a>
+          {% else %}
+            <span class="text-muted small">Archivo no subido aún</span>
+          {% endif %}
         </div>
       </div>
     {% empty %}

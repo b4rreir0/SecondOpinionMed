@@ -1,8 +1,9 @@
 # pacientes/models.py
 from django.db import models
-from django.contrib.auth.models import User
+from django.conf import settings
 from django.core.validators import RegexValidator
 from core.models import TimeStampedModel
+from django.utils import timezone
 import uuid
 
 class Paciente(TimeStampedModel):
@@ -29,7 +30,7 @@ class Paciente(TimeStampedModel):
     )
     
     # Información básica
-    usuario = models.OneToOneField(User, on_delete=models.CASCADE, related_name='paciente')
+    usuario = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='paciente')
     tipo_documento = models.CharField(max_length=20, choices=TIPOS_DOCUMENTO, default='cc')
     numero_documento = models.CharField(max_length=20, unique=True, validators=[
         RegexValidator(regex=r'^\d+$', message='Solo números permitidos')
@@ -160,6 +161,8 @@ class CasoClinico(TimeStampedModel):
     
     # Asignaciones
     medico_asignado = models.ForeignKey('medicos.Medico', on_delete=models.SET_NULL, null=True, blank=True)
+    # Localidad representada por el caso (se asigna al crear la solicitud)
+    localidad = models.ForeignKey('medicos.Localidad', on_delete=models.SET_NULL, null=True, blank=True, related_name='casos')
     comite_asignado = models.ForeignKey('medicos.ComiteMultidisciplinario', on_delete=models.SET_NULL, null=True, blank=True)
     
     # Archivos adjuntos

@@ -1,6 +1,7 @@
 # core/models.py
 from django.db import models
-from django.contrib.auth.models import User, Group, Permission
+from django.conf import settings
+from django.contrib.auth.models import Group, Permission
 from django.utils import timezone
 import uuid
 
@@ -121,7 +122,7 @@ class Auditoria(models.Model):
         ('sistema', 'Sistema'),
     )
     
-    usuario = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
     tipo_accion = models.CharField(max_length=20, choices=TIPOS_ACCION)
     modelo_afectado = models.CharField(max_length=100)
     objeto_id = models.IntegerField(null=True, blank=True)

@@ -17,3 +17,8 @@ class CasesConfig(AppConfig):
         except Exception:
             # auditlog not installed or registration failed; skip in dev
             pass
+        # Ensure signals are imported so they are registered
+        try:
+            from . import signals  # noqa: F401
+        except Exception:
+            pass

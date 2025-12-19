@@ -10,6 +10,7 @@ from .models import Paciente, CasoClinico, AntecedenteMedico, DocumentoClinico, 
 from .forms import CasoClinicoForm, AntecedenteMedicoForm, DocumentoClinicoForm, SolicitudSegundaOpinionForm
 from core.decorators import paciente_required
 from core.services import NotificacionService
+from medicos.models import Localidad
 
 @paciente_required
 def dashboard(request):
@@ -257,6 +258,19 @@ def solicitud_segunda_opinion(request, caso_uuid):
             solicitud = form.save(commit=False)
             solicitud.caso = caso
             solicitud.save()
+            # If a localidad was provided, link it to the caso and assign the doctor
+            localidad = form.cleaned_data.get('localidad')
+            if localidad:
+                caso.localidad = localidad
+                caso.save()
+                if localidad.medico:
+                    try:
+                        caso.asignar_medico(localidad.medico)
+                        # Notify assigned doctor
+                        NotificacionService.notificar_asignacion_caso(caso, localidad.medico)
+                    except Exception:
+                        # fallback: ignore notification errors but keep flow
+                        pass
             
             messages.success(request, 'Solicitud de segunda opinión enviada exitosamente.')
             return redirect('pacientes:caso_detail', uuid=caso.uuid)

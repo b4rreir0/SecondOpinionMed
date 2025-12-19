@@ -46,3 +46,24 @@ class ComentarioCasoForm(forms.ModelForm):
             'comentario': forms.Textarea(attrs={'rows': 3}),
             'tipo_comentario': forms.Select(attrs={'class': 'form-select'}),
         }
+
+
+from .models import RevisionCaso
+
+
+class RevisionCasoForm(forms.ModelForm):
+    class Meta:
+        model = RevisionCaso
+        fields = [
+            'diagnostico_propuesto', 'tratamiento_recomendado',
+            'observaciones', 'conclusiones', 'coincidencia_diagnostico', 'cambio_tratamiento', 'requiere_discusion'
+        ]
+        widgets = {
+            'diagnostico_propuesto': forms.Textarea(attrs={'rows': 4}),
+            'tratamiento_recomendado': forms.Textarea(attrs={'rows': 4}),
+            'observaciones': forms.Textarea(attrs={'rows': 3}),
+            'conclusiones': forms.Textarea(attrs={'rows': 3}),
+            'coincidencia_diagnostico': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'cambio_tratamiento': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'requiere_discusion': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }

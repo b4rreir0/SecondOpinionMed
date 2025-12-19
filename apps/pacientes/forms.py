@@ -1,6 +1,7 @@
 # pacientes/forms.py
 from django import forms
 from .models import Paciente, SolicitudSegundaOpinion, DocumentoClinico
+from medicos.models import Localidad
 
 class PacienteForm(forms.ModelForm):
     fecha_nacimiento = forms.DateField(
@@ -37,6 +38,7 @@ class SolicitudSegundaOpinionForm(forms.ModelForm):
             'urgencia': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'autorizacion_eps': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
+    localidad = forms.ModelChoiceField(queryset=Localidad.objects.all(), required=False, widget=forms.Select(attrs={'class': 'form-select'}), help_text='Localidad a la que representa el caso')
 
 class DocumentoClinicoForm(forms.ModelForm):
     class Meta:

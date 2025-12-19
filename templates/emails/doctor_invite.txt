@@ -1,11 +1,15 @@
 Invitación para unirse como médico
 
-Has sido invitado por {{ invited_by }} a unirte al sistema.
-Visita el siguiente enlace para completar tu registro (expira en 72 horas):
+Hola,
+
+Has sido invitado por {{ invited_by }} a registrarte como médico en SecondOpinionMed.
+Para completar tu registro y crear tu perfil profesional, visita el siguiente enlace (expira en 72 horas):
 
 {{ register_url }}
 
-Si no solicitaste esta invitación, ignora este email.
+Al registrarte podrás gestionar casos de segunda opinión, revisar solicitudes y colaborar con otros especialistas.
 
-Saludos,
-Equipo de Segunda Opinión Médica
+Si no solicitaste esta invitación, puedes ignorar este correo.
+
+Saludos cordiales,
+Equipo SecondOpinionMed

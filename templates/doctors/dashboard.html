@@ -226,7 +226,7 @@
                                         <td>{{ case.primary_diagnosis }}</td>
                                         <td>{{ case.patient.patient_profile.full_name }}</td>
                                         <td>
-                                            <span class="case-status status-{{ case.status }}">
+                                            <span class="case-status status-{{ case.status|lower }}">
                                                 {{ case.get_status_display }}
                                             </span>
                                         </td>

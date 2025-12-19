@@ -1,11 +1,54 @@
 {% extends 'sop/base_sop.html' %}
 
 {% block sop_body %}
-  <form method="post">
+  <form method="post" novalidate>
     {% csrf_token %}
-    <div class="mb-3">
-      {{ form.as_p }}
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="form-label">{{ form.primary_diagnosis.label }}</label>
+            {{ form.primary_diagnosis }}
+            {% if form.primary_diagnosis.errors %}
+              <div class="text-danger small mt-1">{{ form.primary_diagnosis.errors.as_text|striptags }}</div>
+            {% endif %}
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">{{ form.diagnosis_date.label }}</label>
+            {{ form.diagnosis_date }}
+            {% if form.diagnosis_date.errors %}
+              <div class="text-danger small mt-1">{{ form.diagnosis_date.errors.as_text|striptags }}</div>
+            {% endif %}
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">{{ form.localidad.label }}</label>
+            {{ form.localidad }}
+            {% if form.localidad.errors %}
+              <div class="text-danger small mt-1">{{ form.localidad.errors.as_text|striptags }}</div>
+            {% endif %}
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">{{ form.referring_institution.label }}</label>
+            {{ form.referring_institution }}
+            {% if form.referring_institution.errors %}
+              <div class="text-danger small mt-1">{{ form.referring_institution.errors.as_text|striptags }}</div>
+            {% endif %}
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">{{ form.main_symptoms.label }}</label>
+            {{ form.main_symptoms }}
+            {% if form.main_symptoms.errors %}
+              <div class="text-danger small mt-1">{{ form.main_symptoms.errors.as_text|striptags }}</div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
     </div>
+
     <div class="d-flex justify-content-between">
       <a href="{% url 'cases:sop_start' %}" class="btn btn-outline-secondary">Volver</a>
       <button type="submit" class="btn btn-new-case">Continuar al Paso 3</button>
