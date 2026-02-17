@@ -1,0 +1,313 @@
+{% extends "admin/layout_admin.html" %}
+{% load static %}
+
+{% block title %}Panel de Gestión - OnCoMDT{% endblock %}
+
+{% block main_content %}
+<div class="mb-8">
+    <h1 class="text-2xl font-bold text-slate-900">Panel de Gestión Integral</h1>
+    <p class="text-sm text-slate-500 mt-1">Administración completa del sistema OnCoMDT</p>
+</div>
+
+<!-- Estadísticas Generales -->
+<div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-8">
+    <!-- Usuarios -->
+    <div class="bg-white rounded-xl border border-slate-200 p-4">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-xs text-slate-500 uppercase">Usuarios</p>
+                <p class="text-2xl font-bold text-slate-900">{{ stats.usuarios_total }}</p>
+                <p class="text-xs text-green-600">{{ stats.usuarios_activos }} activos</p>
+            </div>
+            <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                <span class="material-icons-outlined text-blue-600">people</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Médicos -->
+    <div class="bg-white rounded-xl border border-slate-200 p-4">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-xs text-slate-500 uppercase">Médicos</p>
+                <p class="text-2xl font-bold text-slate-900">{{ stats.medicos_total }}</p>
+                <p class="text-xs text-green-600">{{ stats.medicos_activos }} activos</p>
+            </div>
+            <div class="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
+                <span class="material-icons-outlined text-green-600">local_hospital</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Pacientes -->
+    <div class="bg-white rounded-xl border border-slate-200 p-4">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-xs text-slate-500 uppercase">Pacientes</p>
+                <p class="text-2xl font-bold text-slate-900">{{ stats.pacientes_total }}</p>
+                <p class="text-xs text-green-600">{{ stats.pacientes_activos }} activos</p>
+            </div>
+            <div class="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
+                <span class="material-icons-outlined text-purple-600">person</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Casos -->
+    <div class="bg-white rounded-xl border border-slate-200 p-4">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-xs text-slate-500 uppercase">Casos MDT</p>
+                <p class="text-2xl font-bold text-slate-900">{{ stats.casos_total }}</p>
+                <p class="text-xs text-amber-600">{{ stats.casos_pendientes }} pendientes</p>
+            </div>
+            <div class="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
+                <span class="material-icons-outlined text-amber-600">folder</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Opiniones -->
+    <div class="bg-white rounded-xl border border-slate-200 p-4">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-xs text-slate-500 uppercase">Opiniones</p>
+                <p class="text-2xl font-bold text-slate-900">{{ stats.opiniones }}</p>
+                <p class="text-xs text-blue-600">médicas</p>
+            </div>
+            <div class="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
+                <span class="material-icons-outlined text-indigo-600">rate_review</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Notificaciones -->
+    <div class="bg-white rounded-xl border border-slate-200 p-4">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-xs text-slate-500 uppercase">Notificaciones</p>
+                <p class="text-2xl font-bold text-slate-900">{{ stats.notificaciones }}</p>
+                <p class="text-xs text-slate-500">enviadas</p>
+            </div>
+            <div class="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center">
+                <span class="material-icons-outlined text-red-600">notifications</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Secciones de Gestión -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Gestión de Casos -->
+    <div class="bg-white rounded-xl border border-slate-200 p-6">
+        <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center">
+            <span class="material-icons-outlined text-primary mr-2">folder</span>
+            Gestión de Casos
+        </h2>
+        <div class="space-y-3">
+            <a href="{% url 'administracion:casos_list' %}" class="flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:border-primary hover:bg-primary/5 transition-colors">
+                <div class="flex items-center gap-3">
+                    <span class="material-icons-outlined text-slate-400">assignment</span>
+                    <span class="text-sm font-medium">Todos los Casos</span>
+                </div>
+                <span class="bg-slate-100 text-slate-600 text-xs font-bold px-2 py-1 rounded-full">{{ stats.casos_total }}</span>
+            </a>
+            <a href="#" class="flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:border-primary hover:bg-primary/5 transition-colors">
+                <div class="flex items-center gap-3">
+                    <span class="material-icons-outlined text-slate-400">pending_actions</span>
+                    <span class="text-sm font-medium">Casos Pendientes</span>
+                </div>
+                <span class="bg-amber-100 text-amber-600 text-xs font-bold px-2 py-1 rounded-full">{{ stats.casos_pendientes }}</span>
+            </a>
+            <a href="#" class="flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:border-primary hover:bg-primary/5 transition-colors">
+                <div class="flex items-center gap-3">
+                    <span class="material-icons-outlined text-slate-400">check_circle</span>
+                    <span class="text-sm font-medium">Casos Completados</span>
+                </div>
+                <span class="bg-green-100 text-green-600 text-xs font-bold px-2 py-1 rounded-full">{{ stats.casos_completados }}</span>
+            </a>
+            <a href="#" class="flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:border-primary hover:bg-primary/5 transition-colors">
+                <div class="flex items-center gap-3">
+                    <span class="material-icons-outlined text-slate-400">description</span>
+                    <span class="text-sm font-medium">Documentos</span>
+                </div>
+                <span class="bg-slate-100 text-slate-600 text-xs font-bold px-2 py-1 rounded-full">{{ stats.documentos }}</span>
+            </a>
+        </div>
+    </div>
+    
+    <!-- Gestión de Usuarios y Roles -->
+    <div class="bg-white rounded-xl border border-slate-200 p-6">
+        <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center">
+            <span class="material-icons-outlined text-primary mr-2">people</span>
+            Usuarios y Roles
+        </h2>
+        <div class="space-y-3">
+            <a href="#" class="flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:border-primary hover:bg-primary/5 transition-colors">
+                <div class="flex items-center gap-3">
+                    <span class="material-icons-outlined text-slate-400">person</span>
+                    <span class="text-sm font-medium">Usuarios</span>
+                </div>
+                <span class="bg-slate-100 text-slate-600 text-xs font-bold px-2 py-1 rounded-full">{{ stats.usuarios_total }}</span>
+            </a>
+            <a href="#" class="flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:border-primary hover:bg-primary/5 transition-colors">
+                <div class="flex items-center gap-3">
+                    <span class="material-icons-outlined text-slate-400">local_hospital</span>
+                    <span class="text-sm font-medium">Médicos</span>
+                </div>
+                <span class="bg-green-100 text-green-600 text-xs font-bold px-2 py-1 rounded-full">{{ stats.medicos_total }}</span>
+            </a>
+            <a href="#" class="flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:border-primary hover:bg-primary/5 transition-colors">
+                <div class="flex items-center gap-3">
+                    <span class="material-icons-outlined text-slate-400">person_pin</span>
+                    <span class="text-sm font-medium">Pacientes</span>
+                </div>
+                <span class="bg-purple-100 text-purple-600 text-xs font-bold px-2 py-1 rounded-full">{{ stats.pacientes_total }}</span>
+            </a>
+            <a href="#" class="flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:border-primary hover:bg-primary/5 transition-colors">
+                <div class="flex items-center gap-3">
+                    <span class="material-icons-outlined text-slate-400">group</span>
+                    <span class="text-sm font-medium">Grupos</span>
+                </div>
+                <span class="bg-slate-100 text-slate-600 text-xs font-bold px-2 py-1 rounded-full">{{ stats.grupos }}</span>
+            </a>
+        </div>
+    </div>
+    
+    <!-- Gestión Médica -->
+    <div class="bg-white rounded-xl border border-slate-200 p-6">
+        <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center">
+            <span class="material-icons-outlined text-primary mr-2">medical_services</span>
+            Gestión Médica
+        </h2>
+        <div class="space-y-3">
+            <a href="#" class="flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:border-primary hover:bg-primary/5 transition-colors">
+                <div class="flex items-center gap-3">
+                    <span class="material-icons-outlined text-slate-400">groups</span>
+                    <span class="text-sm font-medium">Comités MDT</span>
+                </div>
+                <span class="bg-slate-100 text-slate-600 text-xs font-bold px-2 py-1 rounded-full">{{ stats.comites }}</span>
+            </a>
+            <a href="#" class="flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:border-primary hover:bg-primary/5 transition-colors">
+                <div class="flex items-center gap-3">
+                    <span class="material-icons-outlined text-slate-400">group_work</span>
+                    <span class="text-sm font-medium">Grupos Médicos</span>
+                </div>
+                <span class="bg-slate-100 text-slate-600 text-xs font-bold px-2 py-1 rounded-full">{{ stats.grupos_medicos }}</span>
+            </a>
+            <a href="#" class="flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:border-primary hover:bg-primary/5 transition-colors">
+                <div class="flex items-center gap-3">
+                    <span class="material-icons-outlined text-slate-400">category</span>
+                    <span class="text-sm font-medium">Especialidades</span>
+                </div>
+                <span class="bg-slate-100 text-slate-600 text-xs font-bold px-2 py-1 rounded-full">{{ stats.especialidades }}</span>
+            </a>
+            <a href="#" class="flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:border-primary hover:bg-primary/5 transition-colors">
+                <div class="flex items-center gap-3">
+                    <span class="material-icons-outlined text-slate-400">healing</span>
+                    <span class="text-sm font-medium">Tipos de Cáncer</span>
+                </div>
+                <span class="bg-slate-100 text-slate-600 text-xs font-bold px-2 py-1 rounded-full">{{ stats.tipos_cancer }}</span>
+            </a>
+            <a href="#" class="flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:border-primary hover:bg-primary/5 transition-colors">
+                <div class="flex items-center gap-3">
+                    <span class="material-icons-outlined text-slate-400">place</span>
+                    <span class="text-sm font-medium">Localidades</span>
+                </div>
+                <span class="bg-slate-100 text-slate-600 text-xs font-bold px-2 py-1 rounded-full">{{ stats.localidades }}</span>
+            </a>
+        </div>
+    </div>
+    
+    <!-- Comunicación y Notificaciones -->
+    <div class="bg-white rounded-xl border border-slate-200 p-6">
+        <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center">
+            <span class="material-icons-outlined text-primary mr-2">notifications</span>
+            Comunicación
+        </h2>
+        <div class="space-y-3">
+            <a href="#" class="flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:border-primary hover:bg-primary/5 transition-colors">
+                <div class="flex items-center gap-3">
+                    <span class="material-icons-outlined text-slate-400">mail</span>
+                    <span class="text-sm font-medium">Plantillas de Email</span>
+                </div>
+                <span class="bg-slate-100 text-slate-600 text-xs font-bold px-2 py-1 rounded-full">{{ stats.plantillas_email }}</span>
+            </a>
+            <a href="#" class="flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:border-primary hover:bg-primary/5 transition-colors">
+                <div class="flex items-center gap-3">
+                    <span class="material-icons-outlined text-slate-400">send</span>
+                    <span class="text-sm font-medium">Emails Enviados</span>
+                </div>
+                <span class="bg-slate-100 text-slate-600 text-xs font-bold px-2 py-1 rounded-full">{{ stats.emails_enviados }}</span>
+            </a>
+            <a href="#" class="flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:border-primary hover:bg-primary/5 transition-colors">
+                <div class="flex items-center gap-3">
+                    <span class="material-icons-outlined text-slate-400">person_add</span>
+                    <span class="text-sm font-medium">Invitaciones a Médicos</span>
+                </div>
+                <span class="bg-slate-100 text-slate-600 text-xs font-bold px-2 py-1 rounded-full">{{ stats.invitaciones }}</span>
+            </a>
+            <a href="#" class="flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:border-primary hover:bg-primary/5 transition-colors">
+                <div class="flex items-center gap-3">
+                    <span class="material-icons-outlined text-slate-400">history</span>
+                    <span class="text-sm font-medium">Historial de Acciones</span>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Sección de Acceso al Django Admin -->
+<div class="mt-8 bg-white rounded-xl border border-slate-200 p-6">
+    <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center">
+        <span class="material-icons-outlined text-primary mr-2">admin_panel_settings</span>
+        Acceso Directo al Administrador de Django
+    </h2>
+    <p class="text-sm text-slate-500 mb-4">
+        Accede al panel de administración de Django para gestionar directamente los modelos de datos.
+    </p>
+    <a href="/admin/" target="_blank" class="btn btn-primary">
+        <span class="material-icons-outlined">open_in_new</span>
+        Abrir Panel de Administración
+    </a>
+</div>
+
+<!-- Recientes -->
+<div class="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Últimos Casos -->
+    <div class="bg-white rounded-xl border border-slate-200 p-6">
+        <h2 class="text-lg font-semibold text-slate-800 mb-4">Últimos Casos</h2>
+        <div class="space-y-3">
+            {% for caso in recientes.ultimos_casos %}
+            <div class="flex items-center justify-between p-3 rounded-lg bg-slate-50">
+                <div>
+                    <span class="font-mono text-sm text-primary">{{ caso.case_id }}</span>
+                    <p class="text-xs text-slate-500">{{ caso.primary_diagnosis|truncatechars:30 }}</p>
+                </div>
+                <span class="text-xs text-slate-400">{{ caso.created_at|date:"d M" }}</span>
+            </div>
+            {% empty %}
+            <p class="text-sm text-slate-400">No hay casos recientes</p>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- Últimas Opiniones -->
+    <div class="bg-white rounded-xl border border-slate-200 p-6">
+        <h2 class="text-lg font-semibold text-slate-800 mb-4">Últimas Opiniones</h2>
+        <div class="space-y-3">
+            {% for opinion in recientes.ultimas_opiniones %}
+            <div class="flex items-center justify-between p-3 rounded-lg bg-slate-50">
+                <div>
+                    <span class="text-sm font-medium text-slate-700">Dr. {{ opinion.doctor.nombre_completo }}</span>
+                    <p class="text-xs text-slate-500">{{ opinion.case.case_id }} - {{ opinion.get_voto_display }}</p>
+                </div>
+                <span class="text-xs text-slate-400">{{ opinion.fecha_emision|date:"d M" }}</span>
+            </div>
+            {% empty %}
+            <p class="text-sm text-slate-400">No hay opiniones recientes</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

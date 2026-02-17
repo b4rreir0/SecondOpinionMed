@@ -153,7 +153,7 @@
         <div class="container-fluid">
             <a class="navbar-brand" href="/">🏥 Segunda Opinión Médica</a>
             <div class="ms-auto">
-                <span class="me-3">Bienvenido, Dr(a). {{ user.doctor_profile.full_name }}</span>
+                <span class="me-3">Bienvenido, Dr(a). {{ user.medico.nombre_completo }}</span>
                 <form method="post" action="{% url 'auth:logout' %}" style="display: inline;">
                     {% csrf_token %}
                     <button type="submit" class="btn btn-logout btn-sm">Cerrar Sesión</button>
@@ -166,7 +166,7 @@
     <div class="dashboard-header">
         <div class="container-xl">
             <h1>👨‍⚕️ Mi Panel de Médico</h1>
-            <p>Especialidad: {{ user.doctor_profile.get_specialty_display }}</p>
+            <p>Especialidad: {{ user.medico.especialidades_principales }}</p>
         </div>
     </div>
 
@@ -185,7 +185,7 @@
             <div class="col-md-4">
                 <div class="card stat-card">
                     <div class="card-body">
-                        <div class="stat-number">{{ user.doctor_profile.max_concurrent_cases }}</div>
+                        <div class="stat-number">{{ user.medico.max_casos_mes }}</div>
                         <div class="stat-label">Capacidad Máxima</div>
                     </div>
                 </div>
@@ -193,7 +193,7 @@
             <div class="col-md-4">
                 <div class="card stat-card">
                     <div class="card-body">
-                        <div class="stat-number">{% if user.doctor_profile.is_available %}✓{% else %}✗{% endif %}</div>
+                        <div class="stat-number">{% if user.medico.disponible_segundas_opiniones %}✓{% else %}✗{% endif %}</div>
                         <div class="stat-label">Disponibilidad</div>
                     </div>
                 </div>

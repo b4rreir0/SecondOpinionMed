@@ -1,4 +1,8 @@
 from django.db import transaction
+from django.db.models import Count, Q
+from django.utils import timezone
+import uuid
+
 from .models import Case
 
 
@@ -180,21 +184,73 @@ class CaseService:
         return Case.objects.filter(patient=patient)
     
     @staticmethod
-    def get_doctor_assigned_cases(doctor):
+    def get_doctor_assigned_cases(doctor, include_completed=False):
         """
         Obtiene todos los casos asignados a un médico.
         
         Implementa Permisos a Nivel de Objeto (OLP).
+        Un médico puede ver:
+        1. Los casos donde es el doctor asignado directamente
+        2. Los casos de su comité multidisciplinario
+        
+        Args:
+            doctor: Usuario médico
+            include_completed: Si True, incluye casos completados
         """
+        from medicos.models import Medico
+        
+        # DEBUG: Log
+        print(f"[get_doctor_assigned_cases] Doctor: {getattr(doctor, 'email', doctor)}")
+        print(f"[get_doctor_assigned_cases] Tiene atributo medico: {hasattr(doctor, 'medico')}")
+        
+        # Determinar estados a incluir
+        if include_completed:
+            statuses = ['PAID', 'IN_REVIEW', 'CLARIFICATION_NEEDED', 'ASSIGNED', 'PROCESSING', 'COMPLETED']
+        else:
+            statuses = ['PAID', 'IN_REVIEW', 'CLARIFICATION_NEEDED', 'ASSIGNED', 'PROCESSING']
+        
+        # Casos donde es el doctor asignado
         qs = Case.objects.filter(
             doctor=doctor,
-            status__in=['PAID', 'IN_REVIEW', 'CLARIFICATION_NEEDED']
+            status__in=statuses
         )
+        print(f"[get_doctor_assigned_cases] Casos propios (sin filtro estado): {Case.objects.filter(doctor=doctor).count()}")
+        
+        # También obtener los casos del comité al que pertenece el médico
+        try:
+            # Obtener el objeto Medico relacionado con este usuario
+            medico = getattr(doctor, 'medico', None)
+            print(f"[get_doctor_assigned_cases] Medico: {medico}")
+            
+            if medico:
+                # Obtener los comités del médico
+                comites = medico.comites.all()
+                print(f"[get_doctor_assigned_cases] Comites del medico: {comites.count()}")
+                
+                if comites.exists():
+                    # Obtener las localidades de esos comités
+                    from medicos.models import Localidad
+                    localidades = Localidad.objects.filter(comite__in=comites)
+                    print(f"[get_doctor_assigned_cases] Localidades: {localidades.count()}")
+                    
+                    # Obtener casos de esas localidades
+                    casos_comite = Case.objects.filter(
+                        localidad__in=localidades,
+                        status__in=statuses
+                    )
+                    print(f"[get_doctor_assigned_cases] Casos del comite (sin filtro estado): {casos_comite.count()}")
+                    
+                    # Combinar: casos propios + casos del comité
+                    qs = qs | casos_comite
+        except Exception as e:
+            # Si hay algún error, simplemente devolver los casos propios
+            print(f"Error getting committee cases: {e}")
+        
         try:
             print(f"[CaseService] Doctor {getattr(doctor, 'email', doctor)} assigned cases count: {qs.count()}")
         except Exception:
             pass
-        return qs
+        return qs.distinct()
 
     @staticmethod
     @transaction.atomic
@@ -263,12 +319,24 @@ class CaseService:
                         case.save()
                     except Exception:
                         pass
-                if loc and loc.medico and getattr(loc.medico, 'usuario', None):
-                    # Assign the case to the medico's user account
-                    try:
-                        CaseService.assign_case_to_doctor(case, loc.medico.usuario)
-                    except Exception:
-                        pass
+                
+                # Asignar al líder del comité si existe, o al médico de la localidad
+                if loc:
+                    # Primero verificar si hay un comité asignado a la localidad
+                    if loc.comite and loc.comite.medicos_miembros.exists():
+                        # Asignar al primer miembro del comité (el líder)
+                        primer_medico = loc.comite.medicos_miembros.first()
+                        if primer_medico and primer_medico.usuario:
+                            try:
+                                CaseService.assign_case_to_doctor(case, primer_medico.usuario)
+                            except Exception:
+                                pass
+                    # Si no hay comité, usar el médico de la localidad
+                    elif loc.medico and getattr(loc.medico, 'usuario', None):
+                        try:
+                            CaseService.assign_case_to_doctor(case, loc.medico.usuario)
+                        except Exception:
+                            pass
         except Exception:
             pass
 
@@ -423,3 +491,127 @@ class CaseService:
             user=user,
             action=action
         )
+
+
+# =============================================================================
+# SERVICIOS DE ASIGNACIÓN (Nuevo Sistema MDT)
+# =============================================================================
+
+def asignar_caso_automatico(case):
+    """
+    Asigna automáticamente un caso al grupo médico correspondiente y a un responsable.
+    
+    Este servicio:
+    1. Determina el MedicalGroup según el tipo_cancer del caso
+    2. Selecciona un responsable (round-robin o por defecto)
+    3. Asigna el caso al grupo y responsable
+    4. Envía notificaciones a los miembros del grupo
+    
+    Args:
+        case (Case): El caso a asignar
+        
+    Returns:
+        tuple: (success: bool, message: str)
+    """
+    from medicos.models import MedicalGroup, DoctorGroupMembership, Medico
+    
+    with transaction.atomic():
+        try:
+            grupo = MedicalGroup.objects.get(
+                tipo_cancer__codigo__iexact=case.specialty_required,
+                activo=True
+            )
+        except MedicalGroup.DoesNotExist:
+            try:
+                grupo = MedicalGroup.objects.filter(
+                    nombre__icontains=case.specialty_required,
+                    activo=True
+                ).first()
+            except Exception:
+                pass
+            
+            if not grupo:
+                return (False, f"No se encontró grupo médico para la especialidad: {case.specialty_required}")
+        
+        responsable = _seleccionar_responsable(grupo)
+        
+        if not responsable:
+            return (False, f"No hay médicos disponibles en el grupo: {grupo.nombre}")
+        
+        case.medical_group = grupo
+        case.responsable = responsable
+        case.doctor = responsable.usuario
+        case.assigned_at = timezone.now()
+        case.save()
+        
+        _notificar_asignacion_caso(case, grupo)
+        
+        return (True, f"Caso asignado al grupo {grupo.nombre} y responsable {responsable.nombre_completo}")
+
+
+def _seleccionar_responsable(grupo):
+    """Selecciona el médico responsable usando algoritmo round-robin."""
+    from medicos.models import Medico
+    from django.db.models import Count, Q
+    
+    if grupo.responsable_por_defecto:
+        if (grupo.responsable_por_defecto.estado == 'activo' and 
+            grupo.responsable_por_defecto.disponible_segundas_opiniones):
+            return grupo.responsable_por_defecto
+    
+    miembros = grupo.miembros.filter(
+        estado='activo',
+        disponible_segundas_opiniones=True
+    ).annotate(
+        casos_activos=Count(
+            'usuario__doctor_cases',
+            filter=Q(usuario__doctor_cases__status__in=['PROCESSING', 'IN_REVIEW'])
+        )
+    ).order_by('casos_activos', 'fecha_ingreso')
+    
+    return miembros.first()
+
+
+def _notificar_asignacion_caso(case, grupo):
+    """Envía notificaciones a todos los miembros del grupo médico."""
+    from notifications.models import Notification
+    
+    titulo = f"Nuevo caso asignado: {case.case_id}"
+    mensaje = f"Se ha asignado un nuevo caso de {case.specialty_required} al grupo {grupo.nombre}."
+    
+    for membresia in grupo.miembros.filter(activo=True):
+        medico = membresia.medico
+        Notification.objects.create(
+            receptor=medico.usuario,
+            tipo='asignacion_caso',
+            titulo=titulo,
+            mensaje=mensaje,
+            enlace=f'/medicos/casos/{case.id}/',
+            caso_id=case.case_id
+        )
+
+
+def obtener_estadisticas_grupo(grupo):
+    """Obtiene estadísticas de un grupo médico."""
+    return {
+        'numero_miembros': grupo.miembros.filter(activo=True).count(),
+        'miembros_activos': grupo.numero_miembros,
+        'quorum_config': grupo.quorum_config,
+        'puede_asignar': grupo.puede_asignar_caso(),
+    }
+
+
+def verificar_quorum(case):
+    """Verifica si se ha alcanzado el quorum de opiniones para un caso."""
+    if not hasattr(case, 'medical_group'):
+        return {'alcanzado': False, 'mensaje': 'Sin grupo asignado', 'votos_totales': 0}
+    
+    votos_totales = case.opiniones.count()
+    quorum_requerido = case.medical_group.quorum_config
+    
+    return {
+        'alcanzado': votos_totales >= quorum_requerido,
+        'votos_totales': votos_totales,
+        'quorum_requerido': quorum_requerido,
+        'faltantes': max(0, quorum_requerido - votos_totales)
+    }

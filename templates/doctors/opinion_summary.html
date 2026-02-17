@@ -1,0 +1,93 @@
+{% extends 'doctors/layout_doctor.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+{% endblock %}
+
+{% block title %}Resumen de Votaciones - Caso {{ case.case_id }}{% endblock %}
+
+{% block main_content %}
+<div class="mb-6">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="flex items-center gap-2 text-sm text-slate-500">
+            <li><a href="{% url 'cases:doctor_dashboard' %}" class="text-primary hover:underline">Dashboard</a></li>
+            <li><span class="text-slate-400">/</span></li>
+            <li><a href="{% url 'cases:doctor_case_detail' case.case_id %}" class="text-primary hover:underline">Caso {{ case.case_id }}</a></li>
+            <li><span class="text-slate-400">/</span></li>
+            <li class="text-slate-700 font-medium">Resumen de Votaciones</li>
+        </ol>
+    </nav>
+    
+    <h1 class="text-2xl font-bold text-slate-900">Resumen de Votaciones - Caso {{ case.case_id }}</h1>
+    <p class="text-sm text-slate-500 mt-1">Votaciones del comité multidisciplinario</p>
+</div>
+
+<!-- Estadísticas de votación -->
+<div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+    <h2 class="text-lg font-semibold text-slate-900 mb-4">
+        <i class="fas fa-chart-bar mr-2 text-primary"></i>Estadísticas de Votación
+    </h2>
+    
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-slate-50 rounded-lg p-4">
+            <p class="text-sm text-slate-500">Total de votos</p>
+            <p class="text-2xl font-bold text-slate-900">{{ stats.total|default:0 }}</p>
+        </div>
+        <div class="bg-green-50 rounded-lg p-4">
+            <p class="text-sm text-slate-500">A favor</p>
+            <p class="text-2xl font-bold text-green-600">{{ stats.aprobacion|default:0 }}</p>
+        </div>
+        <div class="bg-red-50 rounded-lg p-4">
+            <p class="text-sm text-slate-500">En contra</p>
+            <p class="text-2xl font-bold text-red-600">{{ stats.rechazo|default:0 }}</p>
+        </div>
+    </div>
+</div>
+
+<!-- Lista de opiniones -->
+<div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+    <div class="px-6 py-4 border-b border-slate-200">
+        <h2 class="text-lg font-semibold text-slate-900">
+            <i class="fas fa-users mr-2 text-primary"></i>Opiniones de los Miembros
+        </h2>
+    </div>
+    
+    <div class="divide-y divide-slate-100">
+        {% for opinion in opinions %}
+        <div class="p-6">
+            <div class="flex items-start justify-between mb-3">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold mr-3">
+                        {{ opinion.doctor.usuario.get_full_name|make_list|first|upper }}
+                    </div>
+                    <div>
+                        <p class="font-medium text-slate-900">{{ opinion.doctor.usuario.get_full_name }}</p>
+                        <p class="text-sm text-slate-500">{{ opinion.doctor.especialidad|default:"Especialista" }}</p>
+                    </div>
+                </div>
+                <span class="px-3 py-1 rounded-full text-sm font-medium {% if opinion.voto == 'aprobacion' %}bg-green-100 text-green-700{% else %}bg-red-100 text-red-700{% endif %}">
+                    {% if opinion.voto == 'aprobacion' %}<i class="fas fa-thumbs-up mr-1"></i> Aprobación{% else %}<i class="fas fa-thumbs-down mr-1"></i> Rechazo{% endif %}
+                </span>
+            </div>
+            <div class="bg-slate-50 rounded-lg p-4 mt-3">
+                <p class="text-sm text-slate-700">{{ opinion.criterio|linebreaks }}</p>
+            </div>
+            <p class="text-xs text-slate-400 mt-3">{{ opinion.fecha_voto|date:"d M Y H:i" }}</p>
+        </div>
+        {% empty %}
+        <div class="p-8 text-center">
+            <span class="material-icons-outlined text-4xl text-slate-300 mb-2">how_to_vote</span>
+            <p class="text-slate-500">Aún no hay opiniones registradas</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Acciones -->
+<div class="mt-6 flex justify-between items-center">
+    <a href="{% url 'cases:doctor_case_detail' case.case_id %}" class="px-4 py-2 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 flex items-center">
+        <i class="fas fa-arrow-left mr-2"></i>Volver al Caso
+    </a>
+</div>
+{% endblock %}

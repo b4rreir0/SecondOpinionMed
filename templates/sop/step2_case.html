@@ -1,7 +1,7 @@
 {% extends 'sop/base_sop.html' %}
 
 {% block sop_body %}
-  <form method="post" novalidate>
+  <form method="post" novalidate id="case-form">
     {% csrf_token %}
     <div class="card mb-3">
       <div class="card-body">
@@ -20,6 +20,9 @@
             {% if form.diagnosis_date.errors %}
               <div class="text-danger small mt-1">{{ form.diagnosis_date.errors.as_text|striptags }}</div>
             {% endif %}
+            <div class="form-text text-muted" style="font-size: 0.75rem;">
+              La fecha no puede ser futura (solo fechas pasadas o hoy)
+            </div>
           </div>
 
           <div class="col-md-6">
@@ -54,4 +57,40 @@
       <button type="submit" class="btn btn-new-case">Continuar al Paso 3</button>
     </div>
   </form>
+
+  <script>
+    // Validación de fecha de diagnóstico - no puede ser futura
+    document.addEventListener('DOMContentLoaded', function() {
+      const dateInput = document.querySelector('input[name="case_diagnosis_date"]');
+      if (dateInput) {
+        // Obtener la fecha de hoy en formato YYYY-MM-DD
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        const maxDate = `${year}-${month}-${day}`;
+        
+        // Establecer el atributo max para evitar fechas futuras
+        dateInput.max = maxDate;
+        
+        // Validación al enviar el formulario
+        const form = document.getElementById('case-form');
+        if (form) {
+          form.addEventListener('submit', function(e) {
+            const selectedDate = new Date(dateInput.value);
+            const todayDate = new Date();
+            todayDate.setHours(0, 0, 0, 0);
+            selectedDate.setHours(0, 0, 0, 0);
+            
+            if (selectedDate > todayDate) {
+              e.preventDefault();
+              alert('La fecha de diagnóstico no puede ser futura. Por favor seleccione una fecha anterior o igual a hoy.');
+              dateInput.focus();
+              return false;
+            }
+          });
+        }
+      }
+    });
+  </script>
 {% endblock %}

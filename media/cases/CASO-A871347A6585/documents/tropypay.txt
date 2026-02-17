@@ -1,0 +1,2789 @@
+Getting Started
+Welcome to the TropiPay API documentation! Whether you're looking to integrate TropiPay's financial services into your application or automate your business operations, this guide will help you get started quickly and efficiently. Below, you'll find everything you need to begin working with the TropiPay API, including how to set up your environment, access the sandbox for testing, and obtain your API credentials. TropiPay is an electronic wallet that simplifies day-to-day financial operations, including receiving international payments. The TropiPay Business Open API allows you to automate financial operations for your business, enabling seamless integration with your TropiPay account.
+
+note
+This documentation is specifically tailored for API v3. While API v2 and API v1 are still partially supported at this time, they are considered legacy versions and may not be supported in the future. There is no compelling reason to continue using these older versions, as v3 provides superior functionality, enhanced performance, and a more comprehensive feature set. We strongly recommend migrating to v3 for all integrations to ensure long-term compatibility and access to the latest improvements.
+
+Key Features of the TropiPay API
+Automate Financial Operations: Manage your TropiPay account programmatically.
+Sandbox Environment: Test your integration in a risk-free environment with fake data.
+Security: Ensure safe and secure transactions with robust authentication mechanisms, including API keys and two-factor authentication (2FA).
+Scalability: Designed to handle high-volume transactions, making it ideal for businesses of all sizes.
+Global Reach: Facilitate international payments and manage multi-currency accounts effortlessly.
+Developer-Friendly SDK: Simplify integration with our TypeScript and JavaScript SDK, compatible with both CommonJS and ES6 module systems.
+Getting Help
+TropiPay Developers Support
+If you encounter any issues or need assistance, join the TropiPay Developers Support Group on Telegram. The support team can help you with test accounts, configuration, and troubleshooting.
+
+Contributing to the Documentation
+Found something you'd like to improve? We welcome your contributions! Visit our GitHub repository to submit suggestions or pull requests.
+
+Next Steps
+Now that you're set up with the sandbox environment and have your API credentials, you're ready to start integrating with the TropiPay API. Check out the rest of the documentation for detailed API endpoints, examples, and best practices.
+
+Happy coding! 🚀
+
+Setting Up credentials
+danger
+It is strongly recommended to test everything in the API sandbox environment before using real money in the production environment. The sandbox provides a safe and controlled space to experiment with API functionalities, troubleshoot issues, and ensure smooth integration without any financial risk. This helps prevent unintended transactions and ensures that everything is working as expected before moving to the live environment.
+
+tip
+The testing or sandbox environment does not use real credentials or actual balances. Additionally, you cannot use test credentials in the live environment, and vice versa. The standard KYC validations required for real accounts are not performed in this environment. Transactions are conducted exclusively with test cards and CVV numbers, among other limitations. As outlined in the documentation, SMS messages are never sent in the testing environment; instead, confirmation codes are always set to 123456. However, you will receive emails and webhooks with the same payloads as in production, allowing you to test end-to-end workflows seamlessly.
+
+1. Obtain a Demo Account
+Log in to the sandbox website and navigate to the 'Application and Credentials' section in the main menu.
+
+applications and credentials
+
+Business test account:
+
+email: testdevbusiness@mailinator.com
+password: 4321REWq
+
+Personal test account
+
+email: testdev@mailinator.com
+password: 4321REWq
+
+2. Creating an API Key
+An API key and secret function similarly to a username and password for your account. They allow you to authenticate and access the API. You can control which scopes or permissions are granted to these credentials. As a best practice, always follow the principle of least privilege: only assign the minimum necessary permissions required for your specific use case. This reduces security risks and ensures tighter control over your account's access.
+
+create a new api key
+
+danger
+Whether you're in the sandbox or a live environment, be aware that if you fill in the IP address field, the credential will only be accessible from that specific IP or IP range. Use this option only if you have a static IP and plan to use the credential exclusively from that address.
+
+If you're using this credential in the sandbox, you likely want it to be accessible from anywhere. In that case, leave this field blank—otherwise, you’ll end up receiving 'Forbidden' errors everywhere, potentially leading to temporary bans for your user.
+
+These are the bare minimum permissions required to create a payment card and receive payments. You can adjust these permissions based on your specific needs. Always ensure that the permissions granted align with your use case, following the principle of least privilege to maintain security and control. Review and customize the permissions as necessary to suit your requirements.
+
+permissions of api key
+
+Edit this page
+Using access token
+Endpoint
+Sandbox URL:
+POST https://sandbox.tropipay.me/api/v3/access/token
+
+Live URL https://www.tropipay.com/api/v3/access/token
+
+Description
+This endpoint is used to obtain an access token using the client credentials grant type. The access token is required to authenticate API requests.
+
+Headers
+Key	Value	Description
+Content-Type	application/json	Specifies the request body format.
+User-Agent	YourAppName/Version	(Optional) Identifies the client making the request.
+Request Body
+The request body must be sent as JSON and include the following parameters:
+
+Parameter	Type	Required	Description
+grant_type	string	Yes	Must be set to client_credentials.
+client_id	string	Yes	The client ID provided by Tropipay.
+client_secret	string	Yes	The client secret provided by Tropipay.
+Example Request (cURL)
+curl --request POST \
+  --url https://tropipay-dev.herokuapp.com](https://sandbox.tropipay.me/api/v3/access/token \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "grant_type": "client_credentials",
+    "client_id": "your_client_id",
+    "client_secret": "your_client_secret"
+  }'
+
+Response
+A successful request returns a JSON object containing the access token.
+
+Example Response
+{
+  "access_token": "your_access_token",
+  "refresh_token": "your_refresh_token",
+  "token_type": "Bearer",
+  "expires_in": 1741987517,
+  "scope": "ALLOW_EXTERNAL_CHARGE ALLOW_CREATE_BENEFICIARY ALLOW_UPDATE_BENEFICIARY ALLOW_PAYMENT_IN ALLOW_PAYMENT_OUT ALLOW_MARKET_PURCHASES ALLOW_GET_PROFILE_DATA ALLOW_GET_BALANCE ALLOW_GET_MOVEMENT_LIST ALLOW_GET_POS_MOVEMENT_BY_CREDENTIALS"
+}
+
+
+Response Parameters
+Parameter	Type	Description
+access_token	string	The token to use for API authentication.
+refresh_token	string	A token used to obtain a new access token.
+token_type	string	The type of token, typically Bearer.
+expires_in	number	Token validity duration in seconds.
+scope	string	The permissions granted to the token.
+Error Handling
+If the request fails, the API returns an error response. Common error responses include:
+
+HTTP Status	Error Code	Description
+400	invalid_request	Missing or invalid parameters.
+401	invalid_client	Invalid client credentials.
+403	forbidden	Unauthorized access.
+Example Error Response
+{
+	"error": {
+		"type": "VALIDATION_ERROR",
+		"code": "VALIDATION_ERROR",
+		"message": "Credential not found",
+		"details": [],
+		"i18n": "Parámetros inválidos"
+	}
+}
+
+tip
+Ensure your client_id and client_secret are kept secure.
+The access_token must be included in the Authorization header of subsequent API requests.
+Tokens typically expire after a set period (expires_in), and a new token must be requested when expired.
+Edit this page
+
+Using a CMS
+Why Use a CMS for Your E-commerce?
+Content Management System (CMS) simplifies the process of managing and updating your e-commerce store. By integrating TropiPay, merchants can seamlessly handle payments with Credit/Debit Cards and TropiPay accounts, ensuring secure and fast transactions.
+
+Advantages of Using a CMS with TropiPay
+✅ Easy Integration – No need to code complex payment solutions.
+✅ Secure Transactions – Payments are processed safely and deposited directly into the merchant’s TropiPay account.
+✅ Enhanced User Experience – Provides a seamless checkout flow for customers.
+✅ Multi-platform Support – Available for various CMS platforms, making integration effortless.
+
+Integration Plugins and SDKs
+Our community has developed multiple integration plugins and SDKs to connect TropiPay with the most popular CMS-based e-commerce platforms.
+
+TropiPayJS SDK
+For developers looking for a custom integration, TropiPay offers an SDK for JavaScript/TypeScript.
+
+🔗 Go to SDK documentation here
+
+Available CMS Plugins
+Drupal
+🛠 Drupal Tropipay Plugin v7.x-1.3 (For Drupal v7)
+📥 Download Plugin here
+
+🛠 Drupal Tropipay Plugin v1.0.x-dev (For Drupal 8 - 9)
+📥 Download Plugin here
+
+WooCommerce
+🛠 WooCommerce Tropipay Plugin (Latest version)
+📥 Download Plugin here
+
+PrestaShop
+🛠 PrestaShop Tropipay Plugin
+📥 Download Plugin here
+
+Odoo
+🛠 Odoo Tropipay Addon (Version 16)
+📥 Download Plugin here
+
+Edit this page
+Previous
+Using access token
+Next
+Create a Paymentcard
+Advantages of Using a CMS with TropiPay
+Integration Plugins and SDKs
+TropiPayJS SDK
+Available CMS Plugins
+Drupal
+WooCommerce
+PrestaShop
+Odoo
+Docs
+API Reference
+Community
+Help Center
+Telegram
+More
+Blog
+GitHub
+
+Create a Paymentcard
+This endpoint allows you to generate a payment link. With this link, you can receive deposits from other TropiPay accounts or external sources in a simple way. You can share your payment links and manage your charges efficiently.
+
+POST <base url>/api/v3/paymentcards
+
+Headers
+Name	Type	Required	Description
+Authorization	string	Yes	Bearer {user-token}
+Content-Type	string	Yes	application/json
+Example Request
+{
+    "client": {
+    "name": "John",
+    "lastName": "McClane",
+    "address": "Ave. Guadí 232, Barcelona, Barcelona",
+    "phone": "+34645553333",
+    "email": "client@email.com",
+    "countryId": 2,
+    "termsAndConditions": true,
+    "city": "Barcelona",
+    "postCode": "78622",
+    "dateOfBirth": "1984-08-15"
+  },
+  "reference": "my-reference",
+  "concept": "Bicycle",
+  "favorite": "true",
+  "description": "Two wheels",
+  "amount": 100,
+  "currency": "EUR",
+  "singleUse": "true",
+  "reasonId": 4,
+  "accountId": 9,
+  "expirationDays": 1,
+  "lang": "es",
+  "urlSuccess": "https://my-business.com/payment-ok",
+  "urlFailed": "https://my-business.com/payment-ko",
+  "urlNotification": "https://my-business.com/payment-callback",
+  "directPayment": "false",
+  "paymentMethods": [
+    "EXT",
+    "TPP",
+    "TPP_GIFTCARD"
+  ]
+}
+
+Example Response
+{
+	"id": "1178ee20-fd00-11ef-a2a1-395c2db61965",
+	"saveToken": false,
+	"accountId": 9,
+	"reference": "my-reference",
+	"concept": "Bicycle",
+	"description": "Two wheels",
+	"amount": 100,
+	"currency": "EUR",
+	"singleUse": true,
+	"favorite": true,
+	"reasonId": 4,
+	"reasonDes": null,
+	"expirationDays": 0,
+	"userId": "5b78aed0-70d7-11ef-8e71-afa4d9a6153a",
+	"lang": "es",
+	"imageBase": null,
+	"state": 1,
+	"urlSuccess": "https://my-business.com/payment-ok",
+	"urlFailed": "https://my-business.com/payment-ko",
+	"urlNotification": "https://my-business.com/payment-callback",
+	"expirationDate": null,
+	"serviceDate": null,
+	"hasClient": true,
+	"credentialId": 10,
+	"force3ds": false,
+	"origin": 2,
+	"paymentcardType": 1,
+	"strictPostalCodeCheck": false,
+	"strictAddressCheck": false,
+	"updatedAt": "2025-03-09T16:03:41.486Z",
+	"createdAt": "2025-03-09T16:03:40.675Z",
+	"qrImage": "data:image/png;base64,iVBORw0KGgoA...",
+	"shortUrl": "https://tppay.me/m81tp753",
+	"paymentUrl": null,
+	"bankOrderCode": "439900781291",
+	"rawUrlPayment": null,
+	"giftcard": null
+}
+
+Fields
+Field	Type	Description
+reference	string	Used for tracking orders within your application. This value will be returned in notifications and webhooks.
+concept	string	A brief title or concept for the payment.
+favorite	boolean	Mark this payment card as a favorite.
+description	string	Detailed description of what the payment is for.
+amount	number	Payment amount in cents (e.g., 10.55 EUR should be sent as 1055).
+currency	string	Currency code (e.g., "EUR").
+singleUse	boolean	Whether the payment link can be used only once.
+reasonId	number	Reason identifier for the payment.
+accountId	number	The unique identifier of the account for which the payment card will be created. IMPORTANT: Determines where the fund will be settled. If omited the configured default account by the user will be used
+reasonDes	string	Text for the reason if reason is 9 (see below for a comprehensive list of reasons).
+expirationDays	number	Funds will be pending in until this number of days after payment
+lang	string	Language code (e.g., "es" for Spanish).
+urlSuccess	string	URL where users will be redirected after successful payment.
+urlFailed	string	URL where users will be redirected if payment fails.
+urlNotification	string	POST endpoint that will receive payment notifications. Must be accessible to TropiPay servers. For testing, you can use services like ngrok or webhook.site.
+expirationDate	string	Date until the paymentcard will be available ISO8601 format including variants allowing timezone
+termsAndConditions	boolean	Acceptance of terms and conditions.
+Client Information (Required)
+tip
+The client object, if present, must include ALL the following fields (pass null to let Tropipay request the client data in the payment card):
+
+Field	Type	Description
+name	string	Client's first name.
+lastName	string	Client's last name.
+address	string	Client's address.
+phone	string	Client's phone number.
+email	string	Client's email address.
+city	string	Client's city.
+postCode	string	Client's zip code or postal code.
+dateOfBirth	string	Client's birth date. Format: yyyy-mm-dd.
+termsAndConditions	string	Acceptance of terms and conditions.
+Optional Fields
+Field	Type	Description
+countryId	number	Country identifier. Not required if countryIso is provided.
+countryIso	string	Country ISO code (e.g., "ES", "US"). Not required if countryId is provided.
+paymentMethods	array[string]	Specifies available payment methods. Options include 'EXT' (external cards like Visa, Mastercard) and 'TPP' (TropiPay balance). If omitted, all payment methods will be available.
+saveToken	boolean	Save payment token for future use. Defaults to false.
+imageBase	string	Base64 string format of an image (JPG, PNG, etc.). Example: data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKQAAACkHYTCA...
+Code Examples
+cURL
+PHP
+Java
+C#
+Go
+curl --request POST \
+  --url https://tropipay-dev.herokuapp.com/api/v3/paymentcards \
+  --header 'Accept: application/json' \
+  --header 'Authorization: Bearer {your-token}' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "reference": "my-reference",
+    "concept": "Bicycle",
+    "favorite": true,
+    "description": "Two wheels",
+    "accountId": 9,
+    "amount": 100000,
+    "currency": "EUR",
+    "singleUse": true,
+    "reasonId": 4,
+    "expirationDays": 1,
+    "lang": "es",
+    "urlSuccess": "https://my-business.com/payment-ok",
+    "urlFailed": "https://my-business.com/payment-ko",
+    "urlNotification": "https://my-business.com/payment-callback",
+    "serviceDate": "2021-08-20",
+    "client": {
+      "name": "John",
+      "lastName": "McClane",
+      "address": "Ave. Guadí 232, Barcelona, Barcelona",
+      "phone": "+34645553333",
+      "email": "client@email.com",
+      "countryId": 1,
+      "termsAndConditions": "true",
+      "city": "Barcelona",
+      "postCode": "78622",
+      "dateOfBirth: "1984-08-15"
+    },
+    "directPayment": true,
+    "paymentMethods": [
+      "EXT",
+      "TPP"
+    ]
+  }'
+
+Response Fields
+Field	Type	Description
+id	string	Unique identifier for the payment card.
+reference	string	Your provided reference.
+concept	string	Payment concept.
+description	string	Payment description.
+amount	number	Payment amount in cents.
+accountId	number	The unique identifier of the account for which the payment card was created.
+currency	string	Currency code.
+singleUse	boolean	Whether the payment link can be used only once.
+favorite	boolean	Whether the payment card is marked as favorite.
+reasonId	number	Reason identifier.
+reasonDes	string	Reason description (may be null).
+expirationDays	number	Days until expiration.
+userId	string	User ID of the payment card creator.
+lang	string	Language code.
+state	number	Payment state.
+urlSuccess	string	Success URL.
+urlFailed	string	Failed URL.
+urlNotification	string	Notification URL for webhooks.
+expirationDate	string	Expiration date (may be null).
+serviceDate	string	Service date (may be null).
+hasClient	boolean	Whether client information is included.
+updatedAt	string	Last update timestamp.
+createdAt	string	Creation timestamp.
+qrImage	string	Base64-encoded QR code image for the payment.
+shortUrl	string	Short URL to access the payment.
+Implementation Notes
+For testing webhook notifications locally, consider using services like ngrok or webhook.site
+The amount field is always an integer in cents (e.g., 10.55 EUR should be represented as 1055)
+You can specify payment methods to limit how users can pay (external cards, TropiPay balance, or both)
+The QR image is returned as a base64 string, which can be displayed directly on your website
+Verify paymements
+One of the most important aspects of any integration is the ability to verify that a successful payment has been made. The method for doing so and the amount of information you receive may vary depending on how your account receives funds. Tropipay provides multiple ways of receiving payments; payment cards are one option, perhaps most suitable for websites. However, there’s also the option of sharing your profile (which generates a special payment card allowing clients to specify the amount) or internal transfers from another Tropipay account. There are differences between these methods in terms of fees, and you might want to choose one over the other, or even a combination of different ones.
+
+Using Paymentcards and notificationUrl
+note
+The notificationUrl must be a public endpoint, accesible from Tropipay servers. You can use services like webhook.site or ngrok to test locally
+
+When creating a payment card via API, you can specify a notificationUrl. Tropipay will send a POST request with a JSON payload to this URL when the event transaction_completed or transaction_failed occurs. This payload contains useful information such as reference, bank order code, and client data (email, name, surname, etc). If you receive the "status":"OK", it means your order is paid. if you receive "status":"KO" means that payment was initiated but failed.
+
+Preferably, your endpoint returns a status 200 OK as soon as possible. Then, process the payload asynchronously. Any other status code or lack of response from your notificationUrl (timeout) will be interpreted as a failure to receive the callback correctly. Tropipay will attempt redelivery at intervals until the webhook returns a status 200.
+
+warning
+Always verify the payload signature in production to ensure it originates from Tropipay. The signature can be found in the signatureV3 field. You should calculate and compare the provided signature with the one received in the payload.
+
+signatureV3 = sha256( bankOrderCode + apiKey + sha1(apiSecret) + originalCurrencyAmount )
+
+Keep logs
+This apply for notificationUrl and hooks the same. keep logs of every callback received so you have an audit trail, documenting transaction detail. Logs facilitate debugging by providing insights into payment failures or discrepancies. Services like Papertrail or Loggly can slurp up your logs, giving you a centralized spot to peek at ‘em.
+
+Example of a success notificationUrl payload
+{
+  "status": "OK",
+  "data": {
+    "id": 389863,
+    "reference": "1695389078367",
+    "bankOrderCode": "690259220262",
+    "provider": 4,
+    "userId": "366e8170-65d3-11ed-a813-575702a10503",
+    "bookingDate": "2023-09-22T13:24:38.370Z",
+    "days": null,
+    "amount": 200,
+    "currency": "EUR",
+    "originalCurrencyAmount": "200",
+    "destinationAmount": "143",
+    "destinationCurrency": "EUR",
+    "conversionRate": 1,
+    "depositaccountId": null,
+    "ourFee": 300,
+    "providerFee": -57,
+    "state": 5,
+    "serviceId": 2,
+    "paymentcardId": "92ad58b0-594a-11ee-893c-db9cbd81fd9c",
+    "expirationDate": "2023-09-22T13:24:38.367Z",
+    "movementTypeId": 2,
+    "transactionId": null,
+    "isInternal": false,
+    "agent": "TROPIPAY",
+    "ip": "152.206.139.26",
+    "reasonId": 4,
+    "reasonDes": null,
+    "errorReason": null,
+    "notificationUrl": null,
+    "riskFlag": 0,
+    "riskScore": 0,
+    "createdAt": "2023-09-22T13:24:38.370Z",
+    "updatedAt": "2023-09-22T13:25:12.354Z",
+    "paymentcard": {
+      "id": "92ad58b0-594a-11ee-893c-db9cbd81fd9c",
+      "reference": "2ksuahi1olmumodrr",
+      "concept": "Bicycle",
+      "description": "Two wheels",
+      "amount": 200,
+      "currency": "EUR",
+      "singleUse": false,
+      "reasonId": 4,
+      "reasonDes": null,
+      "userId": "366e8170-65d3-11ed-a813-575702a10503",
+      "qrImage": null,
+      "shortUrl": "https://tppay.me/lmumoe35",
+      "state": 1,
+      "expirationDays": 0,
+      "lang": "es",
+      "urlSuccess": "https://www.tropipay.com",
+      "urlFailed": "https://www.google.com",
+      "urlNotification": "https://webhook.site/22db2afd-3fb8-404b-b4c4-c39b1334e439",
+      "expirationDate": null,
+      "serviceDate": null,
+      "hasClient": false,
+      "paymentUrl": null,
+      "favorite": true,
+      "saveToken": false,
+      "imageBase": null
+    },
+    "charges": [
+      {
+        "clientName": "John",
+        "clientLastName": "Wick",
+        "clientAddress": "Hotel Continental",
+        "clientPhone": "892498324234",
+        "clientEmail": "johnwick@gmail.com",
+        "riskScore": 0,
+        "id": 260991,
+        "orderCode": "1695389078367",
+        "cardPan": "0004",
+        "cardExpirationDate": "2024-02-01T00:00:00.000Z",
+        "cardHolderName": "John",
+        "saveToken": false,
+        "amount": 200,
+        "currency": 978,
+        "userId": "366e8170-65d3-11ed-a813-575702a10503",
+        "bookingId": 389863,
+        "errorReason": "",
+        "state": 3,
+        "serviceId": 2,
+        "clientTC": "true",
+        "clientCountryId": 25,
+        "updatedAt": "2023-09-22T13:25:12.246Z",
+        "createdAt": "2023-09-22T13:24:38.381Z",
+        "cardCountry": "DE",
+        "cardBrand": "VISA",
+        "cardCategory": "SecureTrading Test Issuer1",
+        "cardType": "",
+        "clientIp": "152.206.139.26",
+        "cardSubBrand": null,
+        "card3DSVersion": "",
+        "card3DS2IdMsg": null,
+        "cardAut3DSecure2Method": null,
+        "card3DS2Partition": null,
+        "cardDcc": null,
+        "cardBin": "454881",
+        "securityCheckPostCode": "0",
+        "securityCheckAddress": "0"
+      }
+    ],
+    "cardTokenId": null,
+    "signature": "e78e9e31139c35e9e987cd3d0ad1208108318fb26685c7fa6cba3e3a6626be42",
+    "signaturev2": "4845e478d69d77f2556f48617e5c9c012c3929df3c259cc4e640e634661f1d34",
+    "signaturev3":"9875e478d69d77f2556f48617e5c9c012c3929df3c259cc4e640e634661f1n84",
+    "clientData": {
+      "clientName": "John",
+      "clientLastName": "Wick",
+      "clientAddress": "Hotel Continental",
+      "clientEmail": "johnwick@gmail.com"
+    }
+  }
+}
+
+Using Hooks
+note
+The webhook must be a public endpoint, accesible from Tropipay servers. You can use services like webhook.site or ngrok to test locally
+
+Hooks, often called webhooks are a convenient way to receive notification when some events occur in your Tropipay account. These events can be for example: when a payment is completed or funds are guarded by Tropipay in a mediation paymentcard. You can use hooks instead of notificationUrl to verify payments.
+
+Answer right away
+Tropipay will send a POST request with a JSON payload to this URL when the selected event occurs. This endpoints must be accesible from the Internet, and the tropipay servers specifically. Make sure your endoint returns HTTP 200/OK right away. If no response (timeout) or response is different from HTTP 200 (4xx, 5xx). Tropipay would try to resend the callback several times.
+
+Coming soon
+More info inthe hook section of the documentation
+Authentication
+TropiPay's API distinguishes between two main authentication contexts depending on the action to be performed:
+
+Application-Level Authentication (Server-to-Server): Used for operations your application performs on its own behalf. This is the most common method and uses an API key and secret to obtain a bearer token. This flow is ideal for automated processes running on your backend.
+
+User-Level Authentication: Required for actions that need explicit consent from a user, such as operations involving their personal balance or biometric confirmations. This flow typically involves redirecting the user to TropiPay to authorize the action.
+
+This document primarily focuses on Application-Level Authentication.
+
+TropiPay uses API keys to authenticate server-to-server requests. You can view and manage your API keys in the TropiPay Dashboard.
+
+Your API keys carry many privileges, so be sure to keep them secure! Do not share your secret API keys in publicly accessible areas such as GitHub, client-side code, and so forth.
+
+Authentication to the API is performed via HTTP Bearer Authentication. Provide your API key as the bearer token value.
+
+All API requests must be made over HTTPS. Calls made over plain HTTP will fail. API requests without authentication will also fail.
+
+Base URL
+https://sandbox.tropipay.me/api/v3
+
+Request Format
+All endpoints accept and return data in JSON format
+Dates are in ISO 8601 format (UTC)
+Amounts are in cents (100 = $1.00)
+Content-Type: application/json
+Required Headers
+Content-Type: application/json
+Authorization: Bearer <access_token>
+X-Device-Id: <device_id>  // Optional, required for biometric operations
+
+Obtain Access Token
+To authenticate with the TropiPay API, you first need to obtain an access token using your application credentials.
+
+Request
+POST
+/access/token
+curl -X POST https://sandbox.tropipay.me/api/v3/access/token \
+  -H "Content-Type: application/json" \
+  -d '{
+    "client_id": "your_client_id",
+    "client_secret": "your_client_secret",
+    "grant_type": "client_credentials"
+  }'
+
+Parameters
+Parameter	Type	Required	Description
+client_id	string	Yes	Your application's client ID
+client_secret	string	Yes	Your application's client secret
+grant_type	string	Yes	Must be client_credentials
+Response
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJ5b3VyX2NsaWVudF9pZCIsImlhdCI6MTYzOTc0NDgwMCwiZXhwIjoxNjM5ODMxMjAwfQ.example_signature",
+  "token_type": "Bearer",
+  "expires_in": 86400,
+  "scope": "read write"
+}
+
+
+Response Parameters
+Parameter	Type	Description
+access_token	string	The access token to use for API requests
+token_type	string	Always "Bearer"
+expires_in	integer	Token expiration time in seconds
+scope	string	Granted permissions
+Using the Access Token
+Include the access token in the Authorization header of all API requests:
+
+curl -X GET https://sandbox.tropipay.me/api/v3/users/profile \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+Error Responses
+If authentication fails, you'll receive a 401 Unauthorized response:
+
+{
+  "error": {
+    "type": "authentication_error",
+    "code": "invalid_credentials",
+    "message": "Invalid client credentials"
+  }
+}
+
+Security Best Practices
+Keep your API keys secure and never expose them in client-side code
+Use HTTPS for all API requests
+Rotate your API keys regularly
+Monitor your API usage for unusual activity
+Store credentials securely using environment variables or secure vaults
+Rate Limiting
+API requests are subject to rate limiting. If you exceed the rate limit, you'll receive a 429 Too Many Requests response. The response will include headers indicating your current rate limit status:
+
+X-RateLimit-Limit: The maximum number of requests allowed per time window
+X-RateLimit-Remaining: The number of requests remaining in the current time window
+X-RateLimit-Reset: The time when the rate limit resets (Unix timestamp)
+Skip to main content
+Tropipay Logo
+Tropipay API Docs
+API Reference
+Blog
+GitHub
+
+Getting Started
+Getting Started
+Basics
+Setting Up credentials
+Using access token
+Using a CMS
+Create a Paymentcard
+Verify paymements
+API Reference
+Authentication
+Users
+Accounts
+Movements
+Transfers
+Payment Cards
+Beneficiaries
+Webhooks
+Error Codes
+API ReferenceUsers
+Users
+The Users API allows you to manage user profiles, balances, security settings, and authentication preferences. This includes operations like retrieving user information, updating profiles, managing two-factor authentication, and handling security codes.
+
+The User Object
+{
+  "id": "443b4dd0-e8b3-11ec-bcf1-49674ab3a8ea",
+  "name": "John",
+  "surname": "Doe",
+  "email": "john.doe@example.com",
+  "phone": "+1234567890",
+  "state": 1,
+  "kycLevel": 4,
+  "balance": 163202,
+  "pendingIn": 1339174,
+  "pendingOut": 0,
+  "twoFaMode": 1,
+  "logo": "https://umedia.tropipay.com/develop/user-id/logo-257.png",
+  "createdAt": "2022-06-10T11:48:38.319Z",
+  "updatedAt": "2025-07-24T05:50:54.066Z"
+}
+
+Attributes
+Attribute	Type	Description
+id	string	Unique identifier for the user (UUID).
+name	string	User's first name.
+surname	string	User's last name.
+email	string	User's email address.
+phone	string	User's phone number.
+state	integer	Numeric code representing the user's account state (e.g., 1 for active).
+kycLevel	integer	Know Your Customer verification level.
+balance	integer	The user's primary account balance in cents.
+pendingIn	integer	Total amount of incoming funds pending confirmation, in cents.
+pendingOut	integer	Total amount of outgoing funds pending confirmation, in cents.
+twoFaMode	integer	Numeric code for the two-factor authentication mode (e.g., 1 for enabled).
+logo	string	URL to the user's profile logo/avatar.
+createdAt	string	Timestamp of when the user was created.
+updatedAt	string	Timestamp of the last update to the user's profile.
+Retrieve User Profile
+Retrieves the details of the authenticated user.
+
+GET
+/users/profile
+curl -X GET https://sandbox.tropipay.me/api/v3/users/profile \
+  -H "Authorization: Bearer sk_test_..."
+
+Response
+{
+  "id": "443b4dd0-e8b3-11ec-bcf1-49674ab3a8ea",
+  "name": "John",
+  "surname": "Doe",
+  "email": "john.doe@example.com",
+  "phone": "+1234567890",
+  "state": 1,
+  "kycLevel": 4,
+  "balance": 163202,
+  "pendingIn": 1339174,
+  "pendingOut": 0,
+  "twoFaMode": 1,
+  "logo": "https://umedia.tropipay.com/develop/user-id/logo-257.png",
+  "createdAt": "2022-06-10T11:48:38.319Z",
+  "updatedAt": "2025-07-24T05:50:54.066Z",
+  "group": { ... },
+  "userDetail": { ... },
+  "options": { ... }
+}
+
+Send Security Code
+This endpoint sends a security code to the user's phone or email. It is a critical step during the registration process to validate and update the user's contact information, ensuring the account is secure.
+
+POST
+/users/sendSecurityCode
+curl -X POST https://sandbox.tropipay.me/api/v3/users/sendSecurityCode \
+  -H "Authorization: Bearer sk_test_..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "sms",
+    "callingCode": "+1",
+    "phone": "234567890"
+  }'
+
+Parameters
+Parameter	Type	Required	Description
+type	string	Yes	Type of verification (sms, email)
+phone	string	Conditional	Required when type is sms
+callingCode	string	Conditional	Required when type is sms. User's country calling code.
+email	string	Conditional	Required when type is email
+Validate Security Token
+Validates a security code that was previously sent to the user.
+
+POST
+/users/validateToken
+curl -X POST https://sandbox.tropipay.me/api/v3/users/validateToken \
+  -H "Authorization: Bearer sk_test_..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "securityCode": "123456",
+    "type": "sms"
+  }'
+
+Parameters
+Parameter	Type	Required	Description
+securityCode	string	Yes	The 6-digit security code
+type	string	Yes	Type of verification (sms, email, totp)
+Response
+A successful validation returns a boolean isValid, the complete user object, and a new, short-lived JSON Web Token (JWT). This new token should be used for subsequent actions that require a recently verified session.
+
+info
+Important: If the security code was sent to a new phone number not previously associated with the account, a successful validation will update the user's profile with the new number.
+
+{
+  "isValid": true,
+  "user": {
+    "id": "443b4dd0-e8b3-11ec-bcf1-49674ab3a8ea",
+    "name": "John",
+    "surname": "Doe",
+    "email": "john.doe@example.com",
+    "phone": "+3455555555",
+    // ... other user fields
+  },
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+
+Configure Two-Factor Authentication
+Enables or disables two-factor authentication for the user account.
+
+POST
+/users/2fa
+curl -X POST https://sandbox.tropipay.me/api/v3/users/2fa \
+  -H "Authorization: Bearer sk_test_..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "enabled": true,
+    "type": "totp",
+    "securityCode": "123456"
+  }'
+
+Parameters
+Parameter	Type	Required	Description
+enabled	boolean	Yes	Whether to enable or disable 2FA
+type	string	Yes	Type of 2FA (totp, sms)
+securityCode	string	Yes	Verification code
+Get 2FA Secret
+Generates a new TOTP secret for setting up two-factor authentication.
+
+POST
+/users/2fa/secret
+curl -X POST https://sandbox.tropipay.me/api/v3/users/2fa/secret \
+  -H "Authorization: Bearer sk_test_..."
+
+Response
+{
+  "secret": "JBSWY3DPEHPK3PXP",
+  "qrCodeUrl": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA..."
+}
+
+Response Parameters
+Parameter	Type	Description
+secret	string	Base32-encoded TOTP secret
+qrCodeUrl	string	Data URL of QR code for easy setup
+Change Password
+Changes the user's account password.
+
+POST
+/users/pass
+curl -X POST https://sandbox.tropipay.me/api/v3/users/pass \
+  -H "Authorization: Bearer sk_test_..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "oldPass": "password123",
+    "newPass": "newpassword456"
+  }'
+
+Parameters
+Parameter	Type	Required	Description
+oldPass	string	Yes	Current password
+newPass	string	Yes	New password
+Disable User Account
+Disables the user account, preventing further access.
+
+POST
+/users/disable
+curl -X POST https://sandbox.tropipay.me/api/v3/users/disable \
+  -H "Authorization: Bearer sk_test_..."
+
+Response
+{
+  "success": true,
+  "message": "User account has been disabled"
+}
+
+Error Handling
+The Users API uses conventional HTTP response codes to indicate the success or failure of an API request. In general:
+
+2xx range indicate success
+4xx range indicate an error that failed given the information provided
+5xx range indicate an error with TropiPay's servers
+Common Error Codes
+Code	Description
+400	Bad Request - Invalid parameters
+401	Unauthorized - Invalid authentication
+403	Forbidden - Insufficient permissions
+404	Not Found - Resource doesn't exist
+429	Too Many Requests - Rate limit exceeded
+500	Internal Server Error
+Edit this page
+Previous
+Authentication
+Next
+Accounts
+The User Object
+Attributes
+Retrieve User Profile
+Response
+Send Security Code
+Parameters
+Validate Security Token
+Parameters
+Response
+Configure Two-Factor Authentication
+Parameters
+Get 2FA Secret
+Response
+Response Parameters
+Change Password
+Parameters
+Disable User Account
+Response
+Error Handling
+Common Error Codes
+Docs
+API Reference
+Community
+Help Center
+Telegram
+More
+Blog
+GitHub
+Copyright © 2025 Tropipay.
+Accounts
+The Accounts API allows you to manage user accounts, including retrieving account information, checking balances, performing currency conversions, and managing Tropicard integrations.
+
+The Account Object
+{
+    "id": 21221,
+    "accountNumber": "TP00-0000-0000-0000-0000",
+    "userId": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+    "alias": "My Account",
+    "balance": 418090,
+    "pendingIn": 1422276,
+    "pendingOut": 0,
+    "state": 1,
+    "paymentEntityId": 34,
+    "currency": "USDC",
+    "type": 1,
+    "createdAt": "2025-07-14T19:10:04.936Z",
+    "updatedAt": "2025-07-22T13:16:59.737Z",
+    "isDefault": false,
+    "groupId": null,
+    "TropiCards": [],
+    "services": [
+        {
+            "slug": "CRYPTO_TOPUP",
+            "enabled": true
+        }
+    ],
+    "paymentMethods": [
+        {
+            "slug": "TPP",
+            "name": "Tropipay",
+            "enabled": true
+        }
+    ]
+}
+
+Attributes
+Attribute	Type	Description
+id	integer	Unique identifier for the account.
+accountNumber	string	The unique account number.
+userId	string	The ID of the user who owns the account.
+alias	string	A user-defined name for the account.
+balance	integer	The current balance of the account in cents.
+pendingIn	integer	The amount of incoming funds that are pending confirmation, in cents.
+pendingOut	integer	The amount of outgoing funds that are pending confirmation, in cents.
+state	integer	The state of the account (e.g., 1 for active).
+currency	string	The currency code for the account (e.g., USDC, EUR).
+type	integer	The type of account (e.g., 1 for a standard account).
+createdAt	string	The date and time when the account was created, in ISO 8601 format.
+updatedAt	string	The date and time when the account was last updated, in ISO 8601 format.
+isDefault	boolean	Indicates if this is the user's default account.
+services	array	A list of financial services enabled for this account.
+paymentMethods	array	A list of payment methods available for this account.
+List All Accounts
+Returns a list of all accounts associated with the authenticated user.
+
+GET
+/accounts/
+curl -X GET https://sandbox.tropipay.me/api/v3/accounts/ \
+  -H "Authorization: Bearer sk_test_..."
+
+Parameters
+Parameter	Type	Required	Description
+type	string	No	Filter by account type
+Response
+[
+  {
+    "id": 21221,
+    "accountNumber": "TP00-0000-0000-0000-0000",
+    "userId": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+    "alias": "My Account",
+    "balance": 418090,
+    "pendingIn": 1422276,
+    "pendingOut": 0,
+    "state": 1,
+    "paymentEntityId": 34,
+    "currency": "USDC",
+    "type": 1,
+    "createdAt": "2025-07-14T19:10:04.936Z",
+    "updatedAt": "2025-07-22T13:16:59.737Z",
+    "isDefault": false,
+    "groupId": null,
+    "TropiCards": [],
+    "services": [
+        {
+            "slug": "CRYPTO_TOPUP",
+            "enabled": true
+        }
+    ],
+    "paymentMethods": [
+        {
+            "slug": "TPP",
+            "name": "Tropipay",
+            "enabled": true
+        }
+    ]
+  }
+]
+
+Retrieve Account Balance
+Retrieves the balance for a specific account.
+
+GET
+/accounts/balance/{accountNumber}
+curl -X GET https://sandbox.tropipay.me/api/v3/accounts/balance/TP1234567890123456789012 \
+  -H "Authorization: Bearer sk_test_..."
+
+Response
+{
+  "accountNumber": "TP00-0000-0000-0000-0000",
+  "balance": 418090,
+  "pendingIn": 1422276,
+  "pendingOut": 0,
+  "currency": "USDC"
+}
+
+Response Parameters
+Parameter	Type	Description
+accountNumber	string	The unique account number.
+balance	integer	The current balance of the account in cents.
+pendingIn	integer	The amount of incoming funds that are pending confirmation, in cents.
+pendingOut	integer	The amount of outgoing funds that are pending confirmation, in cents.
+currency	string	The currency code for the account (e.g., USDC).
+Retrieve All Account Balances
+Retrieves the balance information for all user accounts.
+
+GET
+/accounts/allBalance
+curl -X GET https://sandbox.tropipay.me/api/v3/accounts/allBalance \
+  -H "Authorization: Bearer sk_test_..."
+
+Response
+[
+  {
+    "balance": 418090,
+    "currency": "USDC"
+  },
+  {
+    "balance": 163202,
+    "currency": "EUR"
+  }
+]
+
+Response Parameters
+The response is an array of account objects, each with the following attributes:
+
+Parameter	Type	Description
+balance	integer	The total balance of the account in cents.
+currency	string	The currency code for the account (e.g., USDC, EUR).
+Set Default Account
+Sets a specific account as the default account for the user.
+
+PUT
+/accounts/default
+curl -X PUT https://sandbox.tropipay.me/api/v3/accounts/default \
+  -H "Authorization: Bearer sk_test_..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "accountId": 21221
+  }'
+
+Parameters
+Parameter	Type	Required	Description
+accountId	string	Yes	ID of the account to set as default
+Response
+{
+  "success": true
+}
+
+Add Tropicard Account
+Links a Tropicard to the user's account.
+
+POST
+/accounts/
+curl -X POST https://sandbox.tropipay.me/api/v3/accounts/ \
+  -H "Authorization: Bearer sk_test_..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "tropicardNumber": "1234567890123456",
+    "pin": "1234"
+  }'
+
+Parameters
+Parameter	Type	Required	Description
+tropicardNumber	string	Yes	16-digit Tropicard number
+pin	string	Yes	4-digit PIN code
+Simulate Currency Conversion
+Simulates a currency conversion between two accounts to preview rates and fees.
+
+POST
+/accounts/{sourceAccountId}/convert/{targetAccountId}/simulate
+curl -X POST https://sandbox.tropipay.me/api/v3/accounts/acc_123/convert/acc_124/simulate \
+  -H "Authorization: Bearer sk_test_..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "amountToPay": 10000
+  }'
+
+Parameters
+Parameter	Type	Required	Description
+amountToPay	integer	Yes	Amount to convert in cents
+Response
+{
+  "amountToPay": 10000,
+  "amountToGet": 8500,
+  "rate": 0.85,
+  "fee": 250,
+  "sourceCurrency": "USD",
+  "targetCurrency": "EUR"
+}
+
+Response Parameters
+Parameter	Type	Description
+amountToPay	integer	Amount to be debited in cents
+amountToGet	integer	Amount to be credited in cents
+rate	number	Exchange rate applied
+fee	integer	Conversion fee in cents
+sourceCurrency	string	Source account currency
+targetCurrency	string	Target account currency
+Execute Currency Conversion
+Executes a currency conversion between two accounts.
+
+POST
+/accounts/{sourceAccountId}/convert/{targetAccountId}
+curl -X POST https://sandbox.tropipay.me/api/v3/accounts/acc_123/convert/acc_124 \
+  -H "Authorization: Bearer sk_test_..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "amountToPay": 10000
+  }'
+
+Parameters
+Parameter	Type	Required	Description
+amountToPay	integer	Yes	Amount to convert in cents
+Get Crypto Address for Self-Charge
+Retrieves a cryptocurrency address for depositing funds into an account.
+
+GET
+/accounts/{accountId}/selfcharge/crypto
+curl -X GET https://sandbox.tropipay.me/api/v3/accounts/21221/selfcharge/crypto \
+  -H "Authorization: Bearer sk_test_..."
+
+Response
+{
+  "feePercent": 300,
+  "feeFixed": 0,
+  "accounts": [
+    {
+      "address": "Bvmv25du1Um2gvMFAd3EQjUCano9a7tPXDp9KnxWRqjc",
+      "network": "SOLANA",
+      "currency": "USDC"
+    }
+  ]
+}
+
+Response Parameters
+Parameter	Type	Description
+feePercent	integer	The deposit fee as a percentage (e.g., 300 for 3.00%).
+feeFixed	integer	A fixed deposit fee in cents.
+accounts	array	An array of available deposit addresses.
+Account Object in accounts array
+Parameter	Type	Description
+address	string	The cryptocurrency wallet address for the deposit.
+network	string	The blockchain network (e.g., SOLANA).
+currency	string	The cryptocurrency code (e.g., USDC).
+Error Handling
+The Accounts API uses conventional HTTP response codes to indicate the success or failure of an API request.
+
+Common Error Codes
+Code	Description
+400	Bad Request - Invalid parameters
+401	Unauthorized - Invalid authentication
+403	Forbidden - Insufficient permissions
+404	Not Found - Account doesn't exist
+409	Conflict - Account already exists or invalid state
+422	Unprocessable Entity - Invalid account data
+429	Too Many Requests - Rate limit exceeded
+500	Internal Server Error
+Example Error Response
+{
+  "error": {
+    "type": "invalid_request_error",
+    "code": "account_not_found",
+    "message": "No such account: acc_invalid",
+    "param": "accountId"
+  }
+}
+
+Movements
+The Movements API allows you to retrieve transaction history and movement details for user accounts. This includes filtering, pagination, and advanced querying capabilities using GraphQL.
+
+The Movement Object
+{
+  "id": 789012,
+  "amount": 10000,
+  "currency": "USD",
+  "state": "completed",
+  "reference": "REF-123",
+  "createdAt": "2024-01-15T10:30:00Z",
+  "completedAt": "2024-01-15T10:31:00Z",
+  "balanceBefore": 140000,
+  "balanceAfter": 150000
+}
+
+Attributes
+Attribute	Type	Description
+id	integer	Unique identifier for the movement
+amount	integer	Movement amount in cents
+currency	string	Currency code (USD, EUR, etc.)
+state	string	Movement state (pending, completed, failed, cancelled)
+reference	string	External reference or transaction ID
+createdAt	string	ISO 8601 timestamp when movement was created
+completedAt	string	ISO 8601 timestamp when movement was completed
+balanceBefore	integer	Account balance before the movement in cents
+balanceAfter	integer	Account balance after the movement in cents
+List Movements
+Returns a list of movements for the authenticated user with optional filtering and pagination.
+
+GET
+/movements/
+curl -X GET "https://sandbox.tropipay.me/api/v3/movements/?limit=20&offset=0" \
+  -H "Authorization: Bearer sk_test_..."
+
+Parameters
+Parameter	Type	Required	Description
+limit	integer	No	Number of results to return (max: 50, default: 20)
+offset	integer	No	Number of records to skip (default: 0)
+query	string	No	JSON-encoded filter object
+Query Filter Object
+The query parameter accepts a JSON-encoded object with the following optional fields:
+
+{
+  "state": ["completed", "pending"],
+  "currency": "USD",
+  "amountGte": 1000,
+  "amountLte": 100000,
+  "createdAtFrom": "2024-01-01T00:00:00Z",
+  "createdAtTo": "2024-12-31T23:59:59Z",
+  "reference": "REF-123"
+}
+
+Filter	Type	Description
+state	array	Filter by movement states
+currency	string	Filter by currency
+amountGte	integer	Minimum amount in cents
+amountLte	integer	Maximum amount in cents
+createdAtFrom	string	Start date (ISO 8601)
+createdAtTo	string	End date (ISO 8601)
+reference	string	Filter by reference
+Response
+{
+  "items": [
+    {
+      "id": 789012,
+      "amount": 10000,
+      "currency": "USD",
+      "state": "completed",
+      "reference": "REF-123",
+      "createdAt": "2024-01-15T10:30:00Z",
+      "completedAt": "2024-01-15T10:31:00Z",
+      "balanceBefore": 140000,
+      "balanceAfter": 150000
+    }
+  ],
+  "totalCount": 1,
+  "hasMore": false
+}
+
+Response Parameters
+Parameter	Type	Description
+items	array	Array of movement objects
+totalCount	integer	Total number of movements matching the query
+hasMore	boolean	Whether there are more results available
+List Account Movements
+Returns movements for a specific account.
+
+GET
+/accounts/{accountId}/movements
+curl -X GET https://sandbox.tropipay.me/api/v3/accounts/acc_123/movements \
+  -H "Authorization: Bearer sk_test_..."
+
+Parameters
+Same parameters as the general movements endpoint, but filtered to the specified account.
+
+Advanced Movements Query (GraphQL)
+For complex queries and advanced filtering, use the GraphQL endpoint.
+
+POST
+/movements/business
+curl -X POST https://sandbox.tropipay.me/api/v3/movements/business \
+  -H "Authorization: Bearer sk_test_..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "query GetMovements($filter: MovementFilter, $pagination: Pagination) { movements(filter: $filter, pagination: $pagination) { items { id amount state currency createdAt recipient { name email } sender { name email } } totalCount } }",
+    "variables": {
+      "filter": {
+        "state": ["completed", "pending"],
+        "amountGte": 100,
+        "amountLte": 100000,
+        "createdAtFrom": "2024-01-01T00:00:00Z",
+        "createdAtTo": "2024-12-31T23:59:59Z"
+      },
+      "pagination": {
+        "limit": 20,
+        "offset": 0
+      }
+    }
+  }'
+
+
+GraphQL Schema
+MovementFilter
+input MovementFilter {
+  state: [MovementState!]
+  currency: String
+  amountGte: Int
+  amountLte: Int
+  createdAtFrom: DateTime
+  createdAtTo: DateTime
+  reference: String
+  accountId: String
+}
+
+Pagination
+input Pagination {
+  limit: Int
+  offset: Int
+}
+
+Movement Type
+type Movement {
+  id: ID!
+  amount: Int!
+  currency: String!
+  state: MovementState!
+  reference: String
+  createdAt: DateTime!
+  completedAt: DateTime
+  balanceBefore: Int!
+  balanceAfter: Int!
+  recipient: User
+  sender: User
+  account: Account!
+}
+
+MovementState Enum
+enum MovementState {
+  PENDING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+GraphQL Response
+{
+  "data": {
+    "movements": {
+      "items": [
+        {
+          "id": "789012",
+          "amount": 10000,
+          "state": "COMPLETED",
+          "currency": "USD",
+          "createdAt": "2024-01-15T10:30:00Z",
+          "recipient": {
+            "name": "John",
+            "email": "john@example.com"
+          },
+          "sender": {
+            "name": "Jane",
+            "email": "jane@example.com"
+          }
+        }
+      ],
+      "totalCount": 1
+    }
+  }
+}
+
+Movement States
+State	Description
+pending	Movement is being processed
+completed	Movement has been successfully completed
+failed	Movement failed due to an error
+cancelled	Movement was cancelled by user or system
+Pagination
+All movement endpoints support pagination using limit and offset parameters:
+
+limit: Maximum number of results to return (1-50, default: 20)
+offset: Number of records to skip (default: 0)
+Example Pagination
+# Get first 20 movements
+curl -X GET "https://sandbox.tropipay.me/api/v3/movements/?limit=20&offset=0"
+
+# Get next 20 movements
+curl -X GET "https://sandbox.tropipay.me/api/v3/movements/?limit=20&offset=20"
+
+Error Handling
+The Movements API uses conventional HTTP response codes to indicate the success or failure of an API request.
+
+Common Error Codes
+Code	Description
+400	Bad Request - Invalid query parameters
+401	Unauthorized - Invalid authentication
+403	Forbidden - Insufficient permissions
+404	Not Found - Account or movement doesn't exist
+422	Unprocessable Entity - Invalid filter parameters
+429	Too Many Requests - Rate limit exceeded
+500	Internal Server Error
+Example Error Response
+{
+  "error": {
+    "type": "invalid_request_error",
+    "code": "invalid_filter",
+    "message": "Invalid date format in createdAtFrom parameter",
+    "param": "query.createdAtFrom"
+  }
+}
+
+Best Practices
+Use pagination for large result sets to improve performance
+Filter by date range to limit the scope of your queries
+Use specific states to get only the movements you need
+Cache results when appropriate to reduce API calls
+Use GraphQL for complex queries requiring related data
+
+Transfers
+The Transfers API allows you to send funds to beneficiaries, simulate transfers to check rates and fees, and create payment links. This section covers all endpoints related to moving money out of your TropiPay account.
+
+The Transfer Object
+A Transfer object represents the movement of funds from your account to a beneficiary. It contains details about the amount, currency, destination, and status of the transaction.
+
+Attributes
+Attribute	Type	Description
+id	integer	Unique identifier for the transfer.
+reference	string	A unique reference code for the transfer.
+bankOrderCode	string	The order code provided by the bank, if applicable.
+state	string	The current state of the transfer (e.g., charged, completed, failed).
+amount	number	The amount transferred, represented as a negative value in cents.
+currency	string	The currency of the transfer (e.g., EUR).
+destinationAmount	number	The amount received by the beneficiary in cents.
+destinationCurrency	string	The currency received by the beneficiary.
+conversionRate	number	The conversion rate applied, if any.
+bookingDate	string	The timestamp when the transfer was created (ISO 8601).
+isInternal	boolean	Indicates if the transfer was internal to TropiPay.
+depositaccountId	integer	The ID of the beneficiary's deposit account.
+Send a Transfer (Payout)
+POST
+/operations/payout
+Executes a payment or transfer to a beneficiary. For high amounts, 2FA authentication may be required.
+
+Headers
+Header	Description
+Authorization	Required. Bearer {your-access-token}
+Content-Type	Required. application/json
+Accept	Required. application/json
+X-DEVICE-ID	Optional. The unique identifier for the user's device.
+Body Parameters
+Parameter	Type	Description
+depositaccountId	integer	Required. The ID of the beneficiary's deposit account.
+accountId	integer	Required. The ID of the source account from which the funds will be debited.
+currency	string	Required. The currency of the amount to be sent (e.g., EUR).
+destinationCurrency	string	Required. The currency the beneficiary will receive.
+amount	number	Required. The amount to be sent, in cents.
+destinationAmount	number	Required. The amount the beneficiary will receive, in cents.
+conceptTransfer	string	Required. A short concept or description for the transfer.
+reasonDes	string	Required. A detailed description of the reason for the transfer.
+reasonId	integer	Required. The ID corresponding to the reason for the transfer.
+paymentMethod	string	Required. The payment method used (e.g., TPP).
+securityCode	string	Optional. The 2FA security code, required for high-value transactions.
+cURL Example
+curl -X POST https://sandbox.tropipay.me/api/v3/operations/payout \ 
+  -H "Authorization: Bearer {your-access-token}" \ 
+  -H "Content-Type: application/json" \ 
+  -d '{
+    "depositaccountId": 177309,
+    "accountId": 45787,
+    "currency": "EUR",
+    "destinationCurrency": "EUR",
+    "amount": 5000,
+    "destinationAmount": 5000,
+    "conceptTransfer": "Monthly payment",
+    "reasonDes": "Payment for services",
+    "reasonId": 9,
+    "paymentMethod": "TPP",
+    "securityCode": "123456"
+  }'
+
+Response Example (200 OK)
+{
+  "id": 12345,
+  "reference": "TX20241201001",
+  "bankOrderCode": "ORD789012",
+  "state": "charged",
+  "amount": -5000,
+  "currency": "EUR",
+  "destinationAmount": 5000,
+  "destinationCurrency": "EUR",
+  "conversionRate": 1.0,
+  "bookingDate": "2024-12-01T10:30:00Z",
+  "isInternal": false,
+  "depositaccountId": 177309
+}
+
+Simulate a Transfer
+POST
+/operations/payout/simulate
+Simulates a payment before executing it to check applicable fees and exchange rates.
+
+Body Parameters
+Parameter	Type	Description
+depositaccountId	integer	Required. The ID of the beneficiary's deposit account.
+paymentMethod	string	Required. The payment method to be simulated (e.g., TPP).
+accountId	integer	Required. The ID of the source account.
+currencyToPay	string	Required. The currency of the payment (e.g., USD).
+currencyToGet	string	Required. The currency the beneficiary will receive.
+amountToPay	number	Required. The amount to be paid, in cents.
+cURL Example
+curl -X POST https://sandbox.tropipay.me/api/v3/operations/payout/simulate \ 
+  -H "Authorization: Bearer {your-access-token}" \ 
+  -H "Content-Type: application/json" \ 
+  -d '{
+    "depositaccountId": 177309,
+    "paymentMethod": "TPP",
+    "accountId": 58814,
+    "currencyToPay": "USD",
+    "currencyToGet": "EUR",
+    "amountToPay": 5000
+  }'
+
+Response Example (200 OK)
+{
+  "estimatedFee": 250,
+  "exchangeRate": 0.92,
+  "finalAmount": 4350,
+  "processingTime": "Immediate",
+  "currency": "USD",
+  "paymentDetails": {
+    "method": "TPP",
+    "accountId": 58814
+  }
+}
+
+
+Payment Cards
+The Payment Cards API allows you to manage and retrieve details about your saved payment cards.
+
+The Payment Card Object
+A PaymentCard object represents a stored payment card (Paylink). It contains all the details about the payment request.
+
+Attributes
+Attribute	Type	Description
+id	string	Unique identifier for the payment card.
+reference	string	Your internal reference for the payment.
+concept	string	The concept or title of the payment.
+description	string	A short description of the payment.
+amount	integer	The amount to be paid, in cents.
+currency	string	The currency of the payment (e.g., EUR, USD, USDC).
+singleUse	boolean	If true, the link can only be used once.
+favorite	boolean	Marks the payment card as a favorite.
+state	integer	The state of the payment card (e.g., 1 for active).
+shortUrl	string	The short URL for the payment page.
+qrImage	string	A base64-encoded QR code image for the payment.
+urlSuccess	string	URL to redirect the user to after a successful payment.
+urlFailed	string	URL to redirect the user to after a failed payment.
+urlNotification	string	Webhook URL to receive payment status notifications.
+expirationDate	string	The timestamp when the payment link will expire (ISO 8601).
+serviceDate	string	The date the service was rendered (ISO 8601).
+createdAt	string	The timestamp when the card was created (ISO 8601).
+updatedAt	string	The timestamp when the card was last updated (ISO 8601).
+client	object	Optional. An object containing the client's information, if provided during creation.
+List Payment Cards
+GET
+/paymentcards
+Retrieves a list of all payment cards (Paylinks) created by the user. The list is paginated and can be filtered by state.
+
+Headers
+Header	Description
+Authorization	Required. Your Bearer access token.
+Accept	Required. Must be application/json.
+Query Parameters
+Parameter	Type	Description
+limit	integer	Optional. The number of items to return per page. Defaults to 10.
+offset	integer	Optional. The number of items to skip for pagination. Defaults to 0.
+state	integer	Optional. Filters cards by state. 1 for active, 0 for used or expired.
+cURL Example
+curl -X GET "https://sandbox.tropipay.me/api/v3/paymentcards?limit=10&offset=0&state=1" \
+  -H "Authorization: Bearer {your-access-token}" \
+  -H "Accept: application/json"
+
+Response Example (200 OK)
+The response is an array of PaymentCard objects.
+
+[
+  {
+    "id": "758bf1b0-5065-11f0-9095-6392f28119a6",
+    "reference": "order-abc-123",
+    "concept": "Monthly Subscription",
+    "description": "Payment for monthly service renewal",
+    "amount": 2500,
+    "currency": "EUR",
+    "state": 1,
+    "shortUrl": "https://tppay.me/mc9gzasb",
+    "createdAt": "2025-06-23T19:08:34.252Z",
+    "updatedAt": "2025-06-23T19:08:34.626Z"
+  }
+]
+
+Retrieve a Payment Card
+GET
+/paymentcards/{id}
+Retrieves the details of a specific payment card by its unique ID.
+
+Path Parameters
+Parameter	Type	Description
+id	string	Required. The unique identifier of the payment card.
+Headers
+Header	Description
+Authorization	Required. Your Bearer access token.
+Accept	Required. Must be application/json.
+cURL Example
+curl -X GET https://sandbox.tropipay.me/api/v3/paymentcards/d08d6f20-6cd1-11f0-b254-3d3d43fd5a7d \
+  -H "Authorization: Bearer {your-access-token}" \
+  -H "Accept: application/json"
+
+Response Example (200 OK)
+Returns a PaymentCard object.
+
+{
+  "id": "d08d6f20-6cd1-11f0-b254-3d3d43fd5a7d",
+  "reference": "order-xyz-789",
+  "concept": "E-book Purchase",
+  "description": "The Complete Guide to APIs",
+  "amount": 1999,
+  "currency": "EUR",
+  "singleUse": true,
+  "favorite": false,
+  "state": 1,
+  "shortUrl": "https://tppay.me/mdp5mk9t",
+  "urlSuccess": "https://example.com/success",
+  "urlFailed": "https://example.com/failed",
+  "urlNotification": "https://example.com/webhook",
+  "expirationDate": "2025-07-30T00:00:00.000Z",
+  "serviceDate": "2025-07-29T00:00:00.000Z",
+  "createdAt": "2025-07-29T23:14:45.138Z",
+  "updatedAt": "2025-07-29T23:14:45.816Z"
+}
+
+Create a Payment Card
+POST
+/paymentcards
+Creates a new payment card (Paylink). A successful creation returns a PaymentCard object.
+
+Headers
+Header	Description
+Authorization	Required. Your Bearer access token.
+Content-Type	Required. Must be application/json.
+Accept	Required. Must be application/json.
+Body Parameters
+Parameter	Type	Description
+concept	string	Required. A brief title for the payment that the user will see (max 254 characters).
+description	string	Required. A short description of the payment.
+amount	integer	Required. The amount to be paid, in the smallest currency unit (e.g., cents). Must be at least 100.
+currency	string	Required. The three-letter ISO currency code: USD, EUR, or USDC.
+singleUse	boolean	Required. If true, the link can only be used once.
+favorite	boolean	Required. Marks the payment card as a favorite for easy access.
+reasonId	integer	Optional. A numeric ID representing the reason for the payment. 4 is a common value for general payments.
+accountId	integer	Optional. The unique identifier of the account for which the payment card will be created. If not provided, the default account will be used.
+reference	string	Optional. Your unique internal reference for the transaction. Required if singleUse is true.
+serviceDate	string	Optional. The date the service is rendered, in ISO 8601 format (e.g., YYYY-MM-DD). Required if singleUse is true.
+expirationDate	string	Optional. The expiration date for the payment link in ISO 8601 format.
+expirationDays	integer	Optional. The number of days until the payment link expires.
+lang	string	Optional. The language for the payment page (e.g., es, en). Defaults to the user's account language.
+saveToken	boolean	Optional. If true, saves the payment token for future use.
+directPayment	boolean	Optional. If true, attempts to process the payment directly without showing the payment page. Defaults to false.
+urlSuccess	string	Optional. URL to redirect the user to after a successful payment. Must be a valid URL.
+urlFailed	string	Optional. URL to redirect the user to after a failed payment. Must be a valid URL.
+urlNotification	string	Optional. A webhook URL to receive server-to-server notifications about the payment status. Must be a valid URL.
+paymentMethods	array	Optional. An array of strings specifying allowed payment methods (e.g., ["TPP", "EXT"]).
+strictPostalCodeCheck	boolean	Optional. If true, enforces strict postal code validation. Defaults to false.
+strictAddressCheck	boolean	Optional. If true, enforces strict address validation. Defaults to false.
+paymentcardType	integer	Optional. The type of payment card to create.
+payment3DS	string	Optional. 3D Secure configuration: default, force, or bypass. Defaults to default.
+client	object	Optional. An object containing the end client's information. Required if singleUse is true. See client object details below.
+Client Object (when provided)
+When the client object is provided, singleUse must be true and the following fields are required:
+
+Field	Type	Description
+name	string	Required. Client's first name.
+lastName	string	Required. Client's last name.
+email	string	Required. Client's email address (must be valid).
+phone	string	Required. Client's phone number.
+address	string	Required. Client's street address.
+countryId	integer	Required* Either countryId or countryIso must be provided. Numeric country identifier.
+countryIso	string	Required* Either countryId or countryIso must be provided. ISO 3166-1 alpha-2 country code.
+termsAndConditions	boolean	Required. Must be true to accept terms and conditions.
+city	string	Optional. Client's city.
+postCode	string	Optional. Client's postal/ZIP code.
+state	string	Optional. Client's state or province.
+dateOfBirth	string	Optional. Client's date of birth in yyyy-MM-dd format.
+cURL Example
+curl -X POST https://sandbox.tropipay.me/api/v3/paymentcards \
+  -H "Authorization: Bearer {your-access-token}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "concept": "E-book Purchase",
+    "description": "The Complete Guide to APIs",
+    "amount": 1999,
+    "currency": "EUR",
+    "singleUse": true,
+    "favorite": false,
+    "reasonId": 4,
+    "accountId": 958,
+    "reference": "order-xyz-789",
+    "serviceDate": "2025-07-29",
+    "urlSuccess": "https://example.com/success",
+    "urlFailed": "https://example.com/failed",
+    "urlNotification": "https://example.com/webhook",
+    "client": {
+      "name": "John",
+      "lastName": "McClane",
+      "address": "Ave. Guadí 232, Barcelona, Barcelona",
+      "phone": "+34645553333",
+      "email": "client@email.com",
+      "countryId": 2,
+      "termsAndConditions": true,
+      "city": "Barcelona",
+      "postCode": "78622",
+      "dateOfBirth": "1984-08-15"
+    }
+  }'
+
+Response Example (200 Created)
+{
+  "id": "d08d6f20-6cd1-11f0-b254-3d3d43fd5a7d",
+  "accountId": 958,
+  "reference": "order-xyz-789",
+  "concept": "E-book Purchase",
+  "description": "The Complete Guide to APIs",
+  "amount": 1999,
+  "currency": "EUR",
+  "singleUse": true,
+  "favorite": false,
+  "state": 1,
+  "shortUrl": "https://tppay.me/mdp5mk9t",
+  "qrImage": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...",
+  "urlSuccess": "https://example.com/success",
+  "urlFailed": "https://example.com/failed",
+  "urlNotification": "https://example.com/webhook",
+  "expirationDate": "2025-07-30T00:00:00.000Z",
+  "serviceDate": "2025-07-29T00:00:00.000Z",
+  "createdAt": "2025-07-29T23:14:45.138Z",
+  "updatedAt": "2025-07-29T23:14:45.816Z"
+}
+Beneficiaries
+The Beneficiaries API allows you to manage the recipient accounts for your transfers. You can create, list, update, and delete beneficiary records, as well as validate account details before sending funds.
+
+The Beneficiary Object
+A Beneficiary object, also referred to as a DepositAccount, stores information about a recipient, including their bank account details, name, and contact information.
+
+Attributes
+Attribute	Type	Description
+id	integer	Unique numeric identifier for the beneficiary account (e.g., 12345).
+accountNumber	string	The beneficiary's bank account number.
+firstName	string	The first name of the beneficiary.
+lastName	string	The last name of the beneficiary.
+alias	string	A custom alias for the beneficiary account.
+countryDestination	object	An object containing the destination country's details.
+type	integer	The type of account.
+state	string	The state of the beneficiary record (e.g., active).
+createdAt	string	The timestamp when the beneficiary was created (ISO 8601).
+Create a Beneficiary
+POST
+/depositaccounts/
+Creates a new beneficiary record (deposit account) to be used for future transfers.
+
+Body Parameters
+Parameter	Type	Description
+accountNumber	string	Required. The beneficiary's bank account number.
+firstName	string	Required. The first name of the beneficiary.
+lastName	string	Required. The last name of the beneficiary.
+countryDestinationId	integer	Required. The ID of the destination country.
+type	integer	Required. The type of account (e.g., 0 for a standard bank account).
+alias	string	Optional. A custom alias for easy identification.
+email	string	Optional. The beneficiary's email address.
+phone	string	Optional. The beneficiary's phone number.
+address	string	Optional. The beneficiary's physical address.
+swift	string	Optional. The SWIFT/BIC code for international transfers.
+cURL Example
+curl -X POST https://sandbox.tropipay.me/api/v3/depositaccounts/ \ 
+  -H "Authorization: Bearer {your-access-token}" \ 
+  -H "Content-Type: application/json" \ 
+  -d '{
+    "accountNumber": "ES9121000418450200051332",
+    "firstName": "Jane",
+    "lastName": "Doe",
+    "countryDestinationId": 1,
+    "type": 0,
+    "alias": "Jane Doe Savings",
+    "email": "jane.doe@example.com",
+    "phone": "+15551234567",
+    "address": "123 Main St, Anytown, USA",
+    "swift": "CASHUS33XXX"
+  }'
+
+Response Example (200 OK)
+{
+  "id": 12345,
+  "accountNumber": "ES9121000418450200051332",
+  "firstName": "Jane",
+  "lastName": "Doe",
+  "alias": "Jane Doe Savings",
+  "state": "active",
+  "createdAt": "2024-07-29T10:30:00Z"
+}
+
+List Beneficiaries
+GET
+/depositaccounts/
+Retrieves a list of all beneficiaries associated with your account.
+
+Query Parameters
+Parameter	Type	Description
+limit	integer	Optional. The maximum number of beneficiaries to return. Defaults to 10.
+offset	integer	Optional. The number of beneficiaries to skip for pagination.
+search	string	Optional. A search term to filter beneficiaries by name, last name, or email.
+cURL Example
+curl -X GET "https://sandbox.tropipay.me/api/v3/depositaccounts/?limit=10&search=Jane" \ 
+  -H "Authorization: Bearer {your-access-token}"
+
+Response Example (200 OK)
+The following is an example of the response. For brevity, some fields within the countryDestination object and other less common attributes have been omitted.
+
+{
+  "items": [
+    {
+      "id": 12345,
+      "accountNumber": "ES0012345678901234567890",
+      "alias": "John Doe's Savings",
+      "swift": "CASHESMMXXX",
+      "type": 7,
+      "personType": 1,
+      "firstName": "John",
+      "lastName": "Doe",
+      "state": 0,
+      "countryDestinationId": 1,
+      "documentNumber": "X1234567Z",
+      "address": "123 Fictional Street, Madrid",
+      "phone": "600123456",
+      "email": "john.doe@example.com",
+      "createdAt": "2023-01-15T10:00:00.000Z",
+      "updatedAt": "2023-01-15T10:00:00.000Z",
+      "countryDestination": {
+        "id": 1,
+        "name": "España",
+        "sepaZone": true,
+        "slug": "ES",
+        "callingCode": 34
+      },
+      "allowed": true
+    }
+  ]
+}
+
+Get a Specific Beneficiary
+GET
+/depositaccounts/{beneficiaryId}
+Retrieves the details of a single beneficiary by their unique ID.
+
+Path Parameters
+Parameter	Type	Description
+beneficiaryId	integer	Required. The numeric ID of the beneficiary to retrieve (e.g., 12345).
+cURL Example
+curl -X GET https://sandbox.tropipay.me/api/v3/depositaccounts/12345 \ 
+  -H "Authorization: Bearer {your-access-token}"
+
+Response Example (200 OK)
+{
+  "id": 12345,
+  "accountNumber": "ES0012345678901234567890",
+  "alias": "John Doe's Savings",
+  "swift": "CASHESMMXXX",
+  "type": 7,
+  "personType": 1,
+  "firstName": "John",
+  "lastName": "Doe",
+  "state": 0,
+  "countryDestinationId": 1,
+  "documentNumber": "X1234567Z",
+  "address": "123 Fictional Street, Madrid",
+  "phone": "600123456",
+  "email": "john.doe@example.com",
+  "createdAt": "2023-01-15T10:00:00.000Z",
+  "updatedAt": "2023-01-15T10:00:00.000Z",
+  "countryDestination": {
+    "id": 1,
+    "name": "España",
+    "sepaZone": true,
+    "slug": "ES",
+    "callingCode": 34
+  },
+  "paymentMethods": [
+    "EXT",
+    "CRYPTO",
+    "APPLE_PAY",
+    "GOOGLE_PAY",
+    "TPP"
+  ],
+  "allowedAccounts": [
+    {
+      "id": 628,
+      "alias": "Main Account",
+      "currency": "EUR",
+      "type": 1
+    }
+  ],
+  "allowed": true
+}
+
+Update a Beneficiary
+PUT
+/depositaccounts/
+Updates the alias of an existing beneficiary. Note that only the alias field can be modified through this endpoint.
+
+Body Parameters
+Parameter	Type	Description
+id	integer	Required. The numeric ID of the beneficiary to update.
+alias	string	Optional. The new alias for the beneficiary account.
+cURL Example
+curl -X PUT https://sandbox.tropipay.me/api/v3/depositaccounts/ \ 
+  -H "Authorization: Bearer {your-access-token}" \ 
+  -H "Content-Type: application/json" \ 
+  -d '{
+    "id": 12345,
+    "alias": "Jane Doe Primary Account"
+  }'
+
+Delete a Beneficiary
+DELETE
+/depositaccounts/{beneficiaryId}
+Deletes a beneficiary record by their unique ID.
+
+Path Parameters
+Parameter	Type	Description
+beneficiaryId	integer	Required. The numeric ID of the beneficiary to delete (e.g., 12345).
+Body Parameters
+Parameter	Type	Description
+securityCode	string	Required. The security code for authentication (e.g., 123456).
+cURL Example
+curl -X DELETE https://sandbox.tropipay.me/api/v3/depositaccounts/12345 \ 
+  -H "Authorization: Bearer {your-access-token}" \ 
+  -H "Content-Type: application/json" \ 
+  -d '{
+    "securityCode": "123456"
+  }'
+
+Validate an Account Number
+POST
+/depositaccounts/validateaccountnumber
+Validates a bank account number to check its format and existence before creating a beneficiary.
+
+Body Parameters
+Parameter	Type	Description
+accountNumber	string	Required. The account number to validate.
+countryDestinationId	integer	Required. The ID of the destination country.
+type	integer	Required. The type of account.
+currency	string	Required. The currency associated with the account (e.g., USD).
+paymentType	integer	Required. The type of payment.
+cURL Example
+curl -X POST https://sandbox.tropipay.me/api/v3/depositaccounts/validateaccountnumber \ 
+  -H "Authorization: Bearer {your-access-token}" \ 
+  -H "Content-Type: application/json" \ 
+  -d '{
+    "accountNumber": "ES9121000418450200051332",
+    "countryDestinationId": 1,
+    "type": 0,
+    "currency": "EUR",
+    "paymentType": 2
+  }'
+
+Response Example (200 OK)
+{
+  "valid": true,
+  "type": null,
+  "errorCode": null,
+  "errorMessage": null
+}
+Webhooks
+TropiPay webhooks allow you to receive real-time notifications about events that occur in your account. This is especially useful for keeping your systems synchronized with TropiPay events, such as received payments, completed transactions, card status changes, and more.
+
+What are webhooks?
+Webhooks are HTTP callbacks that are sent to a specific URL when certain events occur in your TropiPay account. Instead of having to constantly poll the API to check if something has changed, webhooks automatically notify you when something relevant happens.
+
+Benefits of using webhooks
+Real-time: Receive immediate notifications when events occur
+Efficiency: Reduces the need for periodic API polling
+Automation: Enables automated workflows based on TropiPay events
+Synchronization: Keep your systems updated with the latest data
+The Webhook Event Object
+All webhook notifications have the following basic structure:
+
+{
+  "event": "payment.completed",
+  "data": {
+    "id": "pay_123456789",
+    "amount": 10000,
+    "currency": "EUR",
+    "status": "completed",
+    "created_at": "2023-07-22T12:30:00.000Z",
+    "completed_at": "2023-07-22T12:34:56.789Z",
+    "metadata": {
+      "order_id": "order_987654321"
+    }
+  },
+  "timestamp": "2023-07-22T12:34:56.789Z"
+}
+
+Attributes
+Attribute	Type	Description
+event	string	Name of the event that triggered the webhook
+data	object	Event-specific data payload
+timestamp	string	ISO 8601 timestamp when the event occurred
+Event Types
+Payment Events
+Event	Description
+payment.created	A new payment has been created
+payment.completed	A payment has been completed successfully
+payment.failed	A payment has failed
+payment.refunded	A payment has been refunded
+Card Events
+Event	Description
+card.created	A new card has been created
+card.activated	A card has been activated
+card.blocked	A card has been blocked
+card.transaction	A transaction has been made with a card
+Account Events
+Event	Description
+account.updated	Account data has been updated
+account.verified	The account has been verified
+account.login	A login has occurred on the account
+Merchant Hooks
+Merchant hooks are webhooks that are managed at the merchant/business level. These endpoints allow you to manage webhook subscriptions for your merchant account.
+
+List Merchant Hooks
+Returns a list of all events that the merchant is subscribed to via webhooks.
+
+GET
+/merchant/hooks
+curl -X GET https://sandbox.tropipay.me/api/v3/merchant/hooks \
+  -H "Authorization: Bearer sk_test_..." \
+  -H "Content-Type: application/json"
+
+Response
+[
+  {
+    "event": "user_signup",
+    "target": "email",
+    "value": "user@example.com",
+    "createdAt": "2021-02-13T21:30:59.154Z",
+    "updatedAt": "2021-02-13T21:30:59.154Z"
+  },
+  {
+    "event": "payment_created",
+    "target": "web",
+    "value": "https://example.com/webhooks/payment-created",
+    "createdAt": "2021-02-13T21:30:59.154Z",
+    "updatedAt": "2021-02-13T21:30:59.154Z"
+  }
+]
+
+Response Parameters
+Parameter	Type	Description
+event	string	Name of the subscribed event
+target	string	Type of webhook target (web, email)
+value	string	Target value (URL for web, email address for email)
+createdAt	string	ISO 8601 timestamp when subscription was created
+updatedAt	string	ISO 8601 timestamp when subscription was last updated
+Subscribe to Merchant Event
+Allows a merchant to subscribe to an event, specifying the options to receive information at the time it is triggered.
+
+POST
+/merchant/hooks
+curl -X POST https://sandbox.tropipay.me/api/v3/merchant/hooks \
+  -H "Authorization: Bearer {merchant-token}" \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json" \
+  -d '{
+    "event": "user_signup",
+    "target": "web",
+    "value": "https://www.merchant_domain.com/api/user/signup/listen"
+  }'
+
+Parameters
+Parameter	Type	Required	Description
+event	string	Yes	String that represents the name of the event. You must select from the list of available events, otherwise it will not produce an error but will not be executed. For the full list of available events see endpoint GET /hook/events.
+target	string	Yes	String representing the type of event supported. Currently available: web (allows to receive information in a URL), email (allows to receive information in an email address).
+value	string	Yes	String that represents the value depending on the type of selected event determined by the 'target' property. For example, if the selected 'target' is email the value would be an email address, likewise if the selected 'target' is web the expected value corresponds to a URL that receives information through the HTTP POST method.
+Response
+Status Code: 200 OK
+
+{
+  "action": "update",
+  "status": "success",
+  "details": "user_signup"
+}
+
+Response Parameters
+Parameter	Type	Description
+action	string	The action performed (e.g., "update")
+status	string	Status of the operation ("success" or "error")
+details	string	Additional details about the operation, typically the event name
+Update Merchant Hook Subscription
+Allows a merchant to update an event subscription, specifying the options to receive information at the time it is triggered. Take into account that the value of the name or denomination of the event cannot be modified. In case it is required to change this field, it is recommended to delete it and create a new subscription.
+
+PUT
+/merchant/hooks
+curl -X PUT https://sandbox.tropipay.me/api/v3/merchant/hooks \
+  -H "Authorization: Bearer {merchant-token}" \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json" \
+  -d '{
+    "event": "user_signup",
+    "target": "email",
+    "value": "merchant@example.com"
+  }'
+
+Parameters
+Parameter	Type	Required	Description
+event	string	Yes	String that represents the name of the event. This field cannot be modified - if you need to change the event, delete the subscription and create a new one.
+target	string	Yes	String representing the type of event supported. Currently available: web (allows to receive information in a URL), email (allows to receive information in an email address).
+value	string	Yes	String that represents the value depending on the type of selected event determined by the 'target' property. For example, if the selected 'target' is email the value would be an email address, likewise if the selected 'target' is web the expected value corresponds to a URL.
+Response
+Status Code: 200 OK
+
+{
+  "action": "update",
+  "status": "success",
+  "details": "user_signup"
+}
+
+Response Parameters
+Parameter	Type	Description
+action	string	The action performed ("update")
+status	string	Status of the operation ("success" or "error")
+details	string	Additional details about the operation, typically the event name
+Delete Merchant Hook Subscription
+Allows a merchant to unsubscribe from an event by name or denomination.
+
+DELETE
+/merchant/hooks
+curl -X DELETE https://sandbox.tropipay.me/api/v3/merchant/hooks \
+  -H "Authorization: Bearer {merchant-token}" \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json" \
+  -d '{
+    "event": "user_signup"
+  }'
+
+Parameters
+Parameter	Type	Required	Description
+event	string	Yes	String that represents the name of the event to unsubscribe from
+Response
+Status Code: 200 OK
+
+{
+  "action": "update",
+  "status": "success",
+  "details": "user_signup"
+}
+
+Response Parameters
+Parameter	Type	Description
+action	string	The action performed ("update")
+status	string	Status of the operation ("success" or "error")
+details	string	Additional details about the operation, typically the event name
+Get Available Events for Merchant
+Endpoint for getting the full list of available events that allow subscription for merchant hooks.
+
+GET
+/merchant/hooks/events
+curl -X GET https://sandbox.tropipay.me/api/v3/merchant/hooks/events \
+  -H "Authorization: Bearer {merchant-token}" \
+  -H "Accept: application/json"
+
+Response
+Status Code: 200 OK
+
+[
+  {
+    "name": "user_signup",
+    "description": "Event launched once a user completes registration on the TropiPay platform."
+  },
+  {
+    "name": "user_login",
+    "description": "Event launched once a user completes login on the TropiPay platform."
+  },
+  {
+    "name": "user_kyc",
+    "description": "Event launched once a user completes KYC process, indicated in each case the process status."
+  },
+  {
+    "name": "payment_in_state_change",
+    "description": "The event is fired once a user changes their status payment in entry method."
+  },
+  {
+    "name": "payment_out_state_change",
+    "description": "The event is fired once a user changes their status payment out entry method."
+  }
+]
+
+
+Response Parameters
+Parameter	Type	Description
+name	string	The name of the event that can be subscribed to
+description	string	Detailed description of when the event is triggered
+Available Events
+Events are made up of an object with two fundamental properties (name, description):
+
+user_signup: Event launched once a user completes registration on the TropiPay platform.
+user_login: Event launched once a user completes login on the TropiPay platform.
+user_kyc: Event launched once a user completes KYC process, indicated in each case the process status. Payload of response includes:
+{
+  "userId": "string",
+  "status": "string",
+  "event": "string",
+  "user": {}
+}
+
+payment_in_state_change: The event is fired once a user changes their status payment in entry method.
+payment_out_state_change: The event is fired once a user changes their status payment out entry method.
+User Hooks
+User hooks are webhooks that are managed at the individual user level. These endpoints allow users to manage their personal webhook subscriptions.
+
+List User Hooks
+Returns a list of user hook subscriptions for the authenticated user.
+
+GET
+/user/hooks
+curl -X GET https://sandbox.tropipay.me/api/v3/user/hooks \
+  -H "Authorization: Bearer {user-token}" \
+  -H "Accept: application/json"
+
+Response
+Status Code: 200 OK
+
+[
+  {
+    "event": "user_login",
+    "target": "web",
+    "value": "https://webhook.site/680826a5-199e-4455-babc-f47b7f26ee7e",
+    "createdAt": "2022-02-11T18:36:48.300Z",
+    "updatedAt": "2022-02-11T18:36:48.300Z"
+  },
+  {
+    "event": "user_kyc",
+    "target": "email",
+    "value": "user@example.com",
+    "createdAt": "2022-02-11T18:53:30.397Z",
+    "updatedAt": "2022-02-11T18:53:30.397Z"
+  },
+  {
+    "event": "beneficiary_added",
+    "target": "email",
+    "value": "user@example.com",
+    "createdAt": "2022-02-11T18:53:54.027Z",
+    "updatedAt": "2022-02-11T18:53:54.027Z"
+  }
+]
+
+Response Parameters
+Parameter	Type	Description
+event	string	Name of the subscribed event
+target	string	Type of webhook target (web, email)
+value	string	Target value (URL for web, email address for email)
+createdAt	string	ISO 8601 timestamp when subscription was created
+updatedAt	string	ISO 8601 timestamp when subscription was last updated
+Create User Hook
+Insert a user hook to subscribe to webhook events.
+
+POST
+/user/hooks
+curl -X POST https://sandbox.tropipay.me/api/v3/user/hooks \
+  -H "Authorization: Bearer {user-token}" \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json" \
+  -d '{
+    "event": "user_login",
+    "target": "web",
+    "value": "https://webhook.site/680826a5-199e-4455-babc-f47b7f26ee7e"
+  }'
+
+Parameters
+Events are made up of an object with three fundamental properties (event, target, value):
+
+Parameter	Type	Required	Description
+event	string	Yes	String that represents the name of the event. You must select from the list of available events, otherwise it will not produce an error but it will not be executed. For the full list of available events see endpoint GET /user/hooks/events.
+target	string	Yes	String representing the type of event supported. Currently available: web (allows to receive information in a URL), email (allows to receive information in an email address).
+value	string	Yes	String that represents the value depending on the type of selected event determined by the 'target' property. For example, if the selected 'target' is email the value would be an email address, likewise if the selected 'target' is web the expected value corresponds to a URL that receives information through the HTTP POST method.
+Response
+Status Code: 200 OK
+
+In general, valid responses are defined as an object with three elementary properties:
+
+{
+  "action": "subscribe",
+  "status": "success",
+  "details": "user_login"
+}
+
+Response Parameters
+Parameter	Type	Description
+action	string	Represents the type of operation that was just executed
+status	string	Represents the status of the operation, taking value success in case everything goes well
+details	string	Displays additional values related to the operation, usually returns the name of the event
+Update User Hook
+Explicit update hook on payload request.
+
+PUT
+/user/hooks
+curl -X PUT https://sandbox.tropipay.me/api/v3/user/hooks \
+  -H "Authorization: Bearer {user-token}" \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json" \
+  -d '{
+    "event": "user_login",
+    "target": "email",
+    "value": "user@example.com"
+  }'
+
+Parameters
+Events are made up of an object with three fundamental properties (event, target, value):
+
+Parameter	Type	Required	Description
+event	string	Yes	String that represents the name of the event. You must select from the list of available events, otherwise it will not produce an error but it will not be executed. For the full list of available events see endpoint GET /user/hooks/events.
+target	string	Yes	String representing the type of event supported. Currently available: web (allows to receive information in a URL), email (allows to receive information in an email address).
+value	string	Yes	String that represents the value depending on the type of selected event determined by the 'target' property. For example, if the selected 'target' is email the value would be an email address, likewise if the selected 'target' is web the expected value corresponds to a URL that receives information through the HTTP POST method.
+Response
+Status Code: 200 OK
+
+In general, valid responses are defined as an object with three elementary properties:
+
+{
+  "action": "update",
+  "status": "success",
+  "details": "user_login"
+}
+
+Response Parameters
+Parameter	Type	Description
+action	string	Represents the type of operation that was just executed
+status	string	Represents the status of the operation, taking value success in case everything goes well
+details	string	Displays additional values related to the operation, usually returns the name of the event
+Get Available Events for User
+Get user hook event list.
+
+GET
+/user/hooks/events
+curl -X GET https://sandbox.tropipay.me/api/v3/user/hooks/events \
+  -H "Authorization: Bearer {user-token}" \
+  -H "Accept: application/json"
+
+Response
+Status Code: 200 OK
+
+[
+  {
+    "name": "user_signup",
+    "description": "Event launched once a user completes registration on the TropiPay platform."
+  },
+  {
+    "name": "user_login",
+    "description": "Event launched once a user completes login on the TropiPay platform."
+  },
+  {
+    "name": "user_kyc",
+    "description": "Event launched once a user completes kyc process."
+  },
+  {
+    "name": "payment_in_state_change",
+    "description": "The event is fired once a user changes their status payment in entry method."
+  },
+  {
+    "name": "payment_out_state_change",
+    "description": "The event is fired once a user changes their status payment out entry method."
+  },
+  {
+    "name": "beneficiary_added",
+    "description": "Launched after new beneficiary is created."
+  },
+  {
+    "name": "beneficiary_updated",
+    "description": "Launched after a beneficiary is modified."
+  },
+  {
+    "name": "beneficiary_deleted",
+    "description": "Launched after a beneficiary is deleted."
+  }
+]
+
+Response Parameters
+Parameter	Type	Description
+name	string	The name of the event that can be subscribed to
+description	string	Detailed description of when the event is triggered
+Available Events
+The following events are available for user hook subscriptions:
+
+user_signup: Event launched once a user completes registration on the TropiPay platform.
+user_login: Event launched once a user completes login on the TropiPay platform.
+user_kyc: Event launched once a user completes kyc process.
+payment_in_state_change: The event is fired once a user changes their status payment in entry method.
+payment_out_state_change: The event is fired once a user changes their status payment out entry method.
+beneficiary_added: Launched after new beneficiary is created.
+beneficiary_updated: Launched after a beneficiary is modified.
+beneficiary_deleted: Launched after a beneficiary is deleted.
+Get Specific User Hook
+Select all hooks subscribed to a given event name. The URL for a certain event name would be as follows /user/hooks/user_login. For the previous case, all the hooks associated with the user_login event would be obtained, where basically a list would be returned where the target and the associated value would change.
+
+GET
+/user/hooks/{event_name}
+curl -X GET https://sandbox.tropipay.me/api/v3/user/hooks/user_login \
+  -H "Authorization: Bearer {user-token}" \
+  -H "Accept: application/json"
+
+Path Parameters
+Parameter	Type	Required	Description
+event_name	string	Yes	The name of the event to retrieve hooks for (e.g., user_login, user_signup, beneficiary_added)
+Response
+Status Code: 200 OK
+
+[
+  {
+    "event": "user_login",
+    "target": "web",
+    "value": "https://webhook.site/680826a5-199e-4455-babc-f47b7f26ee7e",
+    "createdAt": "2022-02-11T18:36:48.300Z",
+    "updatedAt": "2022-02-11T18:36:48.300Z"
+  },
+  {
+    "event": "user_login",
+    "target": "email",
+    "value": "user@example.com",
+    "createdAt": "2022-02-11T18:43:24.882Z",
+    "updatedAt": "2022-02-11T18:43:24.882Z"
+  }
+]
+
+Response Parameters
+Parameter	Type	Description
+event	string	Name of the subscribed event
+target	string	Type of webhook target (web, email)
+value	string	Target value (URL for web, email address for email)
+createdAt	string	ISO 8601 timestamp when subscription was created
+updatedAt	string	ISO 8601 timestamp when subscription was last updated
+Get User Hook by Target
+Select hook by event name and target name. Note that, to select the data of a very specific hook, you must filter by the name of the event and the target similar as below /user/hooks/user_login/web, in this case we try to request the data of the hook subscribed to the user_login event with notification via web hook.
+
+GET
+/user/hooks/{event_name}/{target_name}
+curl -X GET https://sandbox.tropipay.me/api/v3/user/hooks/user_login/web \
+  -H "Authorization: Bearer {user-token}" \
+  -H "Accept: application/json"
+
+Path Parameters
+Parameter	Type	Required	Description
+event_name	string	Yes	The name of the event to filter by (e.g., user_login, user_signup, beneficiary_added)
+target_name	string	Yes	The target type to filter by (web, email)
+Response
+Status Code: 200 OK
+
+[
+  {
+    "event": "user_login",
+    "target": "email",
+    "value": "user@example.com",
+    "createdAt": "2022-02-11T18:43:24.882Z",
+    "updatedAt": "2022-02-11T18:43:24.882Z"
+  }
+]
+
+Response Parameters
+Parameter	Type	Description
+event	string	Name of the subscribed event
+target	string	Type of webhook target (web, email)
+value	string	Target value (URL for web, email address for email)
+createdAt	string	ISO 8601 timestamp when subscription was created
+updatedAt	string	ISO 8601 timestamp when subscription was last updated
+Delete User Hook
+Delete or unsubscribe hook by event name and target name.
+
+DELETE
+/user/hooks/{event_name}/{target_name}
+curl -X DELETE https://sandbox.tropipay.me/api/v3/user/hooks/user_login/web \
+  -H "Authorization: Bearer {user-token}" \
+  -H "Accept: application/json"
+
+Path Parameters
+Parameter	Type	Required	Description
+event_name	string	Yes	The name of the event to unsubscribe from (e.g., user_login, user_signup, beneficiary_added)
+target_name	string	Yes	The target type to unsubscribe from (web, email)
+Response
+Status Code: 200 OK
+
+In general, valid responses are defined as an object with three elementary properties:
+
+{
+  "action": "unsubscribe",
+  "status": "success",
+  "details": "user_login"
+}
+
+Response Parameters
+Parameter	Type	Description
+action	string	Represents the type of operation that was just executed
+status	string	Represents the status of the operation, taking value success in case everything goes well
+details	string	Displays additional values related to the operation, usually returns the name of the event
+Event Structure
+Events are composed of an object with three fundamental properties:
+
+event: String representing the event name. You must select from the list of available events, otherwise it will not produce an error but will not be executed. For the complete list of available events, see the endpoint GET /hook/events.
+
+target: String representing the supported event type. Currently available:
+
+web: allows receiving information at a URL
+email: allows receiving information at an email address
+value: String representing the value depending on the selected event type determined by the 'target' property. For example, if the selected 'target' is 'email', the value would be an email address. Similarly, if the selected 'target' is 'web', the expected value corresponds to a URL that receives information through the HTTP POST method.
+
+Webhook Implementation
+Setting up your endpoint
+To start receiving webhook notifications, you must register your endpoint URL in the TropiPay developer panel:
+
+Log in to your TropiPay account
+Go to Developers > Webhooks section
+Click "Add new webhook"
+Enter your endpoint URL (must be HTTPS)
+Select the events you want to receive
+Save the configuration
+Once registered, you'll receive a webhook secret that you should use to verify notifications.
+
+Example Implementation
+Node.js (Express)
+const express = require('express');
+const crypto = require('crypto');
+const bodyParser = require('body-parser');
+
+const app = express();
+
+// Important to use raw body for signature verification
+app.use(bodyParser.json({
+  verify: (req, res, buf) => {
+    req.rawBody = buf;
+  }
+}));
+
+// Your webhook secret provided by TropiPay
+const webhookSecret = 'your_webhook_secret';
+
+// Function to verify signature
+function verifySignature(signature, payload) {
+  const expectedSignature = crypto
+    .createHmac('sha256', webhookSecret)
+    .update(payload)
+    .digest('hex');
+  
+  return crypto.timingSafeEqual(
+    Buffer.from(signature),
+    Buffer.from(expectedSignature)
+  );
+}
+
+// Endpoint to receive webhooks
+app.post('/tropipay-webhook', (req, res) => {
+  const signature = req.headers['x-tropipay-signature'];
+  
+  // Verify that the signature is valid
+  try {
+    if (!signature || !verifySignature(signature, req.rawBody)) {
+      console.error('Invalid signature');
+      return res.status(401).send('Invalid signature');
+    }
+    
+    // Process the event according to its type
+    const event = req.body.event;
+    const data = req.body.data;
+    
+    console.log(`Event received: ${event}`);
+    
+    switch (event) {
+      case 'payment.completed':
+        // Logic to process a completed payment
+        handlePaymentCompleted(data);
+        break;
+      
+      case 'card.transaction':
+        // Logic to process a card transaction
+        handleCardTransaction(data);
+        break;
+      
+      // Handle other event types...
+      
+      default:
+        console.log(`Unhandled event: ${event}`);
+    }
+    
+    // Always respond with 200 OK to confirm receipt
+    res.status(200).send('OK');
+    
+  } catch (error) {
+    console.error('Error processing webhook:', error);
+    res.status(500).send('Error processing webhook');
+  }
+});
+
+function handlePaymentCompleted(data) {
+  // Implement your logic to handle completed payments
+  console.log('Payment completed:', data.id, data.amount, data.currency);
+  // For example: update order status in your database
+}
+
+function handleCardTransaction(data) {
+  // Implement your logic to handle card transactions
+  console.log('Card transaction:', data.card_id, data.amount, data.merchant);
+  // For example: log the transaction in your system
+}
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server listening on port ${PORT}`);
+});
+
+PHP
+<?php
+// Get request body
+$payload = file_get_contents('php://input');
+$data = json_decode($payload, true);
+
+// Get signature from header
+$signature = $_SERVER['HTTP_X_TROPIPAY_SIGNATURE'] ?? '';
+
+// Your webhook secret provided by TropiPay
+$webhookSecret = 'your_webhook_secret';
+
+// Verify signature
+$expectedSignature = hash_hmac('sha256', $payload, $webhookSecret);
+
+if (!hash_equals($expectedSignature, $signature)) {
+    http_response_code(401);
+    echo 'Invalid signature';
+    exit;
+}
+
+// Process the event according to its type
+$event = $data['event'] ?? '';
+$eventData = $data['data'] ?? [];
+
+switch ($event) {
+    case 'payment.completed':
+        // Logic to process a completed payment
+        handlePaymentCompleted($eventData);
+        break;
+    
+    case 'card.transaction':
+        // Logic to process a card transaction
+        handleCardTransaction($eventData);
+        break;
+    
+    // Handle other event types...
+    
+    default:
+        error_log("Unhandled event: $event");
+}
+
+// Functions to handle specific events
+function handlePaymentCompleted($data) {
+    // Implement your logic to handle completed payments
+    error_log("Payment completed: {$data['id']}, {$data['amount']} {$data['currency']}");
+    // For example: update order status in your database
+}
+
+function handleCardTransaction($data) {
+    // Implement your logic to handle card transactions
+    error_log("Card transaction: {$data['card_id']}, {$data['amount']}, {$data['merchant']}");
+    // For example: log the transaction in your system
+}
+
+// Respond with 200 OK to confirm receipt
+http_response_code(200);
+echo 'OK';
+?>
+
+Webhook Security
+To ensure that webhook notifications actually come from TropiPay, each request includes a signature in the X-Tropipay-Signature header. This signature is generated using the webhook secret associated with your account.
+
+Verifying Signatures
+Always verify the signature of webhook notifications:
+
+Get the signature from the X-Tropipay-Signature header
+Generate the expected signature using HMAC-SHA256 with your webhook secret
+Compare the signatures using a timing-safe comparison function
+Best Practices
+Signature verification: Always verify the signature of notifications to ensure they come from TropiPay.
+
+Quick response: Respond quickly to notifications with a 200 OK code. If you need to perform extensive processing, do it asynchronously after responding.
+
+Retry handling: TropiPay will retry sending notifications if your endpoint doesn't respond or returns an error code. Make sure your implementation is idempotent to avoid duplicates.
+
+Event logging: Keep a log of all received events to facilitate debugging and tracking.
+
+Timeout: Configure an appropriate timeout for your endpoint. TropiPay expects a response in less than 10 seconds.
+
+Troubleshooting
+If you're not receiving webhook notifications, check the following:
+
+The endpoint URL is correctly configured in TropiPay
+Your server is accessible from the Internet and accepts HTTPS connections
+There are no firewalls or security configurations blocking requests
+The webhook secret you're using is correct
+You're responding correctly to notifications with a 200 OK code
+To test your implementation, you can use the "Send test" function in the TropiPay developer panel, which will allow you to send a test notification to your endpoint.
+
+Error Handling
+The Webhooks API uses conventional HTTP response codes to indicate the success or failure of webhook delivery.
+
+Common Error Codes
+Code	Description
+200	OK - Webhook delivered successfully
+400	Bad Request - Invalid webhook configuration
+401	Unauthorized - Invalid authentication
+403	Forbidden - Insufficient permissions
+404	Not Found - Webhook endpoint not found
+422	Unprocessable Entity - Invalid webhook data
+429	Too Many Requests - Rate limit exceeded
+500	Internal Server Error
+Example Error Response
+{
+  "error": {
+    "type": "webhook_error",
+    "code": "endpoint_unreachable",
+    "message": "Unable to reach webhook endpoint",
+    "endpoint": "https://example.com/webhook"
+  }
+}
+Error Codes
+TropiPay uses conventional HTTP response codes to indicate the success or failure of an API request. In general, codes in the 2xx range indicate success, codes in the 4xx range indicate an error that failed given the information provided (e.g., a required parameter was omitted, a charge failed, etc.), and codes in the 5xx range indicate an error with TropiPay's servers.
+
+HTTP Status Codes
+Code	Description
+200	OK - The request was successful.
+400	Bad Request - The request was unacceptable, often due to missing a required parameter.
+401	Unauthorized - No valid API key provided or the key has expired.
+403	Forbidden - The API key doesn't have permissions to perform the request.
+404	Not Found - The requested resource doesn't exist.
+422	Unprocessable Entity - The request was well-formed but was unable to be followed due to semantic errors.
+500	Internal Server Error - We had a problem with our server. Try again later.
+API Error Codes
+When an API request fails, the response body will contain a JSON object with an error code and a descriptive message. This helps you understand the specific reason for the failure.
+
+Common Error Response Format
+{
+  "error": "invalid_request",
+  "message": "The `amount` parameter is required.",
+  "code": "E00123"
+}
+
+General Error Codes
+Code	Message	Description
+E00001	invalid_credentials	The authentication credentials provided were incorrect.
+E00002	token_expired	The access token has expired. Please request a new one.
+E00003	permission_denied	You do not have permission to access this resource.
+E00004	resource_not_found	The requested resource could not be found.
+E00005	invalid_parameter	A required parameter was missing or invalid. The message will provide more details.
+Transfer & Payment Error Codes
+Code	Message	Description
+E01001	insufficient_funds	The source account does not have enough funds to complete the transfer.
+E01002	beneficiary_not_found	The specified beneficiary account does not exist.
+E01003	invalid_amount	The transfer amount is below the minimum or above the maximum allowed limit.
+E01004	2fa_required	A two-factor authentication code is required for this transaction.
+E01005	invalid_security_code	The provided security code is incorrect or has expired.
+E01006	transfer_limit_exceeded	You have exceeded your daily or monthly transfer limit.
+Beneficiary Error Codes
+Code	Message	Description
+E02001	invalid_account_number	The provided bank account number is invalid or does not exist.
+E02002	invalid_swift_code	The provided SWIFT/BIC code is not valid.
+E02003	beneficiary_already_exists	A beneficiary with the same account number already exists.

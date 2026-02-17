@@ -8,6 +8,15 @@ urlpatterns = [
     # Dashboard
     path('', views.dashboard, name='dashboard'),
     path('dashboard/', views.dashboard, name='dashboard_alt'),
+    
+    # Panel de Gestión Integral (Nuevo)
+    path('gestion/', views.panel_gestion, name='panel_gestion'),
+    
+    # Casos
+    path('casos/', views.gestion_casos, name='casos_list'),
+    path('casos/<str:case_id>/', views.detalle_caso_admin, name='case_detail'),
+    path('casos/<str:case_id>/asignar/', views.asignar_caso, name='asignar_caso'),
+    path('casos/<str:case_id>/cerrar/', views.cerrar_caso, name='cerrar_caso'),
 
     # Usuarios
     path('usuarios/', views.gestion_usuarios, name='gestion_usuarios'),

@@ -11,7 +11,7 @@
     <div class="container-fluid">
         <a class="navbar-brand" href="/">Segunda Opinión Médica</a>
         <div class="d-flex">
-            <span class="me-3">Dr(a). {{ user.doctor_profile.full_name }}</span>
+            <span class="me-3">Dr(a). {{ user.medico.nombre_completo }}</span>
             <a class="btn btn-outline-secondary" href="{% url 'cases:doctor_dashboard' %}">Volver</a>
         </div>
     </div>

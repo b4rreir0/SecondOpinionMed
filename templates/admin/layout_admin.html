@@ -1,0 +1,117 @@
+{% extends "base_modern.html" %}
+
+{% block extra_css %}
+<style>
+    /* Admin Layout - OncoMDT Design System */
+    :root {
+        --color-primary: #1392ec;
+        --color-primary-dark: #0e7ccb;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<!-- Mobile Header -->
+<div class="md:hidden flex items-center justify-between p-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
+    <div class="flex items-center gap-2">
+        <div class="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
+            <span class="material-icons-round text-primary text-xl">admin_panel_settings</span>
+        </div>
+        <span class="font-bold text-lg text-slate-900 dark:text-white">MDT Admin</span>
+    </div>
+    <button class="p-2 text-slate-500 hover:text-primary transition-colors">
+        <span class="material-icons-round">menu</span>
+    </button>
+</div>
+
+<!-- Sidebar Navigation -->
+<aside class="hidden md:flex flex-col w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 h-screen fixed left-0 top-0 z-10">
+    <div class="p-6 border-b border-slate-200 dark:border-slate-800">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-blue-600 flex items-center justify-center shadow-lg">
+                <span class="material-icons-round text-white text-2xl">admin_panel_settings</span>
+            </div>
+            <div>
+                <h1 class="font-bold text-xl text-slate-900 dark:text-white leading-none">MDT Admin</h1>
+                <span class="text-xs text-slate-500 font-medium">Panel de Control</span>
+            </div>
+        </div>
+    </div>
+    
+    <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
+        <!-- Dashboard -->
+        <a class="flex items-center gap-3 px-4 py-3 bg-primary/10 text-primary rounded-xl transition-all duration-200 font-semibold group" href="{% url 'administracion:portal_dashboard' %}">
+            <span class="material-icons-round group-hover:scale-110 transition-transform">dashboard</span>
+            Dashboard
+        </a>
+
+        <!-- Panel de Gestión -->
+        <a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-primary dark:hover:text-primary rounded-xl transition-all duration-200 font-medium group" href="{% url 'administracion:panel_gestion' %}">
+            <span class="material-icons-round group-hover:scale-110 transition-transform">settings</span>
+            Panel de Gestión
+        </a>
+
+        <!-- Cases Section -->
+        <div class="pt-4 pb-2">
+            <p class="px-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Gestión de Casos</p>
+        </div>
+        <a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-primary dark:hover:text-primary rounded-xl transition-all duration-200 font-medium group" href="{% url 'administracion:portal_casos' %}">
+            <span class="material-icons-round group-hover:scale-110 transition-transform">folder_shared</span>
+            Todos los Casos
+            {% if stats.casos_pendientes > 0 %}
+            <span class="ml-auto bg-amber-100 text-amber-600 text-xs font-bold px-2 py-0.5 rounded-full">{{ stats.casos_pendientes }}</span>
+            {% endif %}
+        </a>
+
+        <!-- Users Section -->
+        <div class="pt-4 pb-2">
+            <p class="px-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Usuarios</p>
+        </div>
+        <a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-primary dark:hover:text-primary rounded-xl transition-all duration-200 font-medium group" href="{% url 'administracion:portal_medicos' %}">
+            <span class="material-icons-round group-hover:scale-110 transition-transform">local_hospital</span>
+            Médicos
+        </a>
+        <a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-primary dark:hover:text-primary rounded-xl transition-all duration-200 font-medium group" href="{% url 'administracion:portal_pacientes' %}">
+            <span class="material-icons-round group-hover:scale-110 transition-transform">person</span>
+            Pacientes
+        </a>
+        <a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-primary dark:hover:text-primary rounded-xl transition-all duration-200 font-medium group" href="{% url 'administracion:portal_comites' %}">
+            <span class="material-icons-round group-hover:scale-110 transition-transform">groups</span>
+            Comités MDT
+        </a>
+
+        <!-- Configuration Section -->
+        <div class="pt-4 pb-2">
+            <p class="px-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Configuración</p>
+        </div>
+        <a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-primary dark:hover:text-primary rounded-xl transition-all duration-200 font-medium group" href="{% url 'administracion:portal_configuracion' %}">
+            <span class="material-icons-round group-hover:scale-110 transition-transform">settings</span>
+            Configuración General
+        </a>
+    </nav>
+    
+    {% block sidebar_admin_user %}
+    <div class="p-4 border-t border-slate-200 dark:border-slate-800">
+        <div class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer">
+            <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
+                {{ user.username|make_list|first|upper }}
+            </div>
+            <div class="flex-1 min-w-0">
+                <p class="text-sm font-bold text-slate-900 dark:text-white truncate">
+                    {{ user.get_full_name|default:user.username }}
+                </p>
+                <p class="text-xs text-slate-500 truncate">Administrador</p>
+            </div>
+            <a href="{% url 'auth:logout' %}" class="text-slate-400 hover:text-red-500 transition-colors">
+                <span class="material-icons-round">logout</span>
+            </a>
+        </div>
+    </div>
+    {% endblock %}
+</aside>
+
+<!-- Main Content Area -->
+<main class="flex-1 md:ml-72 p-4 md:p-8 lg:p-12 overflow-y-auto min-h-screen bg-slate-50 dark:bg-slate-950">
+    {% block main_content %}{% endblock %}
+</main>
+{% endblock %}

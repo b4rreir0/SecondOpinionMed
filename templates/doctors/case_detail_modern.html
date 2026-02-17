@@ -1,0 +1,323 @@
+{% extends "doctors/layout_doctor.html" %}
+{% load static %}
+
+{% block title %}Caso {{ caso.case_id }} - OnCoMDT{% endblock %}
+
+{% block main_content %}
+<!-- Información del Paciente -->
+<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+        <span class="material-icons-outlined text-blue-600">person</span>
+        Información del Paciente
+    </h3>
+    
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div>
+            <p class="text-xs text-gray-500 uppercase font-semibold">Nombre</p>
+            <p class="font-semibold text-gray-800">{{ patient_nombre|default:caso.patient.get_full_name|default:'Paciente' }}</p>
+        </div>
+        <div>
+            <p class="text-xs text-gray-500 uppercase font-semibold">ID</p>
+            <p class="font-mono text-gray-600">#{{ caso.patient.id }}</p>
+        </div>
+        <div>
+            <p class="text-xs text-gray-500 uppercase font-semibold">Edad</p>
+            <p class="text-gray-800">{% if patient_edad %}{{ patient_edad }} años{% else %}--{% endif %}</p>
+        </div>
+        <div>
+            <p class="text-xs text-gray-500 uppercase font-semibold">Género</p>
+            <p class="text-gray-800">{{ patient_genero|default:'No especificado' }}</p>
+        </div>
+    </div>
+</div>
+
+<!-- Diagnóstico y Antecedentes -->
+<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+        <span class="material-icons-outlined text-blue-600">medical_services</span>
+        Diagnóstico y Antecedentes
+    </h3>
+    
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+        {% if caso.primary_diagnosis %}
+        <div class="bg-blue-50 rounded-lg p-3 border border-blue-100">
+            <p class="text-xs text-blue-600 uppercase font-semibold">Diagnóstico</p>
+            <p class="font-bold text-gray-800 mt-1">{{ caso.primary_diagnosis }}</p>
+        </div>
+        {% endif %}
+        
+        {% if caso.estadio %}
+        <div class="bg-gray-50 rounded-lg p-3 border border-gray-100">
+            <p class="text-xs text-gray-500 uppercase font-semibold">Estadio</p>
+            <p class="font-bold text-gray-800 mt-1">{{ caso.estadio }}</p>
+        </div>
+        {% endif %}
+        
+        {% if caso.tipo_cancer %}
+        <div class="bg-gray-50 rounded-lg p-3 border border-gray-100">
+            <p class="text-xs text-gray-500 uppercase font-semibold">Tipo de Cáncer</p>
+            <p class="font-bold text-gray-800 mt-1">{{ caso.tipo_cancer.nombre }}</p>
+        </div>
+        {% endif %}
+        
+        {% if caso.diagnosis_date %}
+        <div class="bg-gray-50 rounded-lg p-3 border border-gray-100">
+            <p class="text-xs text-gray-500 uppercase font-semibold">Fecha</p>
+            <p class="font-bold text-gray-800 mt-1">{{ caso.diagnosis_date|date:"d M Y" }}</p>
+        </div>
+        {% endif %}
+    </div>
+    
+    {% if caso.description %}
+    <div class="mt-4">
+        <p class="text-xs text-gray-500 uppercase font-semibold mb-2">Resumen Clínico</p>
+        <p class="text-gray-600 leading-relaxed">{{ caso.description|linebreaks }}</p>
+    </div>
+    {% endif %}
+    
+    <!-- Antecedentes Médicos -->
+    {% if antecedentes_personales or antecedentes_familiares or antecedentes_quirurgicos or alergias or medicamentos %}
+    <div class="mt-4 border-t pt-4">
+        <h4 class="text-md font-semibold text-gray-700 mb-3">Antecedentes Médicos</h4>
+        
+        {% if alergias %}
+        <div class="mb-3">
+            <p class="text-xs text-red-500 uppercase font-semibold mb-1">Alergias</p>
+            <div class="flex flex-wrap gap-2">
+                {% for antecedente in alergias %}
+                <span class="px-2 py-1 bg-red-50 text-red-700 text-xs rounded border border-red-200">{{ antecedente.descripcion }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if medicamentos %}
+        <div class="mb-3">
+            <p class="text-xs text-blue-500 uppercase font-semibold mb-1">Medicamentos Actuales</p>
+            <div class="flex flex-wrap gap-2">
+                {% for antecedente in medicamentos %}
+                <span class="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded border border-blue-200">{{ antecedente.descripcion }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if antecedentes_personales %}
+        <div class="mb-3">
+            <p class="text-xs text-gray-500 uppercase font-semibold mb-1">Antecedentes Personales</p>
+            <ul class="text-sm text-gray-600 list-disc list-inside">
+                {% for antecedente in antecedentes_personales %}
+                <li>{{ antecedente.descripcion }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+        
+        {% if antecedentes_familiares %}
+        <div class="mb-3">
+            <p class="text-xs text-gray-500 uppercase font-semibold mb-1">Antecedentes Familiares</p>
+            <ul class="text-sm text-gray-600 list-disc list-inside">
+                {% for antecedente in antecedentes_familiares %}
+                <li>{{ antecedente.descripcion }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<!-- Documentos -->
+<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+        <span class="material-icons-outlined text-blue-600">folder</span>
+        Documentación ({{ documents|length|default:0 }})
+    </h3>
+    
+    {% if documents %}
+    <div class="space-y-2">
+        {% for doc in documents %}
+        <div class="flex items-center p-3 rounded-lg hover:bg-gray-50 border border-transparent hover:border-gray-200">
+            <span class="material-icons-outlined text-gray-400 mr-3">description</span>
+            <div class="flex-1">
+                <p class="font-medium text-gray-700">{{ doc.file_name|default:doc.description|default:'Documento' }}</p>
+                <p class="text-xs text-gray-400">{{ doc.fecha_creacion|date:"d M Y" }}</p>
+            </div>
+            {% if doc.file %}
+            <a href="{{ doc.file.url }}" download class="text-blue-600">
+                <span class="material-icons-outlined">download</span>
+            </a>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-gray-400 text-center py-4">No hay documentos</p>
+    {% endif %}
+</div>
+
+<!-- Opiniones del Comité -->
+<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+        <span class="material-icons-outlined text-blue-600">rate_review</span>
+        Opiniones del Comité
+    </h3>
+    
+    {% if opiniones %}
+    <div class="space-y-4">
+        {% for opinion in opiniones %}
+        <div class="border border-gray-200 rounded-lg p-4">
+            <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
+                        {% if opinion.doctor.usuario %}{{ opinion.doctor.usuario.get_full_name|make_list|first|upper }}{% else %}?{% endif %}
+                    </div>
+                    <div>
+                        <p class="font-semibold text-gray-700">
+                            {% if opinion.doctor.usuario %}Dr. {{ opinion.doctor.usuario.get_full_name }}{% else %}Médico{% endif %}
+                        </p>
+                        <p class="text-xs text-gray-400">{{ opinion.fecha_emision|date:"d M Y H:i" }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            {% if opinion.comentario_privado %}
+            <p class="text-gray-600 text-sm mb-2">{{ opinion.comentario_privado|truncatewords:50 }}</p>
+            {% endif %}
+            
+            {% if opinion.voto %}
+            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold
+                {% if opinion.voto == 'acuerdo' %}bg-green-100 text-green-700
+                {% elif opinion.voto == 'desacuerdo' %}bg-red-100 text-red-700
+                {% else %}bg-gray-100 text-gray-700{% endif %}">
+                {% if opinion.voto == 'acuerdo' %}✓ De acuerdo
+                {% elif opinion.voto == 'desacuerdo' %}✗ En desacuerdo
+                {% else %}Abstención{% endif %}
+            </span>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-gray-400 text-center py-4">Aún no hay opiniones</p>
+    {% endif %}
+</div>
+
+<!-- Mi Criterio y Votación -->
+<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+        <span class="material-icons-outlined text-blue-600">how_to_vote</span>
+        Mi Criterio y Votación
+    </h3>
+    
+    <form method="post" action="{% url 'cases:opinion_form' caso.case_id %}">
+        {% csrf_token %}
+        
+        <div class="mb-4">
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Tu Criterio Clínico <span class="text-red-500">*</span></label>
+            <textarea name="comentario_privado" class="w-full h-32 p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm" 
+                      placeholder="Escribe tu evaluación clínica detallada aquí...">{{ opinion_medico_actual.comentario_privado|default:'' }}</textarea>
+        </div>
+        
+        <div class="mb-4">
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Tu Votación <span class="text-red-500">*</span></label>
+            <div class="flex gap-3">
+                <button type="button" class="flex-1 py-3 px-4 rounded-lg font-semibold border-2 flex items-center justify-center gap-2 transition-all
+                    {% if opinion_medico_actual.voto == 'acuerdo' %}bg-green-500 text-white border-green-500
+                    {% else %}border-green-500 text-green-500 hover:bg-green-500 hover:text-white{% endif %}"
+                        onclick="selectVote('acuerdo', this)">
+                    <span class="material-icons-outlined">thumb_up</span> De acuerdo
+                </button>
+                <button type="button" class="flex-1 py-3 px-4 rounded-lg font-semibold border-2 flex items-center justify-center gap-2 transition-all
+                    {% if opinion_medico_actual.voto == 'desacuerdo' %}bg-red-500 text-white border-red-500
+                    {% else %}border-red-500 text-red-500 hover:bg-red-500 hover:text-white{% endif %}"
+                        onclick="selectVote('desacuerdo', this)">
+                    <span class="material-icons-outlined">thumb_down</span> En desacuerdo
+                </button>
+            </div>
+            <input type="hidden" name="voto" id="selected-vote" value="{{ opinion_medico_actual.voto|default:'' }}">
+        </div>
+        
+        <div class="flex gap-3">
+            <button type="submit" name="accion" value="borrador" class="px-5 py-2.5 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 font-medium flex items-center gap-2">
+                <span class="material-icons-outlined">save</span> Guardar Borrador
+            </button>
+            <button type="submit" name="accion" value="final" class="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium flex items-center gap-2">
+                <span class="material-icons-outlined">send</span> Enviar Criterio
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Respuesta del Responsable -->
+{% if es_responsable %}
+<div class="bg-white rounded-xl shadow-sm border-2 border-blue-500 p-6 mb-6">
+    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+        <span class="material-icons-outlined text-blue-600">fact_check</span>
+        Respuesta Final al Paciente
+    </h3>
+    <p class="text-sm text-gray-500 mb-4">Como responsable del caso, debes redactar la respuesta oficial.</p>
+    
+    <form method="post" action="{% url 'cases:mdt_response' caso.case_id %}">
+        {% csrf_token %}
+        
+        <div class="mb-4">
+            <label class="block text-sm font-semibold text-gray-700 mb-2">¿Está de acuerdo con el diagnóstico?</label>
+            <div class="flex gap-4">
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="conformidad" value="conformidad" class="w-4 h-4 text-blue-600" onchange="toggleRespuesta(true)">
+                    <span class="text-green-600 font-medium">✓ Sí</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="conformidad" value="no_conformidad" class="w-4 h-4 text-red-500" onchange="toggleRespuesta(false)">
+                    <span class="text-red-600 font-medium">✗ No</span>
+                </label>
+            </div>
+        </div>
+        
+        <div id="respuesta-de-acuerdo" class="mb-4 hidden">
+            <textarea name="explicacion" class="w-full h-24 p-3 border border-gray-300 rounded-lg text-sm" placeholder="Confirmamos el diagnóstico inicial..."></textarea>
+        </div>
+        
+        <div id="respuesta-no-acuerdo" class="mb-4 hidden">
+            <textarea name="explicacion" class="w-full h-24 p-3 border border-gray-300 rounded-lg text-sm" placeholder="No estamos de acuerdo con el diagnóstico inicial porque..."></textarea>
+        </div>
+        
+        <button type="submit" class="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium flex items-center gap-2">
+            <span class="material-icons-outlined">picture_as_pdf</span> Generar PDF y Enviar
+        </button>
+    </form>
+</div>
+{% endif %}
+
+<script>
+function selectVote(vote, btn) {
+    // Reset all buttons
+    const buttons = btn.parentElement.querySelectorAll('button');
+    buttons.forEach(b => {
+        b.classList.remove('bg-green-500', 'text-white', 'bg-red-500', 'text-white');
+        if (b.textContent.includes('De acuerdo')) {
+            b.classList.add('border-green-500', 'text-green-500');
+        } else {
+            b.classList.add('border-red-500', 'text-red-500');
+        }
+    });
+    
+    // Add selected style
+    btn.classList.remove('border-green-500', 'text-green-500', 'border-red-500', 'text-red-500');
+    if (vote === 'acuerdo') {
+        btn.classList.add('bg-green-500', 'text-white', 'border-green-500');
+    } else {
+        btn.classList.add('bg-red-500', 'text-white', 'border-red-500');
+    }
+    
+    document.getElementById('selected-vote').value = vote;
+}
+
+function toggleRespuesta(estaDeAcuerdo) {
+    document.getElementById('respuesta-de-acuerdo').classList.toggle('hidden', !estaDeAcuerdo);
+    document.getElementById('respuesta-no-acuerdo').classList.toggle('hidden', estaDeAcuerdo);
+}
+</script>
+
+{% endblock %}

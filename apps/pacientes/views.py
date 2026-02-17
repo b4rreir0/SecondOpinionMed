@@ -6,11 +6,15 @@ from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_protect
 from django.core.paginator import Paginator
 from django.db.models import Q
+from django.utils import timezone
+from django.http import HttpResponseRedirect, Http404
+from django.http import FileResponse
 from .models import Paciente, CasoClinico, AntecedenteMedico, DocumentoClinico, SolicitudSegundaOpinion
 from .forms import CasoClinicoForm, AntecedenteMedicoForm, DocumentoClinicoForm, SolicitudSegundaOpinionForm
 from core.decorators import paciente_required
 from core.services import NotificacionService
 from medicos.models import Localidad
+from cases.models import Case, MedicalOpinion, FinalReport
 
 @paciente_required
 def dashboard(request):
@@ -278,3 +282,206 @@ def solicitud_segunda_opinion(request, caso_uuid):
         form = SolicitudSegundaOpinionForm()
     
     return render(request, 'pacientes/solicitud_form.html', {'form': form, 'caso': caso})
+
+
+# ==== Nuevas vistas para el sistema MDT ====
+
+@paciente_required
+def dashboard_paciente(request):
+    """Dashboard moderno del paciente con el nuevo sistema MDT"""
+    paciente = request.user
+    
+    # Buscar casos en el modelo Case (Sistema MDT)
+    from cases.models import Case, MedicalOpinion
+    casos_case = Case.objects.filter(patient=paciente).order_by('-created_at')
+    
+    # También buscar en CasoMDT si existe
+    try:
+        from cases.mdt_models import CasoMDT
+        casos_mdt = CasoMDT.objects.filter(paciente=paciente).order_by('-fecha_creacion')
+    except:
+        casos_mdt = []
+    
+    # Combinar casos
+    casos = casos_case
+    
+    # Estadísticas
+    casos_count = casos.count()
+    casos_pendientes = casos.filter(status__in=['SUBMITTED', 'ASSIGNED', 'PROCESSING', 'MDT_IN_PROGRESS']).count()
+    casos_completados = casos.filter(status__in=['MDT_COMPLETED', 'REPORT_DRAFT', 'REPORT_COMPLETE', 'OPINION_COMPLETE', 'CLOSED']).count()
+    
+    # Contar opiniones médicas recibidas
+    opiniones_recibidas = MedicalOpinion.objects.filter(
+        case__patient=paciente
+    ).count()
+    
+    # Obtener informes finales
+    from cases.models import FinalReport
+    informes = FinalReport.objects.filter(case__patient=paciente).order_by('-fecha_emision')[:3]
+    
+    # Obtener algunos casos para mostrar (limit 5)
+    casos_recientes = casos[:5]
+    
+    # Actividades recientes - casos con actividad
+    actividades = []
+    for c in casos[:3]:
+        actividades.append({
+            'tipo': 'ESTADO',
+            'titulo': f'Caso {c.case_id} actualizado',
+            'fecha': c.updated_at,
+            'descripcion': c.get_status_display()
+        })
+    
+    context = {
+        'casos': casos_recientes,
+        'casos_count': casos_count,
+        'casos_pendientes': casos_pendientes,
+        'casos_completados': casos_completados,
+        'opiniones_recibidas': opiniones_recibidas,
+        'informes': informes,
+        'actividades_recientes': actividades,
+    }
+    
+    return render(request, 'patients/dashboard_patient.html', context)
+
+
+@paciente_required
+def detalle_caso_paciente(request, case_id):
+    """Detalle de un caso para el paciente"""
+    from cases.models import Case, MedicalOpinion, FinalReport
+    
+    paciente = request.user
+    
+    # Buscar primero en Case (nuevo sistema)
+    caso = Case.objects.filter(patient=paciente, case_id=case_id).first()
+    
+    if not caso:
+        # Buscar en CasoMDT (sistema antiguo)
+        try:
+            from cases.mdt_models import CasoMDT
+            caso = CasoMDT.objects.filter(paciente=paciente, case_id=case_id).first()
+            es_caso_mdt = True
+        except:
+            es_caso_mdt = False
+    else:
+        es_caso_mdt = False
+    
+    if not caso:
+        raise Http404("Caso no encontrado")
+    
+    # Obtener opiniones médicas según el tipo de caso
+    if es_caso_mdt:
+        try:
+            from cases.mdt_models import CasoMDT
+            opiniones = MedicalOpinion.objects.filter(caso=caso).select_related('medico', 'medico__user')
+        except:
+            opiniones = []
+    else:
+        opiniones = MedicalOpinion.objects.filter(case=caso).select_related('doctor', 'doctor__user')
+    
+    # Obtener informes
+    informes = FinalReport.objects.filter(case=caso).order_by('-fecha_emision')[:3] if not es_caso_mdt else []
+    
+    # Timeline de eventos
+    if es_caso_mdt:
+        timeline = [
+            {
+                'titulo': 'Caso Creado',
+                'descripcion': 'Se recibió la documentación clínica',
+                'fecha': caso.fecha_creacion,
+                'icono': 'add_circle',
+                'completado': True,
+                'actual': False,
+            },
+            {
+                'titulo': 'En Revisión',
+                'descripcion': 'Médicos especialistas evaluando tu caso',
+                'fecha': caso.fecha_asignacion or caso.fecha_creacion,
+                'icono': 'rate_review',
+                'completado': caso.status in ['EN_PROCESO', 'COMPLETADO'],
+                'actual': caso.status == 'EN_PROCESO',
+            },
+            {
+                'titulo': 'Opiniones Médicas',
+                'descripcion': f'{opiniones.count()} opiniones recibidas',
+                'fecha': caso.fecha_creacion,
+                'icono': 'medical_information',
+                'completado': caso.status == 'COMPLETADO',
+                'actual': False,
+            },
+        ]
+    else:
+        # Timeline para el modelo Case
+        timeline = [
+            {
+                'titulo': 'Caso Creado',
+                'descripcion': 'Se recibió la documentación clínica',
+                'fecha': caso.created_at,
+                'icono': 'add_circle',
+                'completado': True,
+                'actual': False,
+            },
+            {
+                'titulo': 'En Revisión',
+                'descripcion': 'Médicos especialistas evaluando tu caso',
+                'fecha': caso.created_at,
+                'icono': 'rate_review',
+                'completado': caso.status in ['ASSIGNED', 'PROCESSING', 'MDT_IN_PROGRESS', 'MDT_COMPLETED'],
+                'actual': caso.status == 'MDT_IN_PROGRESS',
+            },
+            {
+                'titulo': 'Opiniones Médicas',
+                'descripcion': f'{opiniones.count()} opiniones recibidas',
+                'fecha': caso.created_at,
+                'icono': 'medical_information',
+                'completado': caso.status in ['MDT_COMPLETED', 'REPORT_DRAFT', 'REPORT_COMPLETE', 'CLOSED'],
+                'actual': False,
+            },
+            {
+                'titulo': 'Informe Final',
+                'descripcion': 'Recibe tu informe de segunda opinión',
+                'fecha': caso.updated_at,
+                'icono': 'description',
+                'completado': caso.status in ['REPORT_COMPLETE', 'OPINION_COMPLETE', 'CLOSED'],
+                'actual': caso.status == 'REPORT_COMPLETE',
+            },
+        ]
+    
+    context = {
+        'caso': caso,
+        'opiniones': opiniones,
+        'timeline': timeline,
+    }
+    
+    return render(request, 'patients/case_detail_patient.html', context)
+
+
+@paciente_required
+def descargar_informe_caso(request, case_id):
+    """Descargar informe final del caso"""
+    from cases.models import Case, FinalReport
+    
+    paciente = request.user
+    
+    # Buscar primero en Case
+    caso = Case.objects.filter(patient=paciente, case_id=case_id).first()
+    
+    if not caso:
+        # Buscar en CasoMDT
+        try:
+            from cases.mdt_models import CasoMDT
+            caso = CasoMDT.objects.filter(paciente=paciente, case_id=case_id).first()
+        except:
+            caso = None
+    
+    if not caso:
+        raise Http404("Caso no encontrado")
+    
+    # Buscar informe
+    informe = FinalReport.objects.filter(case=caso).first()
+    
+    if informe and informe.archivo:
+        return FileResponse(informe.archivo.open('rb'), as_attachment=True, filename=f'informe_{case_id}.pdf')
+    
+    messages.info(request, 'La descarga de informes estará disponible pronto.')
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))

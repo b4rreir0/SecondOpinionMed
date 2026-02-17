@@ -96,3 +96,82 @@ class PatientVerification(models.Model):
 
     def __str__(self):
         return f"PatientVerification {self.user.email} - {'verified' if self.is_verified else 'pending'}"
+
+
+class Notification(models.Model):
+    """
+    Notificaciones in-app para usuarios del sistema.
+    
+    Almacena notificaciones que se muestran en la interfaz
+    y pueden requerir acción del usuario.
+    """
+    
+    TIPO_CHOICES = [
+        ('asignacion_caso', 'Nuevo caso asignado'),
+        ('nueva_opinion', 'Nueva opinión en caso'),
+        ('recordatorio_voto', 'Recordatorio de votación'),
+        ('votacion_cerrada', 'Votación cerrada'),
+        ('informe_disponible', 'Informe final disponible'),
+        ('caso_actualizado', 'Caso actualizado'),
+        ('documento_subido', 'Nuevo documento subido'),
+    ]
+    
+    receptor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='notificaciones'
+    )
+    tipo = models.CharField(
+        max_length=30,
+        choices=TIPO_CHOICES,
+        help_text="Tipo de notificación"
+    )
+    titulo = models.CharField(
+        max_length=200,
+        help_text="Título de la notificación"
+    )
+    mensaje = models.TextField(
+        help_text="Cuerpo del mensaje"
+    )
+    enlace = models.CharField(
+        max_length=500,
+        blank=True,
+        help_text="URL de acción (opcional)"
+    )
+    leido = models.BooleanField(
+        default=False,
+        help_text="Indica si la notificación ha sido leída"
+    )
+    
+    # Referencia opcional al caso relacionado
+    caso_id = models.CharField(
+        max_length=50,
+        null=True,
+        blank=True,
+        help_text="ID del caso relacionado"
+    )
+    
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    fecha_lectura = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Fecha en que se leyó la notificación"
+    )
+    
+    class Meta:
+        verbose_name = 'Notificación'
+        verbose_name_plural = 'Notificaciones'
+        ordering = ['-fecha_creacion']
+        indexes = [
+            models.Index(fields=['receptor', 'leido']),
+            models.Index(fields=['receptor', '-fecha_creacion']),
+        ]
+    
+    def marcar_como_leida(self):
+        """Marca la notificación como leída"""
+        self.leido = True
+        self.fecha_lectura = timezone.now()
+        self.save(update_fields=['leido', 'fecha_lectura'])
+    
+    def __str__(self):
+        return f"{self.get_tipo_display()} - {self.receptor.email} - {'Leída' if self.leido else 'No leída'}"

@@ -1,0 +1,107 @@
+{% extends "doctors/layout_doctor.html" %}
+{% load static %}
+
+{% block title %}Chat MDT - OnCoMDT{% endblock %}
+
+{% block main_content %}
+<!-- Page Header -->
+<div class="mb-8">
+    <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Chat del Comité MDT</h1>
+    <p class="text-sm text-slate-500 mt-1">
+        Comunícate con los miembros de tu comité multidisciplinario
+    </p>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+    <!-- Lista de Comités -->
+    <div class="lg:col-span-1">
+        <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
+            <h2 class="text-lg font-semibold text-slate-800 dark:text-white mb-4">Mis Comités</h2>
+            
+            <div class="space-y-2">
+                {% for grupo in grupos %}
+                <a href="#" class="flex items-center p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+                    <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary">
+                        <span class="material-icons-outlined">groups</span>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-slate-700 dark:text-white">{{ grupo.nombre }}</p>
+                        <p class="text-xs text-slate-500">{{ grupo.tipo_cancer.nombre }}</p>
+                    </div>
+                </a>
+                {% empty %}
+                <p class="text-sm text-slate-500">No tienes comités asignados.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Área de Chat -->
+    <div class="lg:col-span-3">
+        <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 h-[600px] flex flex-col">
+            <!-- Chat Header -->
+            <div class="p-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary">
+                        <span class="material-icons-outlined">groups</span>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-slate-800 dark:text-white">Comité de Tumores Pulmonares</h3>
+                        <p class="text-xs text-slate-500">3 miembros activos</p>
+                    </div>
+                </div>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    En línea
+                </span>
+            </div>
+
+            <!-- Messages Area -->
+            <div class="flex-1 p-4 overflow-y-auto space-y-4" id="chat-messages">
+                <!-- Sample messages -->
+                <div class="flex items-start gap-3">
+                    <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-sm font-bold">
+                        CG
+                    </div>
+                    <div class="flex-1">
+                        <div class="bg-slate-100 dark:bg-slate-700 rounded-lg p-3">
+                            <p class="text-sm text-slate-700 dark:text-slate-200">
+                                Buenos días equipo. Tengo un caso interesante de carcinoma de células claras que me gustaría discutir.
+                            </p>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-1">Dr. Carlos García - 9:15 AM</p>
+                    </div>
+                </div>
+
+                <div class="flex items-start gap-3">
+                    <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-sm font-bold">
+                        RM
+                    </div>
+                    <div class="flex-1">
+                        <div class="bg-slate-100 dark:bg-slate-700 rounded-lg p-3">
+                            <p class="text-sm text-slate-700 dark:text-slate-200">
+                                Perfecto, dale transmitilo. Estamos listos para la discusión.
+                            </p>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-1">Dr. Roberto Martínez - 9:18 AM</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Message Input -->
+            <div class="p-4 border-t border-slate-200 dark:border-slate-700">
+                <form class="flex items-center gap-3">
+                    <button type="button" class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
+                        <span class="material-icons-outlined">attach_file</span>
+                    </button>
+                    <input type="text" 
+                           placeholder="Escribe un mensaje..." 
+                           class="flex-1 px-4 py-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary">
+                    <button type="submit" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90">
+                        <span class="material-icons-outlined">send</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

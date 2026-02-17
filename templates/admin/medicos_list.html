@@ -1,0 +1,130 @@
+{% extends "admin/layout_admin.html" %}
+{% load static %}
+
+{% block title %}Gestión de Médicos - Panel Admin{% endblock %}
+
+{% block main_content %}
+<div class="max-w-7xl mx-auto space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Gestión de Médicos</h1>
+            <p class="text-slate-500 dark:text-slate-400">Administra los médicos del sistema</p>
+        </div>
+        <a href="{% url 'administracion:portal_invite' %}" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors flex items-center gap-2">
+            <span class="material-icons-round">person_add</span>
+            Invitar Médico
+        </a>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
+        <form method="get" class="flex flex-wrap gap-4 items-end">
+            <div class="flex-1 min-w-[200px]">
+                <label class="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">Buscar</label>
+                <input type="text" name="search" value="{{ search|default:'' }}" 
+                       placeholder="Buscar por nombre o email..."
+                       class="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white">
+            </div>
+            <div class="w-48">
+                <label class="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">Especialidad</label>
+                <select name="especialidad" class="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white">
+                    <option value="">Todas</option>
+                    {% for esp in especialidades %}
+                    <option value="{{ esp.id }}">{{ esp.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors">
+                Filtrar
+            </button>
+        </form>
+    </div>
+
+    <!-- Doctors Table -->
+    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-slate-50 dark:bg-slate-700/50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Médico</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Especialidades</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Institución</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Estado</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Disponibilidad</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Casos Activos</th>
+                        <th class="px-6 py-3 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                    {% for medico in medicos %}
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
+                                    {{ medico.usuario.email|first|upper }}
+                                </div>
+                                <div>
+                                    <p class="text-sm font-bold text-slate-900 dark:text-white">
+                                        Dr. {{ medico.nombres }} {{ medico.apellidos }}
+                                    </p>
+                                    <p class="text-xs text-slate-500">{{ medico.usuario.email }}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex flex-wrap gap-1">
+                                {% for esp in medico.especialidades.all|slice:":3" %}
+                                <span class="px-2 py-0.5 bg-violet-100 text-violet-700 text-xs rounded-full">{{ esp.nombre }}</span>
+                                {% empty %}
+                                <span class="text-slate-400 text-sm">Sin especialidad</span>
+                                {% endfor %}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">
+                            {{ medico.institucion_actual|default:'-' }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if medico.estado == 'activo' %}
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400">Activo</span>
+                            {% else %}
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300">{{ medico.estado }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if medico.disponible_segundas_opiniones %}
+                            <span class="inline-flex items-center text-xs font-bold text-emerald-500">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500 mr-1"></span>
+                                Disponible
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center text-xs font-bold text-slate-400">
+                                <span class="w-2 h-2 rounded-full bg-slate-400 mr-1"></span>
+                                No disponible
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">
+                            {{ medico.casos_actuales|default:0 }} / {{ medico.max_casos_mes }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right">
+                            <a href="{% url 'administracion:portal_medico_detalle' medico.id %}" 
+                               class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors">
+                                <span class="material-icons-round">visibility</span>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="px-6 py-12 text-center text-slate-500">
+                            <span class="material-icons-round text-4xl mb-2">person_off</span>
+                            <p>No hay médicos registrados</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

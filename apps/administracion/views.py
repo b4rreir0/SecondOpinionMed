@@ -15,55 +15,93 @@ from core.services import AsignacionService, ReporteService, AuditoriaService
 from pacientes.models import Paciente, CasoClinico
 from medicos.models import Medico, ComiteMultidisciplinario
 from django.contrib.auth.models import User
+from cases.models import Case as CasoMDT, MedicalOpinion
 
 @admin_required
 def dashboard(request):
-    """Dashboard del administrador"""
+    """Dashboard del administrador con soporte para sistema MDT"""
     admin = request.user.administrador
     
-    # Estadísticas generales
-    total_pacientes = Paciente.objects.filter(activo=True).count()
-    total_medicos = Medico.objects.filter(estado='activo').count()
-    total_casos = CasoClinico.objects.count()
-    casos_activos = CasoClinico.objects.filter(
-        estado__in=['enviado', 'asignado', 'en_revision', 'comite']
-    ).count()
+    # ===== Estadísticas del sistema MDT (nuevo) =====
+    casos_mdt = CasoMDT.objects.all()
+    stats = {
+        'total_casos': casos_mdt.count(),
+        'casos_pendientes': casos_mdt.filter(status='PENDIENTE').count(),
+        'medicos_activos': Medico.objects.filter(estado='activo').count(),
+        'pacientes': Paciente.objects.filter(activo=True).count(),
+    }
     
-    # Casos por estado
-    casos_por_estado = CasoClinico.objects.values('estado').annotate(
-        count=Count('estado')
-    ).order_by('estado')
-    
-    # Actividad reciente
-    casos_recientes = CasoClinico.objects.order_by('-creado_en')[:5]
-    
-    # Alertas del sistema
-    alertas = []
-    if casos_activos > total_medicos * 5:  # Más de 5 casos por médico
-        alertas.append({
-            'tipo': 'warning',
-            'mensaje': 'Alta carga de trabajo. Considere contratar más médicos.'
-        })
-    
-    casos_sin_asignar = CasoClinico.objects.filter(estado='enviado', medico_asignado__isnull=True).count()
-    if casos_sin_asignar > 0:
-        alertas.append({
-            'tipo': 'info',
-            'mensaje': f'{casos_sin_asignar} casos esperando asignación.'
-        })
+    # Casos recientes del sistema MDT
+    casos_recientes = casos_mdt.order_by('-fecha_creacion')[:10]
     
     context = {
         'admin': admin,
-        'total_pacientes': total_pacientes,
-        'total_medicos': total_medicos,
-        'total_casos': total_casos,
-        'casos_activos': casos_activos,
-        'casos_por_estado': casos_por_estado,
+        'stats': stats,
         'casos_recientes': casos_recientes,
-        'alertas': alertas,
     }
     
-    return render(request, 'administracion/dashboard.html', context)
+    return render(request, 'admin/dashboard_admin.html', context)
+
+@admin_required
+def panel_gestion(request):
+    """
+    Panel de Gestión Integral - Administración completa del sistema
+    Muestra todas las entidades del sistema con opciones de gestión
+    """
+    from django.contrib.auth.models import User, Group
+    from medicos.models import Medico, ComiteMultidisciplinario, MedicalGroup, TipoCancer, Especialidad, Localidad, DoctorGroupMembership
+    from pacientes.models import Paciente
+    from cases.models import Case as CasoMDT, MedicalOpinion, CaseDocument, FinalReport, CaseAuditLog
+    from notifications.models import Notification, DoctorInvitation, EmailLog, EmailTemplate
+    
+    # Contadores para cada modelo
+    stats = {
+        # Autenticación
+        'usuarios_total': User.objects.count(),
+        'usuarios_activos': User.objects.filter(is_active=True).count(),
+        'grupos': Group.objects.count(),
+        
+        # Médicos
+        'medicos_total': Medico.objects.count(),
+        'medicos_activos': Medico.objects.filter(estado='activo').count(),
+        'comites': ComiteMultidisciplinario.objects.count(),
+        'grupos_medicos': MedicalGroup.objects.count(),
+        'especialidades': Especialidad.objects.count(),
+        'tipos_cancer': TipoCancer.objects.count(),
+        'localidades': Localidad.objects.count(),
+        'membresias': DoctorGroupMembership.objects.count(),
+        
+        # Pacientes
+        'pacientes_total': Paciente.objects.count(),
+        'pacientes_activos': Paciente.objects.filter(activo=True).count(),
+        
+        # Casos MDT
+        'casos_total': CasoMDT.objects.count(),
+        'casos_pendientes': CasoMDT.objects.filter(status__in=['SUBMITTED', 'ASSIGNED', 'PROCESSING', 'MDT_IN_PROGRESS', 'IN_REVIEW']).count(),
+        'casos_completados': CasoMDT.objects.filter(status__in=['CLOSED', 'OPINION_COMPLETE']).count(),
+        'opiniones': MedicalOpinion.objects.count(),
+        'documentos': CaseDocument.objects.count(),
+        
+        # Notificaciones
+        'notificaciones': Notification.objects.count(),
+        'invitaciones': DoctorInvitation.objects.count(),
+        'emails_enviados': EmailLog.objects.count(),
+        'plantillas_email': EmailTemplate.objects.count(),
+    }
+    
+    # Últimas acciones
+    recientes = {
+        'ultimos_casos': CasoMDT.objects.order_by('-created_at')[:5],
+        'ultimos_usuarios': User.objects.order_by('-date_joined')[:5],
+        'ultimas_opiniones': MedicalOpinion.objects.order_by('-fecha_emision')[:5],
+    }
+    
+    context = {
+        'stats': stats,
+        'recientes': recientes,
+    }
+    
+    return render(request, 'admin/panel_gestion.html', context)
 
 @admin_required
 def pacientes_list(request):

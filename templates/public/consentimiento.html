@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consentimiento Informado - Segunda Opinión Médica</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #1e40af;
+            font-size: 28px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        h2 {
+            color: #1e40af;
+            font-size: 20px;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 8px;
+        }
+        
+        p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+        
+        .highlight {
+            background: #fef3c7;
+            padding: 15px;
+            border-left: 4px solid #f59e0b;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        
+        .signature-line {
+            border-bottom: 1px solid #333;
+            width: 250px;
+            margin: 40px auto 10px;
+        }
+        
+        .signature-label {
+            text-align: center;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .date {
+            text-align: center;
+            margin-top: 30px;
+            font-weight: bold;
+        }
+        
+        .close-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .close-btn:hover {
+            background: #dc2626;
+        }
+        
+        ul {
+            margin-left: 20px;
+            margin-bottom: 15px;
+        }
+        
+        li {
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+    <button class="close-btn" onclick="window.close()">Cerrar</button>
+    
+    <div class="container">
+        <h1>Consentimiento Informado</h1>
+        <p class="date">Fecha: _______________</p>
+        
+        <h2>1. Información General</h2>
+        <p>
+            El presente documento tiene como objetivo informar y obtener el consentimiento del paciente 
+            para la prestación de servicios de segunda opinión médica a través de la plataforma 
+            <strong>OncoMDT</strong> (Segunda Opinión Médica).
+        </p>
+        
+        <h2>2. Naturaleza del Servicio</h2>
+        <p>
+            El servicio de segunda opinión médica consiste en la evaluación de un caso clínico por parte 
+            de un comité multidisciplinario de especialistas, quienes analizarán la documentación médica 
+            proporcionada y emitirán una opinión profesional sobre el diagnóstico y/o tratamiento propuesto.
+        </p>
+        <p>
+            Es importante destacar que este servicio no sustituye la relación médico-paciente, ni pretende 
+            replace the treatment plan prescribed by the treating physician. The second opinion is 
+            consultative in nature.
+        </p>
+        
+        <h2>3. Procedimiento</h2>
+        <ul>
+            <li>El paciente proporciona información clínica relevante y autoriza el acceso a su historial médico.</li>
+            <li>El comité multidisciplinariorevisa la documentación enviada.</li>
+            <li>Se emite un informe con la segunda opinión médica en un plazo determinado.</li>
+            <li>El paciente puede compartir esta opinión con su médico tratante.</li>
+        </ul>
+        
+        <h2>4. Limitaciones del Servicio</h2>
+        <div class="highlight">
+            <strong>Importante:</strong> La segunda opinión se basa únicamente en la documentación 
+            proporcionada por el paciente. No se realiza examen físico directo ni se tiene acceso 
+            a sistemas de salud externos. El diagnóstico final siempre dependerá del criterio del 
+            médico tratante que examine al paciente presencialmente.
+        </div>
+        
+        <h2>5. Protección de Datos</h2>
+        <p>
+            De conformidad con la normativa de protección de datos vigente (RGPD/LGPD), sus datos 
+            personales y médicos serán tratados de forma confidencial. Solo el personal médico 
+            autorizado y usted tendrán acceso a esta información.
+        </p>
+        <p>
+            Sus datos no serán compartidos con terceros sin su consentimiento expreso, excepto cuando 
+            sea requerido por ley.
+        </p>
+        
+        <h2>6. Derechos del Paciente</h2>
+        <p>
+            Usted tiene derecho a:
+        </p>
+        <ul>
+            <li>Acceder a sus datos personales y médicos.</li>
+            <li>Rectificar datos inexactos o incompletos.</li>
+            <li>Solicitar la supresión de sus datos cuando lo considere pertinente.</li>
+            <li>Revocar este consentimiento en cualquier momento.</li>
+        </ul>
+        
+        <h2>7. Aceptación</h2>
+        <p>
+            Al marcar la casilla de aceptación en el formulario de solicitud, usted declara que:
+        </p>
+        <ul>
+            <li>Ha leído y comprendido el contenido de este documento.</li>
+            <li>Ha tenido la oportunidad de hacer preguntas y aclarar dudas.</li>
+            <li>Consiente voluntariamente el tratamiento de sus datos para los fines descritos.</li>
+            <li>Comprende las limitaciones del servicio de segunda opinión médica.</li>
+        </ul>
+        
+        <div class="signature-line"></div>
+        <p class="signature-label">Firma del Paciente</p>
+        
+        <div style="margin-top: 30px;">
+            <p><strong>Nombre completo:</strong> _________________________________</p>
+            <p><strong>DNI/Pasaporte:</strong> _________________________________</p>
+            <p><strong>Fecha:</strong> _________________________________</p>
+        </div>
+    </div>
+</body>
+</html>

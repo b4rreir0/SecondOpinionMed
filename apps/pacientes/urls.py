@@ -7,6 +7,10 @@ app_name = 'pacientes'
 urlpatterns = [
     # Dashboard del paciente
     path('dashboard/', views.dashboard_paciente, name='dashboard'),
+    
+    # Gestión de casos
+    path('casos/<str:case_id>/', views.detalle_caso_paciente, name='case_detail'),
+    path('casos/<str:case_id>/descargar/', views.descargar_informe_caso, name='descargar_informe'),
 
     # Gestión de solicitudes
     path('solicitudes/', views.SolicitudListView.as_view(), name='solicitud_list'),

@@ -1,0 +1,125 @@
+{% extends "doctors/layout_doctor.html" %}
+{% load static %}
+
+{% block title %}Casos Pendientes - OnCoMDT{% endblock %}
+
+{% block main_content %}
+<div class="mb-6">
+    <h1 class="text-2xl font-bold text-slate-900">Casos Pendientes</h1>
+    <p class="text-sm text-slate-500 mt-1">Casos que requieren tu evaluación médica</p>
+</div>
+
+<!-- Filtros -->
+<div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-6">
+    <form method="get" class="flex flex-wrap gap-4 items-end">
+        <div class="flex-1 min-w-[200px]">
+            <label class="block text-xs font-medium text-slate-500 mb-1">Fecha Desde</label>
+            <input type="date" name="fecha_desde" value="{{ fecha_desde|default:'' }}" 
+                   class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm">
+        </div>
+        <div class="flex-1 min-w-[200px]">
+            <label class="block text-xs font-medium text-slate-500 mb-1">Fecha Hasta</label>
+            <input type="date" name="fecha_hasta" value="{{ fecha_hasta|default:'' }}" 
+                   class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm">
+        </div>
+        <div class="flex gap-2">
+            <button type="submit" class="px-4 py-2 bg-primary text-white rounded-lg text-sm hover:bg-primary/90">
+                Filtrar
+            </button>
+            <a href="{% url 'cases:doctor_dashboard' %}" class="px-4 py-2 border border-slate-200 rounded-lg text-sm text-slate-600 hover:bg-slate-50">
+                Limpiar
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- Lista de Casos Pendientes -->
+<div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full">
+            <thead class="bg-slate-50 border-b border-slate-200">
+                <tr>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">ID Caso</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Paciente</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Tipo de Cancer</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Especialidad</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Fecha Asignación</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Estado</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Acciones</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+                {% for caso in casos_pendientes %}
+                <tr class="hover:bg-slate-50">
+                    <td class="px-4 py-3">
+                        <span class="font-mono text-sm font-medium text-primary">{{ caso.case_id }}</span>
+                    </td>
+                    <td class="px-4 py-3">
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-xs font-medium text-slate-600 mr-2">
+                                {{ caso.paciente.get_full_name|make_list|first|upper }}
+                            </div>
+                            <span class="text-sm text-slate-700">{{ caso.paciente.get_full_name }}</span>
+                        </div>
+                    </td>
+                    <td class="px-4 py-3 text-sm text-slate-600">
+                        {{ caso.tipo_cancer.nombre|default:'-' }}
+                    </td>
+                    <td class="px-4 py-3 text-sm text-slate-600">
+                        {{ caso.specialty_required|default:'-' }}
+                    </td>
+                    <td class="px-4 py-3 text-sm text-slate-600">
+                        {{ caso.fecha_asignacion|date:"d M Y" }}
+                    </td>
+                    <td class="px-4 py-3">
+                        {% if caso.status == 'SUBMITTED' %}
+                        <span class="status-badge status-badge-pending">Enviado</span>
+                        {% elif caso.status == 'ASSIGNED' %}
+                        <span class="status-badge status-badge-pending">Asignado</span>
+                        {% elif caso.status == 'PROCESSING' %}
+                        <span class="status-badge status-badge-active">Procesando</span>
+                        {% elif caso.status == 'MDT_IN_PROGRESS' %}
+                        <span class="status-badge status-badge-active">En Análisis</span>
+                        {% elif caso.status == 'IN_REVIEW' %}
+                        <span class="status-badge status-badge-active">En Revisión</span>
+                        {% else %}
+                        <span class="status-badge status-badge-draft">{{ caso.get_status_display }}</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-4 py-3">
+                        <a href="{% url 'cases:doctor_case_detail' caso.case_id %}" 
+                           class="inline-flex items-center px-3 py-1.5 bg-primary text-white text-xs rounded-lg hover:bg-primary/90">
+                            Revisar
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="px-4 py-8 text-center text-slate-400">
+                        <span class="material-icons-outlined text-4xl mb-2">inbox</span>
+                        <p>No hay casos pendientes</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Paginación -->
+{% if page_obj.has_other_pages %}
+<div class="flex justify-center mt-4 gap-2">
+    {% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}" class="px-3 py-1 border border-slate-200 rounded-lg text-sm hover:bg-slate-50">Anterior</a>
+    {% endif %}
+    
+    <span class="px-3 py-1 text-sm text-slate-600">
+        Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+    </span>
+    
+    {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}" class="px-3 py-1 border border-slate-200 rounded-lg text-sm hover:bg-slate-50">Siguiente</a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

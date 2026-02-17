@@ -40,6 +40,10 @@ INSTALLED_APPS = [
     'medicos.apps.MedicosConfig',
     'documents.apps.DocumentsConfig',
     'notifications.apps.NotificationsConfig',
+    'administracion.apps.AdministracionConfig',
+    
+    # Proyecto principal
+    'oncosegunda.apps.OncosegundaConfig',
     
     # Terceros
     'rest_framework',
@@ -82,6 +86,19 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'oncosegunda.wsgi.application'
+ASGI_APPLICATION = 'oncosegunda.asgi.application'
+
+# Configuración de Canales (WebSockets)
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',  # Para desarrollo
+        # Para producción usar Redis:
+        # 'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        # 'CONFIG': {
+        #     "hosts": [os.getenv('REDIS_URL', 'redis://localhost:6379/1')],
+        # },
+    }
+}
 
 DATABASES = {
     'default': {

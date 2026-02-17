@@ -1,0 +1,93 @@
+{% extends "base_modern.html" %}
+
+{% block extra_css %}
+<style>
+    /* Patient Layout - OncoMDT Design System */
+    :root {
+        --color-primary: #1392ec;
+        --color-primary-dark: #0e7ccb;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<!-- Mobile Header -->
+<div class="md:hidden flex items-center justify-between p-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
+    <div class="flex items-center gap-2">
+        <div class="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
+            <span class="material-icons-round text-primary text-xl">medical_services</span>
+        </div>
+        <span class="font-bold text-lg text-slate-900 dark:text-white">MDT Portal</span>
+    </div>
+    <button class="p-2 text-slate-500 hover:text-primary transition-colors">
+        <span class="material-icons-round">menu</span>
+    </button>
+</div>
+
+<!-- Sidebar Navigation -->
+<aside class="hidden md:flex flex-col w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 h-screen fixed left-0 top-0 z-10">
+    <div class="p-6 flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-blue-600 flex items-center justify-center shadow-lg shadow-primary/20">
+            <span class="material-icons-round text-white text-2xl">local_hospital</span>
+        </div>
+        <div>
+            <h1 class="font-bold text-xl text-slate-900 dark:text-white leading-none">MDT System</h1>
+            <span class="text-xs text-slate-500 font-medium">Portal Paciente</span>
+        </div>
+    </div>
+    
+    <nav class="flex-1 px-4 py-6 space-y-2">
+        {% block sidebar_nav %}
+        <a class="flex items-center gap-3 px-4 py-3 bg-primary/10 text-primary rounded-xl transition-all duration-200 font-semibold group" href="{% url 'patients:dashboard' %}">
+            <span class="material-icons-round group-hover:scale-110 transition-transform">dashboard</span>
+            Mis Casos
+        </a>
+        <a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-primary dark:hover:text-primary rounded-xl transition-all duration-200 font-medium group" href="#">
+            <span class="material-icons-round group-hover:scale-110 transition-transform">person</span>
+            Mi Perfil
+        </a>
+        <a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-primary dark:hover:text-primary rounded-xl transition-all duration-200 font-medium group" href="#">
+            <span class="material-icons-round group-hover:scale-110 transition-transform">folder_shared</span>
+            Documentos
+        </a>
+        <a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-primary dark:hover:text-primary rounded-xl transition-all duration-200 font-medium group" href="#">
+            <span class="material-icons-round group-hover:scale-110 transition-transform">help_outline</span>
+            Ayuda
+        </a>
+        {% endblock %}
+    </nav>
+    
+    {% block sidebar_user %}
+    <div class="p-4 border-t border-slate-200 dark:border-slate-800">
+        <div class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer">
+            {% if user.paciente %}
+            <img alt="Profile picture" class="w-10 h-10 rounded-full object-cover border-2 border-white dark:border-slate-700 shadow-sm" 
+                 src="{{ user.paciente.foto.url|default:'https://via.placeholder.com/150' }}">
+            <div class="flex-1 min-w-0">
+                <p class="text-sm font-bold text-slate-900 dark:text-white truncate">
+                    {{ user.get_full_name|default:user.username }}
+                </p>
+                <p class="text-xs text-slate-500 truncate">Paciente ID: #{{ user.paciente.id|stringformat:"04d" }}</p>
+            </div>
+            {% else %}
+            <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
+                {{ user.username|make_list|first|upper }}
+            </div>
+            <div class="flex-1 min-w-0">
+                <p class="text-sm font-bold text-slate-900 dark:text-white truncate">
+                    {{ user.username }}
+                </p>
+            {% endif %}
+            <a href="{% url 'auth:logout' %}" class="text-slate-400 hover:text-red-500 transition-colors">
+                <span class="material-icons-round">logout</span>
+            </a>
+        </div>
+    </div>
+    {% endblock %}
+</aside>
+
+<!-- Main Content Area -->
+<main class="flex-1 md:ml-64 p-4 md:p-8 lg:p-12 overflow-y-auto min-h-screen">
+    {% block main_content %}{% endblock %}
+</main>
+{% endblock %}

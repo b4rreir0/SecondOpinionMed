@@ -1,0 +1,81 @@
+{% load static %}
+
+<div class="bg-surface-light dark:bg-surface-dark rounded-xl border border-border-light dark:border-border-dark overflow-hidden hover:shadow-md transition-shadow duration-200 flex flex-col {% if caso.prioridad == 'urgente' %}relative{% endif %}">
+    <!-- Urgent Badge -->
+    {% if caso.prioridad == 'urgente' %}
+    <div class="absolute top-0 right-0 w-16 h-16 overflow-hidden">
+        <div class="bg-red-500 text-white text-xs font-bold py-1 px-8 absolute top-3 -right-6 transform rotate-45 shadow-sm">URGENTE</div>
+    </div>
+    {% endif %}
+    
+    <div class="p-5 flex-1">
+        <div class="flex justify-between items-start mb-4">
+            <span class="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-mono rounded border border-slate-200 dark:border-slate-700">
+                {{ caso.case_id }}
+            </span>
+            {% include "doctors/components/status_badge.html" with status=caso.status %}
+        </div>
+        
+        <!-- Patient Info -->
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-full {% if caso.especialidad.color %}{{ caso.especialidad.color }}{% else %}bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400{% endif %} flex items-center justify-center">
+                <span class="material-icons-outlined">
+                    {% if caso.especialidad.icono %}{{ caso.especialidad.icono }}{% else %}person{% endif %}
+                </span>
+            </div>
+            <div>
+                <h4 class="font-bold text-slate-900 dark:text-white text-lg">
+                    {{ caso.paciente.user.get_full_name|default:caso.paciente.user.username }}
+                </h4>
+                <p class="text-sm text-slate-500">{{ caso.especialidad.nombre|default:'Oncología' }}</p>
+            </div>
+        </div>
+        
+        <!-- Case Details -->
+        <div class="space-y-2 text-sm text-slate-600 dark:text-slate-400 mb-4">
+            <div class="flex items-center gap-2">
+                <span class="material-icons-outlined text-base text-slate-400">calendar_today</span>
+                <span>Recibido: {{ caso.fecha_creacion|date:"d M Y" }}</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="material-icons-outlined text-base text-slate-400">folder_shared</span>
+                <span>Docs: {{ caso.documentos.count }}</span>
+            </div>
+            {% if caso.tipo_cancer %}
+            <div class="flex items-center gap-2">
+                <span class="material-icons-outlined text-base text-slate-400">local_hospital</span>
+                <span>{{ caso.tipo_cancer.nombre }}</span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Footer Actions -->
+    <div class="bg-slate-50 dark:bg-slate-800/50 px-5 py-3 border-t border-border-light dark:border-border-dark flex justify-between items-center">
+        <!-- Assigned Doctors -->
+        <div class="flex -space-x-2">
+            {% for medico in caso.medicos_asignados|slice:":3" %}
+            <img class="w-7 h-7 rounded-full border-2 border-white dark:border-surface-dark" 
+                 src="{{ medico.foto.url|default:'https://via.placeholder.com/150' }}" 
+                 alt="{{ medico.user.get_full_name }}"
+                 title="{{ medico.user.get_full_name }}">
+            {% empty %}
+            <span class="text-xs text-slate-400">Sin asignar</span>
+            {% endfor %}
+            {% if caso.medicos_asignados|length > 3 %}
+            <div class="w-7 h-7 rounded-full bg-slate-200 dark:bg-slate-600 flex items-center justify-center text-xs font-bold text-slate-600 dark:text-white border-2 border-white dark:border-surface-dark">
+                +{{ caso.medicos_asignados|length|add:"-3" }}
+            </div>
+            {% endif %}
+        </div>
+        
+        <a href="{% url 'doctors:case_detail' caso.case_id %}" 
+           class="text-sm font-semibold text-primary hover:text-primary-dark transition-colors flex items-center gap-1">
+            {% if caso.status == 'COMPLETADO' %}
+            Ver Informe <span class="material-icons-outlined text-base">visibility</span>
+            {% else %}
+            Abrir Caso <span class="material-icons-outlined text-base">arrow_forward</span>
+            {% endif %}
+        </a>
+    </div>
+</div>

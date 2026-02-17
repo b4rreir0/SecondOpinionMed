@@ -1,0 +1,151 @@
+{% extends "doctors/layout_doctor.html" %}
+{% load static %}
+
+{% block title %}Reportes - OnCoMDT{% endblock %}
+
+{% block main_content %}
+<div class="mb-6">
+    <h1 class="text-2xl font-bold text-slate-900">Reportes</h1>
+    <p class="text-sm text-slate-500 mt-1">Genera reportes de tu actividad médica</p>
+</div>
+
+<!-- Opciones de Reporte -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+    <!-- Reporte de Caso Específico -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div class="flex items-center mb-4">
+            <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center mr-3">
+                <span class="material-icons-outlined text-blue-600">description</span>
+            </div>
+            <h3 class="font-semibold text-slate-800">Caso Específico</h3>
+        </div>
+        <p class="text-sm text-slate-500 mb-4">Genera un reporte detallado de un caso específico</p>
+        <form method="get" action="#">
+            <input type="text" name="case_id" placeholder="ID del Caso" 
+                   class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm mb-3">
+            <button type="submit" class="w-full px-4 py-2 bg-primary text-white rounded-lg text-sm hover:bg-primary/90">
+                Generar Reporte
+            </button>
+        </form>
+    </div>
+
+    <!-- Casos Pendientes -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div class="flex items-center mb-4">
+            <div class="w-10 h-10 rounded-lg bg-yellow-100 flex items-center justify-center mr-3">
+                <span class="material-icons-outlined text-yellow-600">pending_actions</span>
+            </div>
+            <h3 class="font-semibold text-slate-800">Casos Pendientes</h3>
+        </div>
+        <p class="text-sm text-slate-500 mb-4">Lista de todos los casos pendientes de revisión</p>
+        <a href="{% url 'cases:casos_pendientes' %}" class="block w-full px-4 py-2 bg-yellow-500 text-white rounded-lg text-sm text-center hover:bg-yellow-600">
+            Ver Pendientes
+        </a>
+    </div>
+
+    <!-- Todos los Casos -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div class="flex items-center mb-4">
+            <div class="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center mr-3">
+                <span class="material-icons-outlined text-green-600">folder_shared</span>
+            </div>
+            <h3 class="font-semibold text-slate-800">Mis Participaciones</h3>
+        </div>
+        <p class="text-sm text-slate-500 mb-4">Historial completo de casos en los que has participado</p>
+        <a href="{% url 'cases:mis_casos' %}" class="block w-full px-4 py-2 bg-green-500 text-white rounded-lg text-sm text-center hover:bg-green-600">
+            Ver Historial
+        </a>
+    </div>
+</div>
+
+<!-- Filtros por Fecha -->
+<div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+    <h3 class="font-semibold text-slate-800 mb-4">Filtrar por Período</h3>
+    <form method="get" class="flex flex-wrap gap-4 items-end">
+        <div class="flex-1 min-w-[200px]">
+            <label class="block text-xs font-medium text-slate-500 mb-1">Fecha Desde</label>
+            <input type="date" name="fecha_desde" value="{{ fecha_desde|default:'' }}" 
+                   class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm">
+        </div>
+        <div class="flex-1 min-w-[200px]">
+            <label class="block text-xs font-medium text-slate-500 mb-1">Fecha Hasta</label>
+            <input type="date" name="fecha_hasta" value="{{ fecha_hasta|default:'' }}" 
+                   class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm">
+        </div>
+        <div class="flex gap-2">
+            <button type="submit" class="px-4 py-2 bg-primary text-white rounded-lg text-sm hover:bg-primary/90">
+                Aplicar Filtros
+            </button>
+            <button type="button" onclick="window.print()" class="px-4 py-2 border border-slate-200 rounded-lg text-sm text-slate-600 hover:bg-slate-50">
+                Imprimir
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Resumen de Actividad -->
+<div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+    <h3 class="font-semibold text-slate-800 mb-4">Resumen de Actividad</h3>
+    
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div class="bg-blue-50 rounded-lg p-4 text-center">
+            <span class="text-2xl font-bold text-blue-600">{{ total_casos|default:0 }}</span>
+            <p class="text-sm text-blue-600">Total Casos</p>
+        </div>
+        <div class="bg-yellow-50 rounded-lg p-4 text-center">
+            <span class="text-2xl font-bold text-yellow-600">{{ casos_pendientes_count|default:0 }}</span>
+            <p class="text-sm text-yellow-600">Pendientes</p>
+        </div>
+        <div class="bg-green-50 rounded-lg p-4 text-center">
+            <span class="text-2xl font-bold text-green-600">{{ casos_completados|default:0 }}</span>
+            <p class="text-sm text-green-600">Completados</p>
+        </div>
+        <div class="bg-purple-50 rounded-lg p-4 text-center">
+            <span class="text-2xl font-bold text-purple-600">{{ dias_promedio|default:0 }}</span>
+            <p class="text-sm text-purple-600">Días Promedio</p>
+        </div>
+    </div>
+
+    <!-- Tabla de Casos del Período -->
+    <h4 class="font-medium text-slate-700 mb-3">Casos del Período</h4>
+    <div class="overflow-x-auto">
+        <table class="w-full">
+            <thead class="bg-slate-50 border-b border-slate-200">
+                <tr>
+                    <th class="px-4 py-2 text-left text-xs font-semibold text-slate-500 uppercase">ID</th>
+                    <th class="px-4 py-2 text-left text-xs font-semibold text-slate-500 uppercase">Fecha</th>
+                    <th class="px-4 py-2 text-left text-xs font-semibold text-slate-500 uppercase">Paciente</th>
+                    <th class="px-4 py-2 text-left text-xs font-semibold text-slate-500 uppercase">Estado</th>
+                    <th class="px-4 py-2 text-left text-xs font-semibold text-slate-500 uppercase">Acción</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+                {% for caso in casos_periodo %}
+                <tr>
+                    <td class="px-4 py-2 font-mono text-sm text-primary">{{ caso.case_id }}</td>
+                    <td class="px-4 py-2 text-sm text-slate-600">{{ caso.created_at|date:"d M Y" }}</td>
+                    <td class="px-4 py-2 text-sm text-slate-600">{{ caso.paciente.get_full_name }}</td>
+                    <td class="px-4 py-2">
+                        <span class="text-xs px-2 py-1 rounded-full 
+                            {% if caso.status == 'CLOSED' %}bg-green-100 text-green-700
+                            {% elif caso.status == 'MDT_IN_PROGRESS' %}bg-blue-100 text-blue-700
+                            {% else %}bg-yellow-100 text-yellow-700{% endif %}">
+                            {{ caso.get_status_display }}
+                        </span>
+                    </td>
+                    <td class="px-4 py-2">
+                        <a href="{% url 'cases:doctor_case_detail' caso.case_id %}" class="text-primary text-sm hover:underline">Ver</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="px-4 py-8 text-center text-slate-400">
+                        No hay casos en el período seleccionado
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,281 @@
+{% extends "admin/layout_admin.html" %}
+{% load static %}
+
+{% block title %}Dashboard - Administración{% endblock %}
+
+{% block extra_css %}
+<style>
+    .bg-primary { background-color: #1392ec; }
+    .bg-primary-dark { background-color: #0e7ccb; }
+    .text-primary { color: #1392ec; }
+    .text-primary-dark { color: #0e7ccb; }
+    .border-primary { border-color: #1392ec; }
+    .hover\:bg-primary-dark:hover { background-color: #0e7ccb; }
+    .hover\:text-primary-dark:hover { color: #0e7ccb; }
+    .shadow-primary { box-shadow: 0 4px 14px 0 rgba(19, 146, 236, 0.25); }
+    .bg-primary\/10 { background-color: rgba(19, 146, 236, 0.1); }
+    .hover\:bg-primary\/15:hover { background-color: rgba(19, 146, 236, 0.15); }
+    .ring-primary\/20 { --tw-ring-color: rgba(19, 146, 236, 0.2); }
+</style>
+{% endblock %}
+
+{% block main_content %}
+<div class="max-w-7xl mx-auto space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+            <h1 class="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">
+                Panel de Administración
+            </h1>
+            <p class="text-slate-500 dark:text-slate-400 mt-1">Resumen del sistema MDT</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <button class="px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-600 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-2">
+                <span class="material-icons-round text-sm">download</span>
+                Exportar
+            </button>
+            <button class="px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-xl font-semibold transition-all duration-200 shadow-primary hover:shadow-lg flex items-center gap-2">
+                <span class="material-icons-round text-sm">add</span>
+                Nuevo Caso
+            </button>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+        <!-- Total Cases -->
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow">
+            <div class="flex items-center justify-between">
+                <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <span class="material-icons-round text-primary text-2xl">folder_shared</span>
+                </div>
+                <span class="text-xs font-bold text-emerald-500 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-1 rounded-full">+12%</span>
+            </div>
+            <div class="mt-4">
+                <p class="text-3xl font-bold text-slate-900 dark:text-white">{{ stats.total_casos|default:0 }}</p>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Casos Totales</p>
+            </div>
+        </div>
+
+        <!-- Pending Cases -->
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow">
+            <div class="flex items-center justify-between">
+                <div class="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center">
+                    <span class="material-icons-round text-amber-500 text-2xl">pending_actions</span>
+                </div>
+                <span class="text-xs font-bold text-amber-600 bg-amber-50 dark:bg-amber-900/30 px-2 py-1 rounded-full">Urgent</span>
+            </div>
+            <div class="mt-4">
+                <p class="text-3xl font-bold text-slate-900 dark:text-white">{{ stats.casos_pendientes|default:0 }}</p>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Casos Pendientes</p>
+            </div>
+        </div>
+
+        <!-- Active Doctors -->
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow">
+            <div class="flex items-center justify-between">
+                <div class="w-12 h-12 rounded-xl bg-violet-50 dark:bg-violet-900/30 flex items-center justify-center">
+                    <span class="material-icons-round text-violet-500 text-2xl">local_hospital</span>
+                </div>
+            </div>
+            <div class="mt-4">
+                <p class="text-3xl font-bold text-slate-900 dark:text-white">{{ stats.medicos_activos|default:0 }}</p>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Médicos Activos</p>
+            </div>
+        </div>
+
+        <!-- Patients -->
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow">
+            <div class="flex items-center justify-between">
+                <div class="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center">
+                    <span class="material-icons-round text-emerald-500 text-2xl">people</span>
+                </div>
+            </div>
+            <div class="mt-4">
+                <p class="text-3xl font-bold text-slate-900 dark:text-white">{{ stats.pacientes|default:0 }}</p>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Pacientes</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Recent Cases (Span 2) -->
+        <div class="lg:col-span-2 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden">
+            <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
+                <h2 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <span class="material-icons-round text-primary">recent_actors</span>
+                    Casos Recientes
+                </h2>
+                <a href="{% url 'administracion:casos_list' %}" class="text-sm font-medium text-primary hover:text-primary-dark transition-colors flex items-center gap-1">
+                    Ver todos
+                    <span class="material-icons-round text-sm">arrow_forward</span>
+                </a>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-slate-50 dark:bg-slate-700/50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Caso ID</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Paciente</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Tipo</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Estado</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Fecha</th>
+                            <th class="px-6 py-3 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                        {% for caso in casos_recientes %}
+                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="text-sm font-bold text-slate-900 dark:text-white font-mono">{{ caso.case_id }}</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-500 text-xs font-bold">
+                                        {{ caso.paciente.user.get_first_name|make_list|first|upper }}
+                                    </div>
+                                    <span class="text-sm text-slate-700 dark:text-slate-300">
+                                        {{ caso.paciente.user.get_first_name|default:caso.paciente.user.username|truncatechars:15 }}
+                                    </span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="text-sm text-slate-600 dark:text-slate-400">
+                                    {{ caso.tipo_cancer.nombre|default:caso.especialidad.nombre|default:'-' }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {% if caso.status == 'PENDIENTE' %}
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400">
+                                    Pendiente
+                                </span>
+                                {% elif caso.status == 'EN_PROCESO' %}
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
+                                    En Proceso
+                                </span>
+                                {% elif caso.status == 'COMPLETADO' %}
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400">
+                                    Completado
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                                {{ caso.fecha_creacion|date:"d M Y" }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right">
+                                <a href="{% url 'administracion:case_detail' caso.case_id %}" 
+                                   class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors">
+                                    <span class="material-icons-round">visibility</span>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="px-6 py-12 text-center text-slate-500">
+                                <span class="material-icons-round text-4xl mb-2">inbox</span>
+                                <p>No hay casos recientes</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="space-y-6">
+            <!-- Quick Actions -->
+            <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-6">
+                <h2 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-4">
+                    <span class="material-icons-round text-primary">flash_on</span>
+                    Acciones Rápidas
+                </h2>
+                <div class="space-y-3">
+                    <a href="#" class="flex items-center gap-3 p-3 rounded-xl hover:bg-primary/5 dark:hover:bg-primary/10 transition-colors group">
+                        <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                            <span class="material-icons-round">person_add</span>
+                        </div>
+                        <span class="text-sm font-medium text-slate-700 dark:text-slate-300 group-hover:text-primary">Nuevo Paciente</span>
+                    </a>
+                    <a href="#" class="flex items-center gap-3 p-3 rounded-xl hover:bg-primary/5 dark:hover:bg-primary/10 transition-colors group">
+                        <div class="w-10 h-10 rounded-lg bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center text-violet-500">
+                            <span class="material-icons-round">local_hospital</span>
+                        </div>
+                        <span class="text-sm font-medium text-slate-700 dark:text-slate-300 group-hover:text-primary">Agregar Médico</span>
+                    </a>
+                    <a href="#" class="flex items-center gap-3 p-3 rounded-xl hover:bg-primary/5 dark:hover:bg-primary/10 transition-colors group">
+                        <div class="w-10 h-10 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-500">
+                            <span class="material-icons-round">group_add</span>
+                        </div>
+                        <span class="text-sm font-medium text-slate-700 dark:text-slate-300 group-hover:text-primary">Crear Comité MDT</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- System Status -->
+            <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-6">
+                <h2 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-4">
+                    <span class="material-icons-round text-primary">monitor_heart</span>
+                    Estado del Sistema
+                </h2>
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-slate-600 dark:text-slate-400">API</span>
+                        <span class="inline-flex items-center gap-1 text-xs font-bold text-emerald-500">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                            Operativo
+                        </span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-slate-600 dark:text-slate-400">Celery Workers</span>
+                        <span class="inline-flex items-center gap-1 text-xs font-bold text-emerald-500">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                            3 Activos
+                        </span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-slate-600 dark:text-slate-400">Almacenamiento</span>
+                        <span class="text-xs font-bold text-amber-500">75% usado</span>
+                    </div>
+                    <div class="w-full h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                        <div class="h-full bg-amber-500 rounded-full" style="width: 75%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notifications -->
+            <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm">
+                <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
+                    <h2 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                        <span class="material-icons-round text-primary">notifications</span>
+                        Notificaciones
+                    </h2>
+                    <span class="bg-red-100 text-red-600 text-xs font-bold px-2 py-0.5 rounded-full">3</span>
+                </div>
+                <div class="p-4 space-y-3 max-h-64 overflow-y-auto">
+                    <div class="flex items-start gap-3 p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                        <div class="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center text-amber-500 flex-shrink-0">
+                            <span class="material-icons-round text-sm">warning</span>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm text-slate-700 dark:text-slate-300">5 casos próximos a vencer</p>
+                            <p class="text-xs text-slate-400">Hace 2 horas</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3 p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                        <div class="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-500 flex-shrink-0">
+                            <span class="material-icons-round text-sm">person_add</span>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm text-slate-700 dark:text-slate-300">Nuevo médico registrado</p>
+                            <p class="text-xs text-slate-400">Hace 5 horas</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

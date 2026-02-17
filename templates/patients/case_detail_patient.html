@@ -1,0 +1,262 @@
+{% extends "patients/layout_patient.html" %}
+{% load static %}
+
+{% block title %}Caso {{ caso.case_id }} - Portal Paciente{% endblock %}
+
+{% block extra_css %}
+<style>
+    .bg-primary { background-color: #1392ec; }
+    .bg-primary-dark { background-color: #0e7ccb; }
+    .text-primary { color: #1392ec; }
+    .text-primary-dark { color: #0e7ccb; }
+    .border-primary { border-color: #1392ec; }
+    .hover\:bg-primary-dark:hover { background-color: #0e7ccb; }
+    .hover\:text-primary-dark:hover { color: #0e7ccb; }
+    .hover\:border-primary-dark:hover { border-color: #0e7ccb; }
+    .shadow-primary { box-shadow: 0 4px 14px 0 rgba(19, 146, 236, 0.25); }
+    .bg-primary\/10 { background-color: rgba(19, 146, 236, 0.1); }
+    .hover\:bg-primary\/15:hover { background-color: rgba(19, 146, 236, 0.15); }
+</style>
+{% endblock %}
+
+{% block main_content %}
+<div class="max-w-7xl mx-auto space-y-6">
+    <!-- Breadcrumb & Status -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <nav class="flex items-center gap-2 text-sm">
+            <a href="{% url 'patients:dashboard' %}" class="text-slate-500 hover:text-primary transition-colors flex items-center gap-1">
+                <span class="material-icons-round text-base">arrow_back</span>
+                Volver a Mis Casos
+            </a>
+        </nav>
+        
+        {% if caso.status == 'PENDIENTE' %}
+        <span class="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400 border border-amber-200 dark:border-amber-700">
+            <span class="w-2 h-2 rounded-full bg-amber-500 mr-2 animate-pulse"></span>
+            Pendiente de Revisión
+        </span>
+        {% elif caso.status == 'EN_PROCESO' %}
+        <span class="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 border border-blue-200 dark:border-blue-700">
+            <span class="w-2 h-2 rounded-full bg-blue-500 mr-2 animate-pulse"></span>
+            En Proceso de Evaluación
+        </span>
+        {% elif caso.status == 'COMPLETADO' %}
+        <span class="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-700">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 mr-2"></span>
+            Evaluación Completa
+        </span>
+        {% endif %}
+    </div>
+
+    <!-- Case Header -->
+    <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden">
+        <div class="bg-gradient-to-r from-primary to-blue-600 p-6 md:p-8">
+            <div class="flex flex-col md:flex-row md:items-center gap-6">
+                <div class="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center text-white flex-shrink-0">
+                    <span class="material-icons-round text-3xl">health_and_safety</span>
+                </div>
+                <div class="flex-1">
+                    <h1 class="text-2xl md:text-3xl font-bold text-white">
+                        {{ caso.tipo_cancer.nombre|default:caso.especialidad.nombre|default:'Evaluación Oncológica' }}
+                    </h1>
+                    <p class="text-blue-100 mt-1">Caso ID: {{ caso.case_id }}</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-xs text-blue-200 uppercase tracking-wider font-semibold">Fecha de Creación</p>
+                    <p class="text-white font-bold">{{ caso.fecha_creacion|date:"d M Y" }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Progress -->
+        <div class="p-6 border-b border-slate-100 dark:border-slate-700">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-sm font-medium text-slate-700 dark:text-slate-300">Progreso de tu Evaluación</span>
+                <span class="text-sm font-bold text-primary">{{ caso.get_progress|default:0 }}%</span>
+            </div>
+            <div class="w-full h-3 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                <div class="h-full bg-gradient-to-r from-primary to-blue-500 rounded-full transition-all duration-700" 
+                     style="width: {{ caso.get_progress|default:0 }}%"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Left Column: Timeline & Info (Span 2) -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Timeline -->
+            <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm">
+                <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-700">
+                    <h2 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                        <span class="material-icons-round text-primary">timeline</span>
+                        Historial del Caso
+                    </h2>
+                </div>
+                <div class="p-6">
+                    <div class="relative">
+                        <!-- Timeline Line -->
+                        <div class="absolute left-4 top-0 bottom-0 w-0.5 bg-slate-200 dark:bg-slate-700"></div>
+                        
+                        <!-- Timeline Items -->
+                        <div class="space-y-6">
+                            {% for evento in timeline %}
+                            <div class="relative flex items-start gap-4">
+                                <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 z-10
+                                    {% if evento.actual %}
+                                    bg-primary text-white shadow-primary
+                                    {% elif evento.completado %}
+                                    bg-emerald-500 text-white
+                                    {% else %}
+                                    bg-slate-200 dark:bg-slate-700 text-slate-400
+                                    {% endif %}">
+                                    <span class="material-icons-round text-sm">
+                                        {% if evento.completado %}check{% else %}{{ evento.icono|default:'radio_button_unchecked' }}{% endif %}
+                                    </span>
+                                </div>
+                                <div class="flex-1 pt-1">
+                                    <p class="text-sm font-bold text-slate-900 dark:text-white">{{ evento.titulo }}</p>
+                                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{{ evento.descripcion }}</p>
+                                    <p class="text-xs text-slate-400 mt-1">{{ evento.fecha|date:"d M Y, H:i" }}</p>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <div class="text-center py-8 text-slate-500">
+                                <span class="material-icons-round text-4xl mb-2">history</span>
+                                <p>No hay eventos registrados</p>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Medical Opinions -->
+            {% if opiniones %}
+            <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm">
+                <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-700">
+                    <h2 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                        <span class="material-icons-round text-primary">medical_information</span>
+                        Opiniones Médicas Recibidas
+                    </h2>
+                </div>
+                <div class="divide-y divide-slate-100 dark:divide-slate-700">
+                    {% for opinion in opiniones %}
+                    <div class="p-6">
+                        <div class="flex items-start gap-4">
+                            <img alt="Doctor" class="w-12 h-12 rounded-full object-cover border-2 border-white dark:border-slate-700 shadow-sm" 
+                                 src="{{ opinion.medico.foto.url|default:'https://via.placeholder.com/150' }}">
+                            <div class="flex-1">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="font-bold text-slate-900 dark:text-white">
+                                            Dr. {{ opinion.medico.user.get_full_name }}
+                                        </p>
+                                        <p class="text-xs text-slate-500 dark:text-slate-400">
+                                            {{ opinion.medico.especialidad.nombre|default:'Especialista' }} • {{ opinion.medico.institucion.nombre|default:'' }}
+                                        </p>
+                                    </div>
+                                    <span class="text-xs text-slate-400">{{ opinion.fecha_creacion|date:"d M Y" }}</span>
+                                </div>
+                                <div class="mt-4 p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
+                                    <p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+                                        {{ opinion.contenido|truncatewords:50 }}
+                                    </p>
+                                </div>
+                                <button class="mt-3 text-xs font-medium text-primary hover:text-primary-dark transition-colors flex items-center gap-1">
+                                    <span class="material-icons-round text-sm">visibility</span>
+                                    Ver Opinión Completa
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Right Column: Documents & Actions (Span 1) -->
+        <div class="space-y-6">
+            <!-- Documents -->
+            <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm">
+                <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
+                    <h2 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                        <span class="material-icons-round text-primary">folder</span>
+                        Mis Documentos
+                    </h2>
+                    <span class="text-xs font-medium text-slate-500 bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded-full">
+                        {{ caso.documentos.count }}
+                    </span>
+                </div>
+                <div class="p-4">
+                    <ul class="space-y-2">
+                        {% for doc in caso.documentos.all %}
+                        <li>
+                            <a href="{{ doc.file.url }}" download 
+                               class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors group">
+                                <div class="w-10 h-10 rounded-lg bg-red-50 dark:bg-red-900/20 flex items-center justify-center text-red-500">
+                                    <span class="material-icons-round">picture_as_pdf</span>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium text-slate-900 dark:text-white truncate">
+                                        {{ doc.file_name|default:doc.description|default:'Documento' }}
+                                    </p>
+                                    <p class="text-xs text-slate-500">{{ doc.fecha_creacion|date:"d M Y" }}</p>
+                                </div>
+                                <span class="material-icons-round text-slate-400 group-hover:text-primary transition-colors">download</span>
+                            </a>
+                        </li>
+                        {% empty %}
+                        <li class="text-center py-6 text-slate-500">
+                            <span class="material-icons-round text-3xl mb-1">description</span>
+                            <p class="text-sm">No hay documentos</p>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="px-4 pb-4">
+                    <button class="w-full py-2.5 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl text-slate-500 hover:border-primary hover:text-primary transition-colors flex items-center justify-center gap-2 text-sm font-medium">
+                        <span class="material-icons-round">cloud_upload</span>
+                        Subir Documento
+                    </button>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-6">
+                <h2 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-4">
+                    <span class="material-icons-round text-primary">settings</span>
+                    Acciones
+                </h2>
+                <div class="space-y-3">
+                    <button class="w-full py-3 px-4 bg-primary hover:bg-primary-dark text-white rounded-xl font-semibold transition-all duration-200 flex items-center justify-center gap-2 shadow-primary hover:shadow-lg">
+                        <span class="material-icons-round">chat</span>
+                        Contactar Soporte
+                    </button>
+                    <button class="w-full py-3 px-4 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-xl font-semibold hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors flex items-center justify-center gap-2">
+                        <span class="material-icons-round">download</span>
+                        Descargar Informe
+                    </button>
+                </div>
+            </div>
+
+            <!-- Contact Info -->
+            <div class="bg-gradient-to-br from-primary/10 to-blue-50 dark:from-primary/5 dark:to-slate-800 rounded-2xl border border-primary/20 p-6">
+                <h3 class="font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-3">
+                    <span class="material-icons-round text-primary">headset_mic</span>
+                    ¿Necesitas Ayuda?
+                </h3>
+                <p class="text-sm text-slate-600 dark:text-slate-400 mb-4">
+                    Nuestro equipo de soporte está disponible 24/7 para ayudarte con tu caso.
+                </p>
+                <a href="mailto:soporte@oncosegunda.com" 
+                   class="inline-flex items-center gap-2 text-sm font-bold text-primary hover:text-primary-dark transition-colors">
+                    <span class="material-icons-round text-sm">email</span>
+                    soporte@oncosegunda.com
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

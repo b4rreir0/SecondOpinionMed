@@ -2,14 +2,148 @@
 
 Una plataforma web completa para la gestión de solicitudes de segunda opinión oncológica, construida con Django.
 
+> **Estado del Proyecto**: Sistema en evolución hacia la versión 2.0 con soporte para Comités Multidisciplinarios (MDT - Multidisciplinary Team)
+
+## 📋 Resumen Técnico Actual
+
+### Stack Tecnológico
+| Componente | Tecnología | Versión |
+|------------|------------|---------|
+| Backend | Django | 6.0 |
+| Python | Python | 3.11+ |
+| Base de Datos | PostgreSQL | 14+ |
+| Cache | Redis | 7.0+ |
+| Cola de Tareas | Celery | 5.3+ |
+| Frontend | HTML5 + Tailwind CSS | 3.4+ |
+| Servidor Web | Nginx + Gunicorn | - |
+| Contenedores | Docker + Docker Compose | - |
+
+### Arquitectura del Sistema
+
+```
+oncosegunda/
+├── apps/                          # Aplicaciones Django
+│   ├── authentication/            # Autenticación y usuarios
+│   ├── pacientes/                 # Gestión de pacientes
+│   ├── medicos/                  # Gestión de médicos
+│   ├── cases/                    # Sistema MDT (nuevo)
+│   ├── administracion/           # Panel de administración
+│   ├── notifications/            # Sistema de notificaciones
+│   ├── documents/                # Gestión de documentos
+│   └── public/                   # Vistas públicas
+├── core/                         # Utilidades compartidas
+├── templates/                    # Templates (estructura moderna)
+│   ├── base_modern.html         # Template base moderno
+│   ├── doctors/                 # Portal de médicos
+│   ├── patients/                # Portal de pacientes
+│   └── admin/                   # Panel de administración
+├── oncosegunda/                 # Configuración del proyecto
+└── docs/                        # Documentación
+```
+
+### Modelos Principales (apps/cases - Sistema MDT)
+
+```python
+# Case: Caso médico principal
+Case {
+    case_id: str (único, formato: B28C7C3ABE7B)
+    paciente: FK(Paciente)
+    status: CHOICE('PENDIENTE', 'EN_PROCESO', 'COMPLETADO')
+    especialidad: FK(Especialidad)
+    tipo_cancer: FK(TipoCancer)
+    diagnóstico: str
+    estadio: str
+    tratamiento_propuesto_original: str
+    fecha_limite: datetime
+    fecha_asignacion: datetime
+    fecha_completado: datetime
+}
+
+# MedicalGroup: Comité MDT
+MedicalGroup {
+    nombre: str
+    especialidad: FK(Especialidad)
+    localidad: FK(Localidad)
+    miembros: M2M(Medico)
+    activo: bool
+}
+
+# MedicalOpinion: Opinión de un médico
+MedicalOpinion {
+    caso: FK(Case)
+    medico: FK(Medico)
+    contenido: TextField
+    status: CHOICE('BORRADOR', 'ENVIADA', 'ACEPTADA', 'RECHAZADA')
+    es_consenso: bool
+}
+
+# FinalReport: Informe consolidado
+FinalReport {
+    caso: FK(Case)
+    medical_group: FK(MedicalGroup)
+    contenido: TextField
+    recomendaciones: JSON
+    fecha_generacion: datetime
+}
+```
+
+### Flujos de Datos Principales
+
+#### 1. Flujo de Creación de Caso
+```
+Paciente → Crear Solicitud → Subir Documentos → Case (PENDIENTE) 
+         → Asignación Automática → Case (EN_PROCESO) → Opiniones Médicas 
+         → Consensus MDT → FinalReport → Case (COMPLETADO)
+```
+
+#### 2. Flujo de Asignación de Médicos
+```
+Case created → Algorithm: RoundRobin(localidad, especialidad) 
+            → Select MedicalGroup → Assign doctors → Notify
+```
+
+#### 3. Flujo de Notificaciones
+```
+Event: case.created → Celery Task → NotificationService 
+     → In-App + Email → User notified
+```
+
+### Endpoints Principales (URLs)
+
+| Rol | Endpoint | Descripción |
+|-----|----------|-------------|
+| Paciente | `/patients/dashboard/` | Dashboard del paciente |
+| Paciente | `/patients/casos/<case_id>/` | Detalle de caso |
+| Médico | `/doctors/dashboard/` | Dashboard del médico |
+| Médico | `/doctors/casos/<case_id>/` | Detalle y opinión médica |
+| Admin | `/administracion/dashboard/` | Panel de administración |
+| Admin | `/administracion/casos/` | Lista de casos |
+| API | `/api/auth/` | Autenticación |
+| API | `/api/cases/` | Casos (REST) |
+
+### Servicios de Negocio (apps/cases/services.py)
+
+- **CaseService**: Creación, actualización, asignación de casos
+- **OpinionService**: Gestión de opiniones médicas
+- **AssignmentService**: Algoritmo de asignación round-robin
+- **ConsensusService**: Generación de consenso MDT
+- **ReportService**: Generación de informes finales
+
+### Tareas Celery (apps/cases/tasks.py)
+
+- `assign_case_to_doctor`: Asigna caso a médico
+- `notify_doctor_assignment`: Notifica asignación
+- `generate_consensus_report`: Genera informe de consenso
+- `send_case_reminders`: Envía recordatorios de casos pendientes
+
 ## Características Principales
 
 - **Gestión de Usuarios**: Sistema de roles (Pacientes, Médicos, Administradores)
 - **Solicitudes de Segunda Opinión**: Proceso completo desde solicitud hasta informe final
 - **Asignación Automática**: Algoritmo round-robin para asignar casos a médicos
-- **Comités Multidisciplinarios**: Sistema de revisión por comités especializados
+- **Comités Multidisciplinarios**: Sistema de revisión por comités especializados (MDT)
 - **Auditoría Completa**: Registro de todas las acciones del sistema
-- **Interfaz Moderna**: Bootstrap 5 con diseño responsive
+- **Interfaz Moderna**: Tailwind CSS con diseño responsive
 - **API REST**: Endpoints para integración con otros sistemas
 - **Docker**: Despliegue containerizado para desarrollo y producción
 
@@ -17,7 +151,7 @@ Una plataforma web completa para la gestión de solicitudes de segunda opinión 
 
 - **Backend**: Django 6.0, Python 3.11
 - **Base de Datos**: PostgreSQL
-- **Frontend**: HTML5, CSS3, JavaScript, Bootstrap 5
+- **Frontend**: HTML5, CSS3, JavaScript, Tailwind CSS 3.4+
 - **Cache**: Redis
 - **Servidor Web**: Nginx + Gunicorn
 - **Contenedor**: Docker & Docker Compose

@@ -83,7 +83,7 @@
                       </div>
                       <div class="col-6">
                         <label class="form-label">Localidad</label>
-                        <input type="text" class="form-control form-control-sm" value="{% if c.localidad %}{{ c.localidad }}{% endif %}" disabled />
+                        <input type="text" class="form-control form-control-sm" value="{% if c.localidad %}{{ c.localidad_nombre|default:c.localidad }}{% else %}No seleccionada{% endif %}" disabled />
                       </div>
                     </div>
                     <div class="mb-2">
@@ -127,7 +127,14 @@
       <div class="card-body">
         <div class="form-check mb-3">
           {{ form.explicit_consent }}
-          <label class="form-check-label ms-2" for="id_explicit_consent">Acepto el consentimiento informado</label>
+          <label class="form-check-label ms-2" for="id_explicit_consent">
+            Acepto el consentimiento informado
+            <!-- Link para ver el consentimiento informado -->
+            <a href="#" onclick="window.open('/consentimiento/', 'ConsentimientoInformado', 'width=700,height=600,scrollbars=yes'); return false;" class="text-primary text-decoration-underline ms-1" title="Ver consentimiento informado">
+              <span class="material-icons-outlined" style="font-size: 16px; vertical-align: middle;">visibility</span>
+              Ver consentimiento
+            </a>
+          </label>
           {% if form.explicit_consent.errors %}
             <div class="text-danger">{{ form.explicit_consent.errors }}</div>
           {% endif %}

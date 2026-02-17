@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Caso - OnCoMDT{% endblock %}</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    
+    <style>
+        body { font-family: 'Manrope', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-100 m-0 p-0">
+    <!-- Header completo arriba -->
+    <header class="bg-blue-600 h-20 flex items-center justify-between px-8 w-full">
+        <!-- Izquierda: Volver y Caso -->
+        <div class="flex items-center gap-4">
+            <a href="{% url 'cases:mis_casos' %}" class="flex items-center gap-2 text-white hover:bg-blue-700 px-3 py-2 rounded-lg transition">
+                <span class="material-icons-outlined">arrow_back</span>
+                <span class="font-medium">Volver</span>
+            </a>
+            
+            {% if caso %}
+            <span class="text-white font-bold text-lg ml-4">{{ caso.case_id }}</span>
+            
+            <span class="px-3 py-1 rounded-full text-xs font-semibold uppercase
+                {% if caso.status == 'MDT_IN_PROGRESS' or caso.status == 'PROCESSING' %}bg-blue-100 text-blue-700
+                {% elif caso.status == 'CLOSED' or caso.status == 'OPINION_COMPLETE' %}bg-green-100 text-green-700
+                {% elif caso.status == 'SUBMITTED' or caso.status == 'ASSIGNED' %}bg-yellow-100 text-yellow-700
+                {% else %}bg-gray-100 text-gray-700{% endif %}">
+                {% if caso.status == 'MDT_IN_PROGRESS' %}En Análisis
+                {% elif caso.status == 'PROCESSING' %}Procesando
+                {% elif caso.status == 'SUBMITTED' %}Enviado
+                {% elif caso.status == 'ASSIGNED' %}Asignado
+                {% elif caso.status == 'CLOSED' %}Cerrado
+                {% elif caso.status == 'OPINION_COMPLETE' %}Completo
+                {% else %}{{ caso.get_status_display }}{% endif %}
+            </span>
+            {% endif %}
+        </div>
+        
+        <!-- Derecha: Usuario y Salir -->
+        <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2 text-white">
+                <div class="w-8 h-8 rounded-full bg-white/30 flex items-center justify-center font-bold">
+                    {{ user.get_full_name|make_list|first|upper }}
+                </div>
+                <span class="font-medium">{{ user.get_full_name|default:user.username }}</span>
+            </div>
+            
+            <form method="post" action="{% url 'auth:logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="text-white hover:bg-blue-700 p-2 rounded-lg">
+                    <span class="material-icons-outlined">logout</span>
+                </button>
+            </form>
+        </div>
+    </header>
+
+    <!-- Contenido principal debajo del header -->
+    <main class="p-8 w-full">
+        <div class="max-w-5xl mx-auto">
+            {% block main_content %}{% endblock %}
+        </div>
+    </main>
+</body>
+</html>

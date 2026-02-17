@@ -13,10 +13,38 @@ class Especialidad(models.Model):
     activa = models.BooleanField(default=True)
     
     class Meta:
+        app_label = 'medicos'
         ordering = ['nombre']
     
     def __str__(self):
         return self.nombre
+
+
+class TipoCancer(models.Model):
+    """
+    Catálogo de tipos de cáncer para clasificar los casos.
+    
+    Se usa para determinar qué grupo médico (Comité) debe evaluar cada caso.
+    """
+    nombre = models.CharField(max_length=100, unique=True)
+    codigo = models.CharField(max_length=20, unique=True, help_text="Código interno (ej: PULMON, MAMA)")
+    descripcion = models.TextField(blank=True)
+    especialidad_principal = models.ForeignKey(
+        Especialidad, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        related_name='tipos_cancer'
+    )
+    activo = models.BooleanField(default=True)
+    
+    class Meta:
+        verbose_name = 'Tipo de Cáncer'
+        verbose_name_plural = 'Tipos de Cáncer'
+        ordering = ['nombre']
+    
+    def __str__(self):
+        return f"{self.nombre} ({self.codigo})"
 
 class Medico(TimeStampedModel):
     """Modelo del médico especialista"""
@@ -114,6 +142,15 @@ class Localidad(TimeStampedModel):
     """Localidad/territorio asignado a un médico"""
     nombre = models.CharField(max_length=200, unique=True)
     medico = models.ForeignKey(Medico, on_delete=models.SET_NULL, null=True, blank=True, related_name='localidades')
+    # Comité MDT asociado a esta localidad
+    comite = models.ForeignKey(
+        'ComiteMultidisciplinario', 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        related_name='localidades',
+        help_text='Comité MDT que atiende casos de esta localidad'
+    )
 
     class Meta:
         ordering = ['nombre']
@@ -121,12 +158,23 @@ class Localidad(TimeStampedModel):
     def __str__(self):
         return self.nombre
 
+
 class ComiteMultidisciplinario(TimeStampedModel):
     """Comité multidisciplinario para casos complejos"""
     nombre = models.CharField(max_length=100, unique=True)
     descripcion = models.TextField()
     especialidades_requeridas = models.ManyToManyField(Especialidad, related_name='comites')
     medicos_miembros = models.ManyToManyField(Medico, related_name='comites', blank=True)
+    
+    # Coordinador del comité (jefe/responsable)
+    coordinador = models.ForeignKey(
+        Medico,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='comites_coordinados',
+        help_text="Médico responsable/coordinador del comité"
+    )
     
     # Configuración
     min_medicos = models.PositiveIntegerField(default=3)
@@ -153,6 +201,131 @@ class ComiteMultidisciplinario(TimeStampedModel):
     
     def __str__(self):
         return f"Comité {self.nombre}"
+
+
+class MedicalGroup(TimeStampedModel):
+    """
+    Grupo médico / Comité por tipo de cáncer.
+    
+    Representa un comité multidisciplinario (MDT) especializado en un tipo
+    específico de cáncer. Cada caso se asigna a un grupo según su tipo_cancer.
+    """
+    nombre = models.CharField(max_length=100, unique=True, help_text="Nombre del comité (ej: Comité de Pulmón)")
+    tipo_cancer = models.ForeignKey(
+        TipoCancer, 
+        on_delete=models.CASCADE, 
+        related_name='grupos_medicos',
+        help_text="Tipo de cáncer que atiende este grupo"
+    )
+    descripcion = models.TextField(blank=True)
+    
+    # Miembros del grupo (relación a través de DoctorGroupMembership)
+    # Esta relación se maneja a través del modelo de membresía
+    
+    # Configuración
+    responsable_por_defecto = models.ForeignKey(
+        Medico, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        related_name='grupos_como_responsable',
+        help_text="Médico responsable por defecto para nuevos casos"
+    )
+    quorum_config = models.PositiveSmallIntegerField(
+        default=3,
+        help_text="Número mínimo de médicos requeridos para tomar decisiones"
+    )
+    
+    # Estado
+    activo = models.BooleanField(default=True)
+    
+    class Meta:
+        verbose_name = 'Grupo Médico'
+        verbose_name_plural = 'Grupos Médicos'
+        ordering = ['nombre']
+    
+    @property
+    def miembros_activos(self):
+        """Retorna los miembros activos del grupo"""
+        return self.miembros.filter(estado='activo', disponible_segundas_opiniones=True)
+    
+    @property
+    def numero_miembros(self):
+        """Retorna el número de miembros activos"""
+        return self.miembros_activos.count()
+    
+    def puede_asignar_caso(self):
+        """Verifica si el grupo puede recibir nuevos casos"""
+        return self.activo and self.numero_miembros >= self.quorum_config
+    
+    def __str__(self):
+        return f"{self.nombre} - {self.tipo_cancer.nombre}"
+
+
+class DoctorGroupMembership(TimeStampedModel):
+    """
+    Membresía de un médico en un grupo médico.
+    
+    Relación M:N entre Medico y MedicalGroup con metadatos adicionales.
+    """
+    
+    ROL_CHOICES = [
+        ('coordinador', 'Coordinador'),
+        ('miembro_senior', 'Miembro Senior'),
+        ('miembro_regular', 'Miembro Regular'),
+        ('residente', 'Residente (Observador)'),
+        ('invitado', 'Especialista Invitado'),
+    ]
+    
+    medico = models.ForeignKey(
+        Medico, 
+        on_delete=models.CASCADE, 
+        related_name='membresias_grupo'
+    )
+    grupo = models.ForeignKey(
+        MedicalGroup, 
+        on_delete=models.CASCADE, 
+        related_name='miembros'
+    )
+    rol = models.CharField(
+        max_length=20,
+        choices=ROL_CHOICES,
+        default='miembro_regular',
+        help_text="Rol del médico en el grupo"
+    )
+    es_responsable = models.BooleanField(
+        default=False,
+        help_text="Indica si este médico es el responsable del grupo"
+    )
+    
+    # Configuración por grupo
+    puede_votar = models.BooleanField(
+        default=True,
+        help_text="Si puede emitir voto en decisiones de consenso"
+    )
+    puede_declara_consenso = models.BooleanField(
+        default=False,
+        help_text="Si puede declarar consenso en nombre del grupo"
+    )
+    disponible_asignacion_auto = models.BooleanField(
+        default=True,
+        help_text="Si está disponible para asignación automática de casos"
+    )
+    
+    # Fechas
+    fecha_union = models.DateTimeField(auto_now_add=True)
+    fecha_salida = models.DateField(null=True, blank=True)
+    activo = models.BooleanField(default=True)
+    
+    class Meta:
+        verbose_name = 'Membresía de Médico'
+        verbose_name_plural = 'Membresías de Médicos'
+        unique_together = ['medico', 'grupo']  # Un médico puede pertenecer una vez a cada grupo
+        ordering = ['-fecha_union']
+    
+    def __str__(self):
+        return f"{self.medico.nombre_completo} - {self.grupo.nombre} ({self.get_rol_display()})"
+
 
 class RevisionCaso(TimeStampedModel):
     """Revisión médica de un caso clínico"""

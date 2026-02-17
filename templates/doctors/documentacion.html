@@ -1,0 +1,195 @@
+{% extends "doctors/layout_doctor.html" %}
+{% load static %}
+
+{% block title %}Guía del Sistema - OnCoMDT{% endblock %}
+
+{% block main_content %}
+<div class="max-w-4xl mx-auto">
+    <h1 class="text-2xl font-bold text-slate-900 mb-6">Guía del Sistema - Segunda Opinión Médica</h1>
+    
+    <!-- Introducción -->
+    <section class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+        <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center">
+            <span class="material-icons-outlined text-primary mr-2">info</span>
+            Introducción
+        </h2>
+        <div class="prose prose-slate max-w-none">
+            <p class="text-slate-600 mb-4">
+                Bienvenido al sistema de Segunda Opinión Médica de OnCoMDT. Esta plataforma permite a los médicos especialistas 
+                evaluar casos clínicos y proporcionar recomendaciones médicas independientes a pacientes que lo soliciten.
+            </p>
+        </div>
+    </section>
+
+    <!-- Flujo de Trabajo -->
+    <section class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+        <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center">
+            <span class="material-icons-outlined text-primary mr-2">route</span>
+            Flujo de Trabajo
+        </h2>
+        <ol class="list-decimal list-inside space-y-3 text-slate-600">
+            <li><strong>Recepción de Caso:</strong> El sistema te asigna casos según tu especialidad y disponibilidad</li>
+            <li><strong>Revisión de Documentación:</strong> Revisa los documentos médicos subidos por el paciente</li>
+            <li><strong>Evaluación Clínica:</strong> Analiza el diagnóstico y tratamiento propuesto</li>
+            <li><strong>Emisión de Opinión:</strong> redacta tu opinión médica profesional</li>
+            <li><strong>Discusión en Comité:</strong> Si es necesario, discute el caso con otros especialistas</li>
+            <li><strong>Envío de Informe:</strong> Genera y envía el informe final al paciente</li>
+        </ol>
+    </section>
+
+    <!-- Secciones del Panel -->
+    <section class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+        <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center">
+            <span class="material-icons-outlined text-primary mr-2">dashboard</span>
+            Secciones del Panel
+        </h2>
+        
+        <div class="space-y-4">
+            <div class="border-l-4 border-primary pl-4">
+                <h3 class="font-semibold text-slate-700">Dashboard</h3>
+                <p class="text-sm text-slate-500">Vista principal con estadísticas de tu actividad y casos recientes</p>
+            </div>
+            
+            <div class="border-l-4 border-yellow-500 pl-4">
+                <h3 class="font-semibold text-slate-700">Casos Pendientes</h3>
+                <p class="text-sm text-slate-500">Lista de casos que requieren tu evaluación. Incluye filtro por fecha y estado</p>
+            </div>
+            
+            <div class="border-l-4 border-blue-500 pl-4">
+                <h3 class="font-semibold text-slate-700">Mis Casos</h3>
+                <p class="text-sm text-slate-500">Historial completo de todos los casos en los que has participado</p>
+            </div>
+            
+            <div class="border-l-4 border-green-500 pl-4">
+                <h3 class="font-semibold text-slate-700">Reportes</h3>
+                <p class="text-sm text-slate-500">Genera reportes de tu actividad con filtros por período de fechas</p>
+            </div>
+            
+            <div class="border-l-4 border-purple-500 pl-4">
+                <h3 class="font-semibold text-slate-700">Chat Comité</h3>
+                <p class="text-sm text-slate-500">Comunicación en tiempo real con otros miembros del comité médico</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Cómo Emitir una Opinión -->
+    <section class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+        <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center">
+            <span class="material-icons-outlined text-primary mr-2">edit_note</span>
+            Cómo Emitir una Opinión Médica
+        </h2>
+        
+        <div class="space-y-4 text-slate-600">
+            <ol class="list-decimal list-inside space-y-2">
+                <li>Accede a <strong>Casos Pendientes</strong> desde el menú lateral</li>
+                <li>Selecciona el caso que deseas evaluar</li>
+                <li>Revisa la documentación del paciente en la sección <strong>Documentos</strong></li>
+                <li>Analiza el diagnóstico y tratamiento propuesto en <strong>Diagnóstico</strong></li>
+                <li>En la sección <strong>Mi Opinión</strong>, redacta tu evaluación</li>
+                <li>Puedes guardar como <strong>borrador</strong> o enviar como <strong>opinión final</strong></li>
+            </ol>
+            
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
+                <div class="flex items-start">
+                    <span class="material-icons-outlined text-blue-600 mr-2">lightbulb</span>
+                    <div>
+                        <strong class="text-blue-800">Recomendación:</strong>
+                        <p class="text-sm text-blue-700 mt-1">
+                            Incluye siempre una justificación clínica detallada y, si es necesario, sugiere estudios adicionales 
+                            o alternativas de tratamiento.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Filtros de Fechas -->
+    <section class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+        <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center">
+            <span class="material-icons-outlined text-primary mr-2">date_range</span>
+            Cómo Usar los Filtros de Fechas
+        </h2>
+        
+        <div class="space-y-3 text-slate-600">
+            <p>En las secciones de <strong>Casos Pendientes</strong>, <strong>Mis Casos</strong> y <strong>Reportes</strong>, 
+            puedes filtrar por rango de fechas:</p>
+            
+            <ul class="list-disc list-inside space-y-2">
+                <li><strong>Fecha Desde:</strong> Define la fecha inicial del período</li>
+                <li><strong>Fecha Hasta:</strong> Define la fecha final del período</li>
+                <li><strong>Aplicar:</strong> Ejecuta el filtro con las fechas seleccionadas</li>
+                <li><strong>Limpiar:</strong> Restablece todos los filtros</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- Chat del Comité -->
+    <section class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+        <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center">
+            <span class="material-icons-outlined text-primary mr-2">chat</span>
+            Chat del Comité Médico
+        </h2>
+        
+        <div class="space-y-3 text-slate-600">
+            <p>La función de chat te permite comunicarte con otros miembros del comité médico:</p>
+            
+            <ul class="list-disc list-inside space-y-2">
+                <li>Accede desde el menú lateral en <strong>Chat Comité</strong></li>
+                <li>Puedes ver los miembros conectados del comité</li>
+                <li>Envía mensajes de texto en tiempo real</li>
+                <li>Comparte información relevante sobre casos específicos</li>
+                <li>Recibe notificaciones de nuevos mensajes</li>
+            </ul>
+            
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-4">
+                <div class="flex items-start">
+                    <span class="material-icons-outlined text-yellow-600 mr-2">warning</span>
+                    <div>
+                        <strong class="text-yellow-800">Nota:</strong>
+                        <p class="text-sm text-yellow-700 mt-1">
+                            Mantén la confidencialidad de la información del paciente en todas tus comunicaciones.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tips de Seguridad -->
+    <section class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center">
+            <span class="material-icons-outlined text-primary mr-2">security</span>
+            Consejos de Seguridad
+        </h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-green-50 rounded-lg p-4">
+                <div class="flex items-center text-green-700 font-medium mb-2">
+                    <span class="material-icons-outlined text-sm mr-1">check_circle</span>
+                    Hacer
+                </div>
+                <ul class="text-sm text-green-600 list-disc list-inside">
+                    <li>Revisar siempre la documentación completa</li>
+                    <li>Guardar borradores frecuentemente</li>
+                    <li>Usar el chat para consultas rápidas</li>
+                    <li>Cerrar sesión al terminar</li>
+                </ul>
+            </div>
+            
+            <div class="bg-red-50 rounded-lg p-4">
+                <div class="flex items-center text-red-700 font-medium mb-2">
+                    <span class="material-icons-outlined text-sm mr-1">cancel</span>
+                    Evitar
+                </div>
+                <ul class="text-sm text-red-600 list-disc list-inside">
+                    <li>Compartir credenciales de acceso</li>
+                    <li>Enviar opiniones sin revisar todo</li>
+                    <li>Compartir datos de pacientes fuera del sistema</li>
+                    <li>Dejar sesiones abiertas</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}

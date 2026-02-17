@@ -90,6 +90,7 @@ def sop_step2(request):
             cleaned = dict(form.cleaned_data)
             loc = cleaned.get('localidad')
             cleaned['localidad'] = loc.pk if loc else None
+            cleaned['localidad_nombre'] = loc.nombre if loc else None
             draft.update({'case_draft': _serialize_for_session(cleaned)})
             request.session[SESSION_KEY] = draft
             request.session.modified = True
@@ -190,6 +191,14 @@ def sop_step4(request):
         if form.is_valid():
             # Before finalizing, update session draft with any inline edits from the review form
             draft = request.session.get(SESSION_KEY, {})
+            
+            # Verificar que el consentimiento explícito esté marcado
+            explicit = form.cleaned_data.get('explicit_consent', False)
+            if not explicit:
+                form.add_error('explicit_consent', 'Debe aceptar el consentimiento informado para enviar la solicitud.')
+                return render(request, 'sop/step4_review.html', {'form': form, 'draft': draft, 'current_step': 4})
+            
+            # Patient fields
             # Patient fields
             p = draft.get('patient_profile', {}) or {}
             p.update({
@@ -217,7 +226,6 @@ def sop_step4(request):
             request.session.modified = True
 
             # finalize: create PatientProfile and Case atomically in service
-            explicit = form.cleaned_data.get('explicit_consent', False)
             # If we have a draft case persisted, update it and finalize instead of creating a duplicate
             try:
                 Case = django_apps.get_model('cases', 'Case')

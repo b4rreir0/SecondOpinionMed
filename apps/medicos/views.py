@@ -7,39 +7,36 @@ from django.views.decorators.csrf import csrf_protect
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.utils import timezone
-from .models import Medico, CasoClinico, RevisionCaso, ComiteMultidisciplinario, ReunionComite, DisponibilidadMedico
+from .models import Medico, RevisionCaso, ComiteMultidisciplinario, ReunionComite, DisponibilidadMedico
 from .forms import RevisionCasoForm, ReunionComiteForm, DisponibilidadMedicoForm
 from core.decorators import medico_required
 from core.services import AsignacionService, NotificacionService, ComiteService
 from pacientes.models import Paciente
+from cases.models import Case
+from cases.services import CaseService
 
 @medico_required
 def dashboard(request):
     """Dashboard del médico"""
     medico = request.user.medico
     
-    # Estadísticas del médico
-    casos_asignados = CasoClinico.objects.filter(
-        medico_asignado=medico,
-        estado__in=['asignado', 'en_revision']
+    # Casos asignados al médico (usando CaseService que incluye casos del comité)
+    casos_asignados = CaseService.get_doctor_assigned_cases(request.user)
+    casos_pendientes = casos_asignados.filter(status='IN_REVIEW')
+    
+    # Casos revisados este mes
+    casos_revisados_mes = casos_asignados.filter(
+        status='COMPLETED'
     ).count()
     
-    casos_revisados_mes = RevisionCaso.objects.filter(
-        medico=medico,
-        creado_en__month=timezone.now().month,
-        creado_en__year=timezone.now().year
-    ).count()
-    
+    # Reuniones de comité
     casos_comite = ReunionComite.objects.filter(
         medicos_participantes=medico,
         fecha_programada__gte=timezone.now()
     ).count()
     
-    # Casos pendientes de revisión
-    casos_pendientes = CasoClinico.objects.filter(
-        medico_asignado=medico,
-        estado='asignado'
-    ).order_by('fecha_asignacion')[:5]
+    # Casos pendientes de revisión (usando CaseService)
+    casos_pendientes_list = casos_pendientes.order_by('-created_at')[:5]
     
     # Próximas reuniones de comité
     reuniones_proximas = ReunionComite.objects.filter(
@@ -52,7 +49,7 @@ def dashboard(request):
         'casos_asignados': casos_asignados,
         'casos_revisados_mes': casos_revisados_mes,
         'casos_comite': casos_comite,
-        'casos_pendientes': casos_pendientes,
+        'casos_pendientes': casos_pendientes_list,
         'reuniones_proximas': reuniones_proximas,
         'capacidad_disponible': medico.capacidad_disponible,
     }

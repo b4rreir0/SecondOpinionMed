@@ -1,0 +1,113 @@
+{% extends "admin/layout_admin.html" %}
+{% load static %}
+
+{% block title %}Gestión de Casos - Panel Admin{% endblock %}
+
+{% block main_content %}
+<div class="max-w-7xl mx-auto space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Gestión de Casos</h1>
+            <p class="text-slate-500 dark:text-slate-400">Administra todos los casos del sistema MDT</p>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
+        <form method="get" class="flex flex-wrap gap-4 items-end">
+            <div class="flex-1 min-w-[200px]">
+                <label class="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">Buscar</label>
+                <input type="text" name="search" value="{{ search|default:'' }}" 
+                       placeholder="Buscar por ID o email..."
+                       class="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white">
+            </div>
+            <div class="w-48">
+                <label class="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">Estado</label>
+                <select name="estado" class="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white">
+                    <option value="">Todos</option>
+                    <option value="PENDIENTE" {% if estado_actual == 'PENDIENTE' %}selected{% endif %}>Pendiente</option>
+                    <option value="EN_PROCESO" {% if estado_actual == 'EN_PROCESO' %}selected{% endif %}>En Proceso</option>
+                    <option value="COMPLETADO" {% if estado_actual == 'COMPLETADO' %}selected{% endif %}>Completado</option>
+                </select>
+            </div>
+            <button type="submit" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors">
+                Filtrar
+            </button>
+        </form>
+    </div>
+
+    <!-- Cases Table -->
+    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-slate-50 dark:bg-slate-700/50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Case ID</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Paciente</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Especialidad</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Estado</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Médico Asignado</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Fecha</th>
+                        <th class="px-6 py-3 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                    {% for caso in casos %}
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="text-sm font-bold text-slate-900 dark:text-white font-mono">{{ caso.case_id }}</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center gap-2">
+                                <div class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary text-xs font-bold">
+                                    {{ caso.paciente.user.email|first|upper }}
+                                </div>
+                                <span class="text-sm text-slate-700 dark:text-slate-300">{{ caso.paciente.user.email }}</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">
+                            {{ caso.especialidad.nombre|default:caso.tipo_cancer.nombre|default:'-' }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if caso.status == 'PENDIENTE' %}
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400">Pendiente</span>
+                            {% elif caso.status == 'EN_PROCESO' %}
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">En Proceso</span>
+                            {% elif caso.status == 'COMPLETADO' %}
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400">Completado</span>
+                            {% else %}
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300">{{ caso.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">
+                            {% if caso.medico_asignado %}
+                                Dr. {{ caso.medico_asignado.user.get_full_name|default:caso.medico_asignado.user.email }}
+                            {% else %}
+                                <span class="text-slate-400">Sin asignar</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                            {{ caso.fecha_creacion|date:"d M Y" }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right">
+                            <a href="{% url 'administracion:portal_caso_detalle' caso.case_id %}" 
+                               class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors">
+                                <span class="material-icons-round">visibility</span>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="px-6 py-12 text-center text-slate-500">
+                            <span class="material-icons-round text-4xl mb-2">inbox</span>
+                            <p>No hay casos registrados</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,6 +1,6 @@
 # administracion/models.py
 from django.db import models
-from django.contrib.auth.models import User
+from django.conf import settings
 from core.models import TimeStampedModel
 
 class Administrador(TimeStampedModel):
@@ -11,7 +11,7 @@ class Administrador(TimeStampedModel):
         ('suspendido', 'Suspendido'),
     )
     
-    usuario = models.OneToOneField(User, on_delete=models.CASCADE, related_name='administrador')
+    usuario = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='administrador')
     nombres = models.CharField(max_length=100)
     apellidos = models.CharField(max_length=100)
     email_institucional = models.EmailField()
@@ -129,7 +129,7 @@ class NotificacionSistema(TimeStampedModel):
     prioridad = models.CharField(max_length=20, choices=PRIORIDADES, default='media')
     
     # Destinatarios
-    destinatarios = models.ManyToManyField(User, related_name='notificaciones_recibidas', blank=True)
+    destinatarios = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='notificaciones_recibidas', blank=True)
     roles_destinatarios = models.ManyToManyField('auth.Group', related_name='notificaciones', blank=True)
     
     # Estado
@@ -138,7 +138,7 @@ class NotificacionSistema(TimeStampedModel):
     fecha_expiracion = models.DateTimeField(null=True, blank=True)
     
     # Metadatos
-    creada_por = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='notificaciones_creadas')
+    creada_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='notificaciones_creadas')
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     
     class Meta:
@@ -182,7 +182,7 @@ class BackupSistema(TimeStampedModel):
     tamano_bytes = models.BigIntegerField(null=True, blank=True)
     
     # Metadatos
-    ejecutado_por = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    ejecutado_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
     checksum = models.CharField(max_length=128, blank=True)
     ubicacion_almacenamiento = models.CharField(max_length=500, blank=True)
     
@@ -236,7 +236,7 @@ class LogSistema(TimeStampedModel):
     linea = models.PositiveIntegerField(null=True, blank=True)
     
     # Contexto
-    usuario = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
     ip_address = models.GenericIPAddressField(null=True, blank=True)
     user_agent = models.TextField(blank=True)
     

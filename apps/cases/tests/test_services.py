@@ -1,7 +1,7 @@
 from django.test import TestCase, override_settings
 from django.contrib.auth import get_user_model
-from apps.cases.services import CaseService
-from apps.cases.models import CaseAuditLog, Case
+from cases.services import CaseService
+from cases.models import CaseAuditLog, Case
 from django.db import connection
 
 User = get_user_model()

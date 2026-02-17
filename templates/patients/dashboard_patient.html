@@ -1,0 +1,283 @@
+{% extends "patients/layout_patient.html" %}
+{% load static %}
+
+{% block title %}Mis Casos - Portal Paciente{% endblock %}
+
+{% block extra_css %}
+<style>
+    .bg-primary { background-color: #1392ec; }
+    .bg-primary-dark { background-color: #0e7ccb; }
+    .bg-primary-light { background-color: #1392ec; }
+    .bg-secondary { background-color: #10b981; }
+    .bg-accent { background-color: #8b5cf6; }
+    .text-primary { color: #1392ec; }
+    .text-primary-dark { color: #0e7ccb; }
+    .border-primary { border-color: #1392ec; }
+    .hover\:bg-primary-dark:hover { background-color: #0e7ccb; }
+    .hover\:text-primary-dark:hover { color: #0e7ccb; }
+    .hover\:border-primary-dark:hover { border-color: #0e7ccb; }
+    .from-primary { --tw-gradient-from: #1392ec; --tw-gradient-to: #0e7ccb; }
+    .to-primary { --tw-gradient-to: #0e7ccb; }
+    .shadow-primary { box-shadow: 0 4px 14px 0 rgba(19, 146, 236, 0.25); }
+    .hover\:shadow-primary:hover { box-shadow: 0 6px 20px rgba(19, 146, 236, 0.35); }
+    .bg-primary\/10 { background-color: rgba(19, 146, 236, 0.1); }
+    .hover\:bg-primary\/15:hover { background-color: rgba(19, 146, 236, 0.15); }
+    .ring-primary\/20 { --tw-ring-color: rgba(19, 146, 236, 0.2); }
+</style>
+{% endblock %}
+
+{% block main_content %}
+<div class="max-w-7xl mx-auto space-y-8">
+    <!-- Welcome Section -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+            <h1 class="text-3xl font-bold text-slate-900 dark:text-white">
+                Hola, <span class="text-primary">{{ user.get_first_name|default:user.username }}</span>
+            </h1>
+            <p class="text-slate-500 dark:text-slate-400 mt-1">Aquí está el resumen de tus evaluaciones médicas</p>
+        </div>
+        <button class="inline-flex items-center gap-2 px-5 py-2.5 bg-primary hover:bg-primary-dark text-white rounded-xl font-semibold transition-all duration-200 shadow-primary hover:shadow-lg hover:scale-[1.02]">
+            <span class="material-icons-round">add</span>
+            Nuevo Caso
+        </button>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+        <!-- Total Cases -->
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow">
+            <div class="flex items-center justify-between">
+                <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <span class="material-icons-round text-primary text-2xl">folder_shared</span>
+                </div>
+                <span class="text-xs font-bold text-emerald-500 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-1 rounded-full">+2 este mes</span>
+            </div>
+            <div class="mt-4">
+                <p class="text-3xl font-bold text-slate-900 dark:text-white">{{ casos_count|default:0 }}</p>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Casos Totales</p>
+            </div>
+        </div>
+
+        <!-- Pending -->
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow">
+            <div class="flex items-center justify-between">
+                <div class="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center">
+                    <span class="material-icons-round text-amber-500 text-2xl">hourglass_empty</span>
+                </div>
+            </div>
+            <div class="mt-4">
+                <p class="text-3xl font-bold text-slate-900 dark:text-white">{{ casos_pendientes|default:0 }}</p>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Pendientes</p>
+            </div>
+        </div>
+
+        <!-- Completed -->
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow">
+            <div class="flex items-center justify-between">
+                <div class="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center">
+                    <span class="material-icons-round text-emerald-500 text-2xl">check_circle</span>
+                </div>
+            </div>
+            <div class="mt-4">
+                <p class="text-3xl font-bold text-slate-900 dark:text-white">{{ casos_completados|default:0 }}</p>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Completados</p>
+            </div>
+        </div>
+
+        <!-- Opinions -->
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow">
+            <div class="flex items-center justify-between">
+                <div class="w-12 h-12 rounded-xl bg-violet-50 dark:bg-violet-900/30 flex items-center justify-center">
+                    <span class="material-icons-round text-violet-500 text-2xl">groups</span>
+                </div>
+            </div>
+            <div class="mt-4">
+                <p class="text-3xl font-bold text-slate-900 dark:text-white">{{ opiniones_recibidas|default:0 }}</p>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Opiniones Médicas</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cases List -->
+    <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden">
+        <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
+            <h2 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <span class="material-icons-round text-primary">medical_services</span>
+                Mis Evaluaciones
+            </h2>
+            <div class="flex items-center gap-2">
+                <button class="px-3 py-1.5 text-xs font-medium text-slate-500 hover:text-primary bg-slate-50 dark:bg-slate-700 rounded-lg transition-colors">
+                    Todos
+                </button>
+                <button class="px-3 py-1.5 text-xs font-medium text-slate-500 hover:text-primary rounded-lg transition-colors">
+                    Activos
+                </button>
+                <button class="px-3 py-1.5 text-xs font-medium text-slate-500 hover:text-primary rounded-lg transition-colors">
+                    Completados
+                </button>
+            </div>
+        </div>
+        
+        <div class="divide-y divide-slate-100 dark:divide-slate-700">
+            {% for caso in casos %}
+            <a href="{% url 'patients:case_detail' caso.case_id %}" 
+               class="block p-6 hover:bg-primary/5 dark:hover:bg-primary/10 transition-colors group">
+                <div class="flex flex-col md:flex-row md:items-center gap-4">
+                    <!-- Icon -->
+                    <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-blue-600 flex items-center justify-center text-white shadow-primary flex-shrink-0">
+                        <span class="material-icons-round text-2xl">health_and_safety</span>
+                    </div>
+                    
+                    <!-- Info -->
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-start justify-between gap-2">
+                            <div>
+                                <h3 class="text-base font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors">
+                                    {{ caso.primary_diagnosis|default:caso.tipo_cancer.nombre|default:'Evaluación' }}
+                                </h3>
+                                <p class="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+                                    {{ caso.created_at|date:"d M Y" }} • {{ caso.localidad.nombre|default:'Sin localidad' }}
+                                </p>
+                            </div>
+                            <div class="flex-shrink-0">
+                                {% if caso.status == 'SUBMITTED' or caso.status == 'ASSIGNED' or caso.status == 'PROCESSING' %}
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400 border border-amber-200 dark:border-amber-700">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1.5 animate-pulse"></span>
+                                    En Revisión
+                                </span>
+                                {% elif caso.status == 'MDT_IN_PROGRESS' %}
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 border border-blue-200 dark:border-blue-700">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-blue-500 mr-1.5 animate-pulse"></span>
+                                    En Análisis MDT
+                                </span>
+                                {% elif caso.status == 'MDT_COMPLETED' or caso.status == 'REPORT_DRAFT' %}
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-violet-50 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400 border border-violet-200 dark:border-violet-700">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-violet-500 mr-1.5 animate-pulse"></span>
+                                    Informe en Proceso
+                                </span>
+                                {% elif caso.status == 'REPORT_COMPLETED' or caso.status == 'OPINION_COMPLETE' or caso.status == 'CLOSED' %}
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-700">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5"></span>
+                                    Completado
+                                </span>
+                                {% else %}
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300">
+                                    {{ caso.get_status_display }}
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Progress Bar -->
+                        <div class="mt-4">
+                            <div class="flex items-center justify-between text-xs mb-1.5">
+                                <span class="text-slate-500 dark:text-slate-400">Progreso</span>
+                                <span class="font-medium text-primary">
+                                    {% if caso.status == 'CLOSED' %}100%
+                                    {% elif caso.status == 'MDT_IN_PROGRESS' %}75%
+                                    {% elif caso.status == 'ASSIGNED' or caso.status == 'PROCESSING' %}50%
+                                    {% elif caso.status == 'SUBMITTED' %}25%
+                                    {% else %}10%
+                                    {% endif %}%
+                                </span>
+                            </div>
+                            <div class="w-full h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-primary to-blue-500 rounded-full transition-all duration-500" 
+                                     style="width: {% if caso.status == 'CLOSED' %}100{% elif caso.status == 'MDT_IN_PROGRESS' %}75{% elif caso.status == 'ASSIGNED' or caso.status == 'PROCESSING' %}50{% elif caso.status == 'SUBMITTED' %}25{% else %}10{% endif %}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Arrow -->
+                    <div class="hidden md:flex w-8 h-8 items-center justify-center rounded-full bg-slate-50 dark:bg-slate-700 text-slate-400 group-hover:bg-primary group-hover:text-white transition-all duration-200">
+                        <span class="material-icons-round text-lg">arrow_forward</span>
+                    </div>
+                </div>
+            </a>
+            {% empty %}
+            <div class="p-12 text-center">
+                <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center">
+                    <span class="material-icons-round text-slate-400 text-3xl">folder_off</span>
+                </div>
+                <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-2">No hay casos todavía</h3>
+                <p class="text-slate-500 dark:text-slate-400 mb-6">Crea tu primera evaluación médica</p>
+                <button class="inline-flex items-center gap-2 px-5 py-2.5 bg-primary hover:bg-primary-dark text-white rounded-xl font-semibold transition-all duration-200">
+                    <span class="material-icons-round">add</span>
+                    Nueva Evaluación
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+        
+        {% if casos %}
+        <div class="px-6 py-4 border-t border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+            <button class="w-full text-center text-sm font-medium text-primary hover:text-primary-dark transition-colors flex items-center justify-center gap-1">
+                Ver todos los casos
+                <span class="material-icons-round text-sm">expand_more</span>
+            </button>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Informes -->
+    {% if informes %}
+    <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-6">
+        <h2 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-6">
+            <span class="material-icons-round text-primary">description</span>
+            Mis Informes
+        </h2>
+        
+        <div class="space-y-3">
+            {% for informe in informes %}
+            <div class="flex items-center gap-4 p-4 rounded-xl bg-slate-50 dark:bg-slate-700/50 hover:bg-primary/5 transition-colors">
+                <div class="w-12 h-12 rounded-xl bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 flex items-center justify-center flex-shrink-0">
+                    <span class="material-icons-round">picture_as_pdf</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-slate-900 dark:text-white">{{ informe.titulo|default:'Informe Médico' }}</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Emitido el {{ informe.fecha_emision|date:"d M Y" }}</p>
+                </div>
+                <a href="#" class="px-4 py-2 text-sm font-medium text-primary hover:bg-primary/10 rounded-lg transition-colors">
+                    Ver
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Recent Activity -->
+    <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-6">
+        <h2 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-6">
+            <span class="material-icons-round text-primary">history</span>
+            Actividad Reciente
+        </h2>
+        
+        <div class="space-y-4">
+            {% for actividad in actividades_recientes %}
+            <div class="flex items-start gap-4 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0
+                    {% if actividad.tipo == 'OPINION' %}bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400
+                    {% elif actividad.tipo == 'DOCUMENTO' %}bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400
+                    {% elif actividad.tipo == 'ESTADO' %}bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400
+                    {% else %}bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400{% endif %}">
+                    <span class="material-icons-round text-lg">
+                        {% if actividad.tipo == 'OPINION' %}rate_review
+                        {% elif actividad.tipo == 'DOCUMENTO' %}description
+                        {% elif actividad.tipo == 'ESTADO' %}sync
+                        {% else %}info{% endif %}
+                    </span>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-slate-900 dark:text-white">{{ actividad.titulo }}</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">{{ actividad.descripcion }}</p>
+                </div>
+                <span class="text-xs text-slate-400 flex-shrink-0">{{ actividad.fecha|timesince }}</span>
+            </div>
+            {% empty %}
+            <p class="text-sm text-slate-500 dark:text-slate-400 text-center py-4">No hay actividad reciente</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

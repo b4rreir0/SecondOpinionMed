@@ -14,12 +14,30 @@ class PatientProfileForm(forms.Form):
     known_allergies = forms.CharField(widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3}), required=False, label='Alergias conocidas')
 
 
+def validate_diagnosis_date_not_future(value):
+    """Valida que la fecha de diagnóstico no sea futura"""
+    if value and value > timezone.now().date():
+        raise forms.ValidationError('La fecha de diagnóstico no puede ser futura. Debe ser hoy o una fecha anterior.')
+    return value
+
+
 class CaseDraftForm(forms.Form):
     primary_diagnosis = forms.CharField(max_length=255, label='Diagnóstico primario', widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: Adenocarcinoma de pulmón'}))
-    diagnosis_date = forms.DateField(widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}), label='Fecha de diagnóstico')
+    diagnosis_date = forms.DateField(
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}), 
+        label='Fecha de diagnóstico',
+        validators=[validate_diagnosis_date_not_future]
+    )
     referring_institution = forms.CharField(max_length=255, label='Institución que refiere', widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nombre de la institución que remite'}))
     main_symptoms = forms.CharField(widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 4}), label='Síntomas principales')
     localidad = forms.ModelChoiceField(queryset=Localidad.objects.all(), required=False, label='Localidad', widget=forms.Select(attrs={'class': 'form-select'}))
+
+    def clean_diagnosis_date(self):
+        """Validación adicional en clean para mayor seguridad"""
+        diagnosis_date = self.cleaned_data.get('diagnosis_date')
+        if diagnosis_date and diagnosis_date > timezone.now().date():
+            raise forms.ValidationError('La fecha de diagnóstico no puede ser futura. Debe ser hoy o una fecha anterior.')
+        return diagnosis_date
 
 
 class CaseDocumentForm(forms.Form):

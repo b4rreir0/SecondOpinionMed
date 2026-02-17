@@ -1,0 +1,159 @@
+{% extends "doctors/layout_doctor.html" %}
+{% load static %}
+
+{% block title %}Respuesta Final - Caso {{ case.case_id }} - OnCoMDT{% endblock %}
+
+{% block main_content %}
+<div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Enviar Respuesta Final al Paciente</h1>
+        <p class="text-sm text-slate-500 mt-1">
+            Caso: <span class="font-mono font-bold">{{ case.case_id }}</span>
+        </p>
+    </div>
+
+    {% if not es_responsable %}
+    <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+        <p class="text-red-700 font-medium">⚠️ Solo el coordinador/responsable del comité puede enviar la respuesta final.</p>
+    </div>
+    {% endif %}
+
+    <!-- Información del Caso -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+        <h3 class="text-lg font-bold text-gray-800 mb-4">Resumen del Caso</h3>
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <p class="text-xs text-gray-500 uppercase">Paciente</p>
+                <p class="font-semibold">{{ case.patient.get_full_name }}</p>
+            </div>
+            <div>
+                <p class="text-xs text-gray-500 uppercase">Email</p>
+                <p class="font-semibold">{{ case.patient.email }}</p>
+            </div>
+            <div>
+                <p class="text-xs text-gray-500 uppercase">Tipo de Cáncer</p>
+                <p class="font-semibold">{{ case.tipo_cancer.nombre|default:'No especificado' }}</p>
+            </div>
+            <div>
+                <p class="text-xs text-gray-500 uppercase">Diagnóstico</p>
+                <p class="font-semibold">{{ case.primary_diagnosis|default:'No especificado' }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Votos del Comité -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+        <h3 class="text-lg font-bold text-gray-800 mb-4">Votos del Comité</h3>
+        
+        {% if todos_votos %}
+            <div class="space-y-3 mb-4">
+                {% for voto in todos_votos %}
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div>
+                            <span class="font-medium">Dr. {{ voto.medico.nombre_completo }}</span>
+                            <span class="ml-2 px-2 py-0.5 text-xs rounded-full 
+                                {% if voto.voto == 'aprueba' %}bg-green-100 text-green-800
+                                {% elif voto.voto == 'aprueba_mod' %}bg-blue-100 text-blue-800
+                                {% elif voto.voto == 'alternativa' %}bg-yellow-100 text-yellow-800
+                                {% elif voto.voto == 'contraindicado' %}bg-red-100 text-red-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ voto.get_voto_display }}
+                            </span>
+                        </div>
+                        {% if voto.justificacion %}
+                            <p class="text-sm text-gray-600 truncate max-w-md">{{ voto.justificacion }}</p>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Resumen de votos -->
+            <div class="flex gap-4 pt-4 border-t">
+                <div class="flex-1 bg-green-50 p-3 rounded-lg text-center">
+                    <p class="text-2xl font-bold text-green-600">{{ workflow.votos_a_favor }}</p>
+                    <p class="text-xs text-gray-600">A favor</p>
+                </div>
+                <div class="flex-1 bg-red-50 p-3 rounded-lg text-center">
+                    <p class="text-2xl font-bold text-red-600">{{ workflow.votos_en_contra }}</p>
+                    <p class="text-xs text-gray-600">En contra</p>
+                </div>
+                <div class="flex-1 bg-gray-50 p-3 rounded-lg text-center">
+                    <p class="text-2xl font-bold text-gray-600">{{ workflow.abstenciones }}</p>
+                    <p class="text-xs text-gray-600">Abstenciones</p>
+                </div>
+            </div>
+        {% else %}
+            <p class="text-gray-500">No hay votos registrados. Debes esperar a que los miembros emitan sus opiniones.</p>
+        {% endif %}
+    </div>
+
+    <!-- Formulario de Respuesta -->
+    {% if es_responsable %}
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <h3 class="text-lg font-bold text-gray-800 mb-4">Respuesta al Paciente</h3>
+        
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-3">¿El comité está de acuerdo con el diagnóstico?</label>
+                
+                <div class="space-y-3">
+                    <label class="flex items-center p-4 border-2 border-green-300 rounded-lg cursor-pointer hover:bg-green-50 transition">
+                        <input type="radio" name="conformidad" value="conformidad" class="w-5 h-5 text-green-600" required>
+                        <div class="ml-3">
+                            <span class="font-medium text-green-700">✅ SÍ, estamos de acuerdo</span>
+                            <p class="text-sm text-gray-600">Se enviará una respuesta confirmando el diagnóstico y tratamiento</p>
+                        </div>
+                    </label>
+                    
+                    <label class="flex items-center p-4 border-2 border-red-300 rounded-lg cursor-pointer hover:bg-red-50 transition">
+                        <input type="radio" name="conformidad" value="no_conformidad" class="w-5 h-5 text-red-600" required>
+                        <div class="ml-3">
+                            <span class="font-medium text-red-700">❌ NO estamos de acuerdo</span>
+                            <p class="text-sm text-gray-600">Se abrirá un campo para explicar las diferencias</p>
+                        </div>
+                    </label>
+                </div>
+            </div>
+            
+            <div id="explicacion-field" class="mb-6 hidden">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Explicación (requerido)</label>
+                <textarea name="explicacion" rows="6" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" placeholder="Explica las diferencias respecto al diagnóstico/tratamiento propuesto..."></textarea>
+            </div>
+            
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                <p class="text-sm text-yellow-800">
+                    <strong>⚠️ Nota:</strong> Al enviar, se generará un PDF oficial y se enviará por correo electrónico al paciente.
+                </p>
+            </div>
+            
+            <div class="flex gap-4">
+                <a href="{% url 'cases:mdt_opinion' case.case_id %}" class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+                    Volver
+                </a>
+                <button type="submit" class="flex-1 bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition font-medium">
+                    📤 Enviar Respuesta al Paciente
+                </button>
+            </div>
+        </form>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+document.querySelectorAll('input[name="conformidad"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+        const explicacionField = document.getElementById('explicacion-field');
+        if (this.value === 'no_conformidad') {
+            explicacionField.classList.remove('hidden');
+            explicacionField.querySelector('textarea').required = true;
+        } else {
+            explicacionField.classList.add('hidden');
+            explicacionField.querySelector('textarea').required = false;
+        }
+    });
+});
+</script>
+{% endblock %}
