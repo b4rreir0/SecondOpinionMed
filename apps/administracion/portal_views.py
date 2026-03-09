@@ -45,7 +45,7 @@ class AdminLoginView(View):
         admin_email, admin_password = _get_admin_credentials()
         if admin_email and admin_password and email == admin_email and password == admin_password:
             request.session['is_custom_admin'] = True
-            return redirect(reverse('administracion:portal_panel'))
+            return redirect(reverse('administracion:portal_dashboard'))
         messages.error(request, 'Credenciales inválidas')
         return render(request, self.template_name)
 
@@ -96,7 +96,7 @@ class InviteDoctorView(View):
         email = request.POST.get('email')
         if not email:
             messages.error(request, 'Introduce un correo válido')
-            return redirect(reverse('administracion:portal_panel'))
+            return redirect(reverse('administracion:portal_dashboard'))
 
         # Try to find admin user as invited_by
         invited_by = None
@@ -109,7 +109,7 @@ class InviteDoctorView(View):
 
         DoctorService.invite_doctor(email, invited_by)
         messages.success(request, f'Invitación enviada a {email} (en cola)')
-        return redirect(reverse('administracion:portal_panel'))
+        return redirect(reverse('administracion:portal_dashboard'))
 
 
 # ============================================================================
@@ -136,7 +136,7 @@ class AdminDashboardView(View):
         }
         
         # Casos recientes
-        casos_recientes = casos_mdt.order_by('-fecha_creacion')[:10]
+        casos_recientes = casos_mdt.order_by('-created_at')[:10]
         
         context = {
             'stats': stats,
@@ -165,7 +165,7 @@ class GestionCasosView(View):
                 Q(paciente__user__email__icontains=search)
             )
         
-        casos = casos.order_by('-fecha_creacion')
+        casos = casos.order_by('-created_at')
         
         context = {
             'casos': casos,
@@ -254,7 +254,7 @@ class MedicoDetalleView(View):
     @admin_required_portal
     def get(self, request, medico_id):
         medico = get_object_or_404(Medico, id=medico_id)
-        casos = CasoMDT.objects.filter(medico_asignado=medico).order_by('-fecha_creacion')[:10]
+        casos = CasoMDT.objects.filter(medico_asignado=medico).order_by('-created_at')[:10]
         
         context = {
             'medico': medico,
@@ -292,7 +292,7 @@ class PacienteDetalleView(View):
     @admin_required_portal
     def get(self, request, paciente_id):
         paciente = get_object_or_404(Paciente, id=paciente_id)
-        casos = CasoMDT.objects.filter(paciente=paciente).order_by('-fecha_creacion')
+        casos = CasoMDT.objects.filter(paciente=paciente).order_by('-created_at')
         
         context = {
             'paciente': paciente,

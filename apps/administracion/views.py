@@ -32,7 +32,7 @@ def dashboard(request):
     }
     
     # Casos recientes del sistema MDT
-    casos_recientes = casos_mdt.order_by('-fecha_creacion')[:10]
+    casos_recientes = casos_mdt.order_by('-created_at')[:10]
     
     context = {
         'admin': admin,

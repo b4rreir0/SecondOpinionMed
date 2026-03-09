@@ -1,7 +1,7 @@
 # administracion/forms.py
 from django import forms
 from django.contrib.auth.models import User
-from .models import ConfiguracionSistema, Administrador
+from .models import ConfiguracionSistema, Administrador, NotificacionSistema, ReporteSistema
 
 class AdministradorForm(forms.ModelForm):
     class Meta:
@@ -17,7 +17,7 @@ class AdministradorForm(forms.ModelForm):
 class ConfiguracionSistemaForm(forms.ModelForm):
     class Meta:
         model = ConfiguracionSistema
-        fields = ['clave', 'valor', 'tipo', 'descripcion', 'categoria']
+        fields = ['clave', 'valor', 'tipo', 'descripcion']
         widgets = {
             'descripcion': forms.Textarea(attrs={'rows': 3}),
             'valor': forms.Textarea(attrs={'rows': 3}),
@@ -56,3 +56,20 @@ class UsuarioCreacionForm(forms.ModelForm):
         if commit:
             user.save()
         return user
+
+
+class NotificacionSistemaForm(forms.ModelForm):
+    class Meta:
+        model = NotificacionSistema
+        fields = ['titulo', 'mensaje', 'tipo', 'prioridad', 'destinatarios', 'roles_destinatarios', 'fecha_expiracion']
+        widgets = {
+            'mensaje': forms.Textarea(attrs={'rows': 4}),
+            'destinatarios': forms.CheckboxSelectMultiple(),
+            'roles_destinatarios': forms.CheckboxSelectMultiple(),
+        }
+
+
+class ReporteSistemaForm(forms.ModelForm):
+    class Meta:
+        model = ReporteSistema
+        fields = ['nombre', 'tipo', 'frecuencia', 'parametros', 'activo']

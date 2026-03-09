@@ -1,5 +1,6 @@
 from django.urls import path
 from . import portal_views
+from . import views
 
 app_name = 'administracion'
 
@@ -32,4 +33,7 @@ urlpatterns = [
     
     # Configuración
     path('configuracion/', portal_views.ConfiguracionView.as_view(), name='portal_configuracion'),
+    
+    # Panel de Gestión (desde views.py)
+    path('gestion/', views.panel_gestion, name='panel_gestion'),
 ]

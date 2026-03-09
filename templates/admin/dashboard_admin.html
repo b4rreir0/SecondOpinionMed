@@ -107,7 +107,7 @@
                     <span class="material-icons-round text-primary">recent_actors</span>
                     Casos Recientes
                 </h2>
-                <a href="{% url 'administracion:casos_list' %}" class="text-sm font-medium text-primary hover:text-primary-dark transition-colors flex items-center gap-1">
+                <a href="{% url 'administracion:portal_casos' %}" class="text-sm font-medium text-primary hover:text-primary-dark transition-colors flex items-center gap-1">
                     Ver todos
                     <span class="material-icons-round text-sm">arrow_forward</span>
                 </a>
@@ -165,7 +165,7 @@
                                 {{ caso.fecha_creacion|date:"d M Y" }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right">
-                                <a href="{% url 'administracion:case_detail' caso.case_id %}" 
+                                <a href="{% url 'administracion:portal_caso_detalle' caso.case_id %}" 
                                    class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors">
                                     <span class="material-icons-round">visibility</span>
                                 </a>
