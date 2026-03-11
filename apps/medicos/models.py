@@ -205,17 +205,21 @@ class ComiteMultidisciplinario(TimeStampedModel):
 
 class MedicalGroup(TimeStampedModel):
     """
-    Grupo médico / Comité por tipo de cáncer.
+    Grupo médico / Comité oncológico especializado.
     
-    Representa un comité multidisciplinario (MDT) especializado en un tipo
-    específico de cáncer. Cada caso se asigna a un grupo según su tipo_cancer.
+    Representa un comité multidisciplinario (MDT) especializado en uno o varios
+    tipos de cáncer. Cada caso se asigna a un grupo según su tipo_cancer.
+    
+    Ejemplos:
+    - "Comité de Tumores Torácicos" -> maneja: Cancer de pulmon, Cancer de esófago
+    - "Comité de Tumores Digestivos" -> maneja: Cancer de colon, Cancer de estomago, Cancer de recto
     """
-    nombre = models.CharField(max_length=100, unique=True, help_text="Nombre del comité (ej: Comité de Pulmón)")
-    tipo_cancer = models.ForeignKey(
+    nombre = models.CharField(max_length=100, unique=True, help_text="Nombre del comité (ej: Comité de Tumores Torácicos)")
+    # Un grupo puede atender varios tipos de cancer (ManyToMany)
+    tipos_cancer = models.ManyToManyField(
         TipoCancer, 
-        on_delete=models.CASCADE, 
         related_name='grupos_medicos',
-        help_text="Tipo de cáncer que atiende este grupo"
+        help_text="Tipos de cáncer que atiende este grupo"
     )
     descripcion = models.TextField(blank=True)
     
@@ -258,8 +262,15 @@ class MedicalGroup(TimeStampedModel):
         """Verifica si el grupo puede recibir nuevos casos"""
         return self.activo and self.numero_miembros >= self.quorum_config
     
+    def get_tipos_cancer_names(self):
+        """Retorna los nombres de los tipos de癌症 como string"""
+        return ', '.join([tc.nombre for tc in self.tipos_cancer.all()[:3]])
+    
     def __str__(self):
-        return f"{self.nombre} - {self.tipo_cancer.nombre}"
+        tipos = ', '.join([tc.nombre for tc in self.tipos_cancer.all()[:3]])
+        if self.tipos_cancer.count() > 3:
+            tipos += f' (+{self.tipos_cancer.count() - 3})'
+        return f"{self.nombre} - [{tipos}]"
 
 
 class DoctorGroupMembership(TimeStampedModel):

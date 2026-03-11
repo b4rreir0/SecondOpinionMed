@@ -545,22 +545,36 @@ def asignar_caso_automatico(case):
     from medicos.models import MedicalGroup, DoctorGroupMembership, Medico
     
     with transaction.atomic():
-        try:
-            grupo = MedicalGroup.objects.get(
-                tipo_cancer__codigo__iexact=case.specialty_required,
-                activo=True
-            )
-        except MedicalGroup.DoesNotExist:
+        # Buscar grupo por tipo_cancer del caso
+        if case.tipo_cancer:
             try:
                 grupo = MedicalGroup.objects.filter(
-                    nombre__icontains=case.specialty_required,
+                    tipos_cancer=case.tipo_cancer,
                     activo=True
                 ).first()
             except Exception:
-                pass
+                grupo = None
+        else:
+            grupo = None
+        
+        # Fallback: buscar por specialty_required si no se encontró por tipo_cancer
+        if not grupo:
+            try:
+                grupo = MedicalGroup.objects.get(
+                    nombre__icontains=case.specialty_required,
+                    activo=True
+                )
+            except MedicalGroup.DoesNotExist:
+                try:
+                    grupo = MedicalGroup.objects.filter(
+                        nombre__icontains=case.specialty_required,
+                        activo=True
+                    ).first()
+                except Exception:
+                    pass
             
             if not grupo:
-                return (False, f"No se encontró grupo médico para la especialidad: {case.specialty_required}")
+                return (False, f"No se encontró grupo médico para: {case.specialty_required}")
         
         responsable = _seleccionar_responsable(grupo)
         

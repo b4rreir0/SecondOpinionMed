@@ -41,15 +41,22 @@ class MedicoSerializer(serializers.ModelSerializer):
 # Serializers de Grupo Médico
 # ===================
 
+class TipoCancerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TipoCancer
+        fields = ['id', 'nombre', 'codigo']
+
+
 class MedicalGroupSerializer(serializers.ModelSerializer):
-    tipo_cancer_nombre = serializers.CharField(source='tipo_cancer.nombre', read_only=True)
+    tipo_cancer_nombre = serializers.CharField(source='get_tipos_cancer_names', read_only=True)
     numero_miembros = serializers.IntegerField(source='numero_miembros', read_only=True)
     miembros = MedicoSerializer(many=True, read_only=True)
+    tipos_cancer = TipoCancerSerializer(many=True, read_only=True)
     
     class Meta:
         model = MedicalGroup
         fields = [
-            'id', 'nombre', 'tipo_cancer', 'tipo_cancer_nombre', 'descripcion',
+            'id', 'nombre', 'tipos_cancer', 'tipo_cancer_nombre', 'descripcion',
             'responsable_por_defecto', 'quorum_config', 'activo',
             'numero_miembros', 'miembros'
         ]

@@ -40,9 +40,14 @@ class LocalidadAdmin(admin.ModelAdmin):
 
 @admin.register(MedicalGroup)
 class MedicalGroupAdmin(admin.ModelAdmin):
-    list_display = ('nombre', 'tipo_cancer', 'quorum_config', 'activo', 'numero_miembros')
-    list_filter = ('activo', 'tipo_cancer')
+    list_display = ('nombre', 'tipos_cancer_display', 'quorum_config', 'activo', 'numero_miembros')
+    list_filter = ('activo', 'tipos_cancer')
     search_fields = ('nombre',)
+    filter_horizontal = ('tipos_cancer',)
+    
+    def tipos_cancer_display(self, obj):
+        return ', '.join([tc.nombre for tc in obj.tipos_cancer.all()[:3]])
+    tipos_cancer_display.short_description = 'Tipos de Cancer'
 
 
 @admin.register(DoctorGroupMembership)
