@@ -90,7 +90,8 @@ class PatientRegistrationView(View):
                     password=form.cleaned_data['password'],
                     full_name=form.cleaned_data['full_name'],
                     identity_document=form.cleaned_data['identity_document'],
-                    phone_number=form.cleaned_data['phone_number']
+                    phone_number=form.cleaned_data['phone_number'],
+                    genero=form.cleaned_data.get('genero', 'no_especificado')
                 )
                 
                 # Enviar email de verificación

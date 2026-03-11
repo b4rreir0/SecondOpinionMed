@@ -187,7 +187,7 @@ class PatientRegistrationService:
     
     @staticmethod
     @transaction.atomic
-    def register_patient(email, password, full_name, identity_document, phone_number):
+    def register_patient(email, password, full_name, identity_document, phone_number, genero='no_especificado'):
         """
         Registra un nuevo paciente en el sistema.
         
@@ -197,6 +197,7 @@ class PatientRegistrationService:
             full_name (str): Nombre completo
             identity_document (str): Cédula o documento de identidad
             phone_number (str): Teléfono de contacto
+            genero (str): Género del paciente
             
         Returns:
             tuple: (CustomUser, PatientProfile) o raise ValidationError
@@ -226,7 +227,8 @@ class PatientRegistrationService:
             user=user,
             full_name=full_name,
             identity_document=identity_document,
-            phone_number=phone_number
+            phone_number=phone_number,
+            genero=genero
         )
         
         return user, patient_profile

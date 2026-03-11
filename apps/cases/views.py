@@ -3,6 +3,7 @@ from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import Http404
 from django.http import FileResponse
+from django.utils import timezone
 
 from .models import Case
 from .services import CaseService
@@ -181,10 +182,10 @@ class DoctorCaseDetailView(LoginRequiredMixin, View):
             alergias = []
             medicamentos = []
         
-        # Calcular edad del paciente (a través de patient_profile)
+        # Calcular edad del paciente (a traves de patient_profile)
         patient_edad = None
-        patient_genero = None
         patient_nombre = None
+        paciente = None
         try:
             paciente = case.patient.patient_profile
             if paciente:
@@ -199,7 +200,18 @@ class DoctorCaseDetailView(LoginRequiredMixin, View):
         except Exception as e:
             print(f"Error getting patient profile: {e}")
             patient_edad = None
-            patient_genero = None
+        
+        # Obtener genero del paciente
+        try:
+            if paciente and hasattr(paciente, 'genero'):
+                genero = paciente.get_genero_display() if paciente.genero else 'No especificado'
+                patient_genero = genero
+            else:
+                patient_genero = 'No especificado'
+        except Exception as e:
+            print(f"Error getting patient gender: {e}")
+            patient_genero = 'No especificado'
+            patient_genero = 'No especificado'
         
         # Obtener opiniones de los miembros del comité
         from .models import MedicalOpinion
@@ -840,6 +852,7 @@ class MDTFinalResponseView(LoginRequiredMixin, View):
         if result['success']:
             # Actualizar estado del caso
             case.status = 'COMPLETED'
+            case.completed_at = timezone.now()
             case.save()
             
             from django.contrib import messages

@@ -45,7 +45,7 @@
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Case ID</th>
                         <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Paciente</th>
-                        <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Especialidad</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Hospital</th>
                         <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Estado</th>
                         <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Médico Asignado</th>
                         <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Fecha</th>
@@ -67,7 +67,7 @@
                             </div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">
-                            {{ caso.especialidad.nombre|default:caso.tipo_cancer.nombre|default:'-' }}
+                            {{ caso.referring_institution|default:'-' }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             {% if caso.status == 'PENDIENTE' %}

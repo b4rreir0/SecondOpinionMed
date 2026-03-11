@@ -139,7 +139,7 @@
                 <div class="card-body">
                     <p><strong>Caso:</strong> {{ case.case_id }}</p>
                     <p><strong>Paciente:</strong> {{ case.patient.email }}</p>
-                    <p><strong>Especialidad:</strong> {{ case.specialty_required }}</p>
+                    <p><strong>Localidad de la enfermedad:</strong> {% if case.tipo_cancer %}{{ case.tipo_cancer.nombre }}{% else %}No especificada{% endif %}</p>
                     <p><strong>Diagnóstico:</strong> {{ case.primary_diagnosis }}</p>
                     <p><strong>Estado:</strong> <span class="badge bg-primary">{{ case.get_status_display }}</span></p>
                 </div>

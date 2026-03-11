@@ -40,7 +40,7 @@
                       <input name="patient_email" value="{{ p.email }}" class="form-control form-control-sm"/>
                     </div>
                     <div class="mb-2">
-                      <label class="form-label">Antecedentes</label>
+                      <label class="form-label">Enfermedades que padecen</label>
                       <textarea name="patient_medical_history" class="form-control form-control-sm">{{ p.medical_history }}</textarea>
                     </div>
                     <div class="mb-2">
@@ -82,12 +82,12 @@
                         <input type="date" name="case_diagnosis_date" value="{{ c.diagnosis_date }}" class="form-control form-control-sm"/>
                       </div>
                       <div class="col-6">
-                        <label class="form-label">Localidad</label>
-                        <input type="text" class="form-control form-control-sm" value="{% if c.localidad %}{{ c.localidad_nombre|default:c.localidad }}{% else %}No seleccionada{% endif %}" disabled />
+                        <label class="form-label">¿Dónde está localizada la enfermedad?</label>
+                        <input type="text" class="form-control form-control-sm" value="{% if c.tipo_cancer %}{{ c.tipo_cancer_nombre|default:c.tipo_cancer }}{% elif case.tipo_cancer %}{{ case.tipo_cancer.nombre }}{% else %}No seleccionada{% endif %}" disabled />
                       </div>
                     </div>
                     <div class="mb-2">
-                      <label class="form-label">Institución remitente</label>
+                      <label class="form-label">Hospital que emitió el diagnóstico</label>
                       <input name="case_referring_institution" value="{{ c.referring_institution }}" class="form-control form-control-sm"/>
                     </div>
                     <div class="mb-0">
@@ -131,7 +131,6 @@
             Acepto el consentimiento informado
             <!-- Link para ver el consentimiento informado -->
             <a href="#" onclick="window.open('/consentimiento/', 'ConsentimientoInformado', 'width=700,height=600,scrollbars=yes'); return false;" class="text-primary text-decoration-underline ms-1" title="Ver consentimiento informado">
-              <span class="material-icons-outlined" style="font-size: 16px; vertical-align: middle;">visibility</span>
               Ver consentimiento
             </a>
           </label>

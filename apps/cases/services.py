@@ -61,12 +61,26 @@ def create_case(patient, case_id, primary_diagnosis, specialty_required, descrip
 
         # Create Case (start as DRAFT then submit via FSM)
         case_id = f"CASO-{uuid.uuid4().hex[:12].upper()}"
+        
+        # Obtener el tipo de cancer
+        tipo_cancer_pk = case_draft.get('tipo_cancer') if case_draft else None
+        tipo_cancer_obj = None
+        if tipo_cancer_pk:
+            try:
+                TipoCancer = django_apps.get_model('medicos', 'TipoCancer')
+                tipo_cancer_obj = TipoCancer.objects.get(pk=tipo_cancer_pk)
+            except Exception:
+                pass
+        
         case = Case.objects.create(
             patient=user,
             case_id=case_id,
             primary_diagnosis=case_draft.get('primary_diagnosis', '') if case_draft else '',
-            specialty_required=case_draft.get('referring_institution', '') if case_draft else '',
+            # Usar el nombre de la especialidad en lugar de la institucion
+            specialty_required=case_draft.get('especialidad_nombre', case_draft.get('referring_institution', '')) if case_draft else '',
             description=case_draft.get('main_symptoms', '') if case_draft else '',
+            tipo_cancer=tipo_cancer_obj,
+            estadio=case_draft.get('estadio', '') if case_draft else '',
         )
 
         # Link documents: create CaseDocument rows if session contains metadata
@@ -296,13 +310,28 @@ class CaseService:
 
         # Create Case
         case_id = f"CASO-{uuid.uuid4().hex[:12].upper()}"
+        
+        # Obtener el tipo de cancer
+        tipo_cancer_pk = case_draft.get('tipo_cancer')
+        tipo_cancer_obj = None
+        if tipo_cancer_pk:
+            try:
+                TipoCancer = django_apps.get_model('medicos', 'TipoCancer')
+                tipo_cancer_obj = TipoCancer.objects.get(pk=tipo_cancer_pk)
+            except Exception:
+                pass
+        
         case = Case.objects.create(
             patient=user,
             case_id=case_id,
             primary_diagnosis=case_draft.get('primary_diagnosis', ''),
-            specialty_required=case_draft.get('referring_institution', ''),
+            # Usar el nombre de la especialidad en lugar de la institucion
+            specialty_required=case_draft.get('especialidad_nombre', case_draft.get('referring_institution', '')),
             description=case_draft.get('main_symptoms', ''),
             diagnosis_date=case_draft.get('diagnosis_date', None) if case_draft.get('diagnosis_date') else None,
+            tipo_cancer=tipo_cancer_obj,
+            estadio=case_draft.get('estadio', ''),
+            referring_institution=case_draft.get('referring_institution', ''),
             status='SUBMITTED'
         )
 

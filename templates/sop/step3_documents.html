@@ -1,57 +1,436 @@
 {% extends 'sop/base_sop.html' %}
 
 {% block sop_body %}
-  <form method="post" enctype="multipart/form-data" novalidate>
-    {% csrf_token %}
-    <div class="card mb-3">
-      <div class="card-body">
-        <div class="row g-3 align-items-end">
-          <div class="col-md-8">
-            <label class="form-label">{{ form.document.label }}</label>
-            {{ form.document }}
-            {% if form.document.errors %}
-              <div class="text-danger small mt-1">{{ form.document.errors.as_text|striptags }}</div>
-            {% endif %}
+  <h4 class="mb-4 fw-bold">📄 Documentos médicos</h4>
+  <p class="text-muted mb-4">Selecciona los documentos médicos en las secciones correspondientes. Los archivos se subirán automáticamente al seleccionarlos.</p>
+  
+  <div class="row g-4">
+    <!-- Resumen de Historia Clínica -->
+    <div class="col-md-6">
+      <div class="card h-100 border-0 shadow-sm">
+        <div class="card-header bg-primary text-white py-3">
+          <div class="d-flex align-items-center">
+            <span class="fs-4 me-2">📋</span>
+            <div>
+              <h6 class="mb-0 fw-bold">Resumen de Historia Clínica</h6>
+              <small class="text-white-50">Documentos relacionados con tu historia clínica</small>
+            </div>
           </div>
-
-          <div class="col-md-4">
-            <label class="form-label">{{ form.document_type.label }}</label>
-            {{ form.document_type }}
-            {% if form.document_type.errors %}
-              <div class="text-danger small mt-1">{{ form.document_type.errors.as_text|striptags }}</div>
-            {% endif %}
-          </div>
-
-          <div class="col-12 d-flex justify-content-end">
-            <button type="submit" class="btn btn-new-case">Agregar documento</button>
+        </div>
+        <div class="card-body">
+          <form method="post" enctype="multipart/form-data" class="document-upload-form" data-category="resumen_historia_clinica">
+            {% csrf_token %}
+            <input type="hidden" name="document_type" value="resumen_historia_clinica">
+            <div class="upload-area text-center p-4 border border-2 rounded-3" 
+                 style="background-color: #f0f4f8; cursor: pointer; border-color: #0d6efd;"
+                 onclick="document.querySelector('#file-resumen').click()"
+                 ondrop="handleDrop(event, 'resumen_historia_clinica')"
+                 ondragover="handleDragOver(event)"
+                 ondragleave="handleDragLeave(event)">
+              <input type="file" name="document" id="file-resumen" class="d-none" 
+                     onchange="handleFileSelect(event, 'resumen_historia_clinica')" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+              <div class="upload-content">
+                <span class="fs-1 d-block mb-2">📁</span>
+                <p class="mb-1 fw-bold text-dark">Click para seleccionar archivo</p>
+                <p class="small text-muted mb-0">PDF, JPG, PNG, DOC (max. 10MB)</p>
+              </div>
+              <div class="upload-progress d-none">
+                <div class="spinner-border text-primary" role="status">
+                  <span class="visually-hidden">Subiendo...</span>
+                </div>
+                <p class="mt-2 mb-0 text-dark">Subiendo archivo...</p>
+              </div>
+            </div>
+          </form>
+          
+          <div class="mt-3">
+            {% for d in documents %}
+              {% if d.type == 'Resumen de Historia Clínica' %}
+                <div class="d-flex justify-content-between align-items-center p-2 rounded mb-2" style="background-color: #e8f0f8;">
+                  <div class="d-flex align-items-center">
+                    <span class="me-2">📄</span>
+                    <small class="text-dark text-truncate" style="max-width: 180px;">{{ d.name }}</small>
+                  </div>
+                  {% if d.id %}
+                    <a href="{% url 'cases:download_document' d.id %}" class="btn btn-sm btn-primary">Ver</a>
+                  {% endif %}
+                </div>
+              {% endif %}
+            {% empty %}
+              <p class="text-muted small text-center py-2">No hay documentos subidos</p>
+            {% endfor %}
           </div>
         </div>
       </div>
     </div>
-  </form>
 
-  <h5>Documentos añadidos</h5>
-  <div class="list-group mb-3">
-    {% for d in documents %}
-      <div class="list-group-item d-flex justify-content-between align-items-center">
-        <div>
-          <strong>{{ d.name }}</strong>
-          <div class="text-muted small">{{ d.type }}</div>
+    <!-- Resultado de Laboratorios -->
+    <div class="col-md-6">
+      <div class="card h-100 border-0 shadow-sm">
+        <div class="card-header bg-primary text-white py-3">
+          <div class="d-flex align-items-center">
+            <span class="fs-4 me-2">🧪</span>
+            <div>
+              <h6 class="mb-0 fw-bold">Resultado de Laboratorios</h6>
+              <small class="text-white-50">Resultados de análisis de laboratorio</small>
+            </div>
+          </div>
         </div>
-        <div>
-          {% if d.id %}
-            <a href="{% url 'cases:download_document' d.id %}" class="btn btn-sm btn-outline-primary">Ver / Descargar</a>
-          {% else %}
-            <span class="text-muted small">Archivo no subido aún</span>
-          {% endif %}
+        <div class="card-body">
+          <form method="post" enctype="multipart/form-data" class="document-upload-form" data-category="resultado_laboratorios">
+            {% csrf_token %}
+            <input type="hidden" name="document_type" value="resultado_laboratorios">
+            <div class="upload-area text-center p-4 border border-2 rounded-3" 
+                 style="background-color: #f0f4f8; cursor: pointer; border-color: #0d6efd;"
+                 onclick="document.querySelector('#file-laboratorios').click()"
+                 ondrop="handleDrop(event, 'resultado_laboratorios')"
+                 ondragover="handleDragOver(event)"
+                 ondragleave="handleDragLeave(event)">
+              <input type="file" name="document" id="file-laboratorios" class="d-none" 
+                     onchange="handleFileSelect(event, 'resultado_laboratorios')" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+              <div class="upload-content">
+                <span class="fs-1 d-block mb-2">📁</span>
+                <p class="mb-1 fw-bold text-dark">Click para seleccionar archivo</p>
+                <p class="small text-muted mb-0">PDF, JPG, PNG, DOC (max. 10MB)</p>
+              </div>
+              <div class="upload-progress d-none">
+                <div class="spinner-border text-primary" role="status">
+                  <span class="visually-hidden">Subiendo...</span>
+                </div>
+                <p class="mt-2 mb-0 text-dark">Subiendo archivo...</p>
+              </div>
+            </div>
+          </form>
+          
+          <div class="mt-3">
+            {% for d in documents %}
+              {% if d.type == 'Resultado de Laboratorios' %}
+                <div class="d-flex justify-content-between align-items-center p-2 rounded mb-2" style="background-color: #e8f0f8;">
+                  <div class="d-flex align-items-center">
+                    <span class="me-2">📄</span>
+                    <small class="text-dark text-truncate" style="max-width: 180px;">{{ d.name }}</small>
+                  </div>
+                  {% if d.id %}
+                    <a href="{% url 'cases:download_document' d.id %}" class="btn btn-sm btn-primary">Ver</a>
+                  {% endif %}
+                </div>
+              {% endif %}
+            {% empty %}
+              <p class="text-muted small text-center py-2">No hay documentos subidos</p>
+            {% endfor %}
+          </div>
         </div>
       </div>
-    {% empty %}
-      <div class="list-group-item text-muted">No hay documentos</div>
-    {% endfor %}
+    </div>
+
+    <!-- Resultado de Imagenología -->
+    <div class="col-md-6">
+      <div class="card h-100 border-0 shadow-sm">
+        <div class="card-header bg-primary text-white py-3">
+          <div class="d-flex align-items-center">
+            <span class="fs-4 me-2">🩻</span>
+            <div>
+              <h6 class="mb-0 fw-bold">Resultado de Imagenología</h6>
+              <small class="text-white-50">Resultados de estudios de imagen (RX, TAC, RMN, etc.)</small>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <form method="post" enctype="multipart/form-data" class="document-upload-form" data-category="resultado_imagenologia">
+            {% csrf_token %}
+            <input type="hidden" name="document_type" value="resultado_imagenologia">
+            <div class="upload-area text-center p-4 border border-2 rounded-3" 
+                 style="background-color: #f0f4f8; cursor: pointer; border-color: #0d6efd;"
+                 onclick="document.querySelector('#file-imagenologia').click()"
+                 ondrop="handleDrop(event, 'resultado_imagenologia')"
+                 ondragover="handleDragOver(event)"
+                 ondragleave="handleDragLeave(event)">
+              <input type="file" name="document" id="file-imagenologia" class="d-none" 
+                     onchange="handleFileSelect(event, 'resultado_imagenologia')" accept=".pdf,.jpg,.jpeg,.png,.dcm">
+              <div class="upload-content">
+                <span class="fs-1 d-block mb-2">📁</span>
+                <p class="mb-1 fw-bold text-dark">Click para seleccionar archivo</p>
+                <p class="small text-muted mb-0">PDF, JPG, PNG, DCM (max. 50MB)</p>
+              </div>
+              <div class="upload-progress d-none">
+                <div class="spinner-border text-primary" role="status">
+                  <span class="visually-hidden">Subiendo...</span>
+                </div>
+                <p class="mt-2 mb-0 text-dark">Subiendo archivo...</p>
+              </div>
+            </div>
+          </form>
+          
+          <div class="mt-3">
+            {% for d in documents %}
+              {% if d.type == 'Resultado de Imagenología' %}
+                <div class="d-flex justify-content-between align-items-center p-2 rounded mb-2" style="background-color: #e8f0f8;">
+                  <div class="d-flex align-items-center">
+                    <span class="me-2">📄</span>
+                    <small class="text-dark text-truncate" style="max-width: 180px;">{{ d.name }}</small>
+                  </div>
+                  {% if d.id %}
+                    <a href="{% url 'cases:download_document' d.id %}" class="btn btn-sm btn-primary">Ver</a>
+                  {% endif %}
+                </div>
+              {% endif %}
+            {% empty %}
+              <p class="text-muted small text-center py-2">No hay documentos subidos</p>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Imágenes -->
+    <div class="col-md-6">
+      <div class="card h-100 border-0 shadow-sm">
+        <div class="card-header bg-primary text-white py-3">
+          <div class="d-flex align-items-center">
+            <span class="fs-4 me-2">🖼️</span>
+            <div>
+              <h6 class="mb-0 fw-bold">Imágenes</h6>
+              <small class="text-white-50">Imágenes médicas adicionales</small>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <form method="post" enctype="multipart/form-data" class="document-upload-form" data-category="imagenes">
+            {% csrf_token %}
+            <input type="hidden" name="document_type" value="imagenes">
+            <div class="upload-area text-center p-4 border border-2 rounded-3" 
+                 style="background-color: #f0f4f8; cursor: pointer; border-color: #0d6efd;"
+                 onclick="document.querySelector('#file-imagenes').click()"
+                 ondrop="handleDrop(event, 'imagenes')"
+                 ondragover="handleDragOver(event)"
+                 ondragleave="handleDragLeave(event)">
+              <input type="file" name="document" id="file-imagenes" class="d-none" 
+                     onchange="handleFileSelect(event, 'imagenes')" accept=".jpg,.jpeg,.png,.gif">
+              <div class="upload-content">
+                <span class="fs-1 d-block mb-2">📁</span>
+                <p class="mb-1 fw-bold text-dark">Click para seleccionar archivo</p>
+                <p class="small text-muted mb-0">JPG, PNG, GIF (max. 20MB)</p>
+              </div>
+              <div class="upload-progress d-none">
+                <div class="spinner-border text-primary" role="status">
+                  <span class="visually-hidden">Subiendo...</span>
+                </div>
+                <p class="mt-2 mb-0 text-dark">Subiendo archivo...</p>
+              </div>
+            </div>
+          </form>
+          
+          <div class="mt-3">
+            {% for d in documents %}
+              {% if d.type == 'Imágenes' %}
+                <div class="d-flex justify-content-between align-items-center p-2 rounded mb-2" style="background-color: #e8f0f8;">
+                  <div class="d-flex align-items-center">
+                    <span class="me-2">📄</span>
+                    <small class="text-dark text-truncate" style="max-width: 180px;">{{ d.name }}</small>
+                  </div>
+                  {% if d.id %}
+                    <a href="{% url 'cases:download_document' d.id %}" class="btn btn-sm btn-primary">Ver</a>
+                  {% endif %}
+                </div>
+              {% endif %}
+            {% empty %}
+              <p class="text-muted small text-center py-2">No hay documentos subidos</p>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resultado de Biopsia -->
+    <div class="col-md-6">
+      <div class="card h-100 border-0 shadow-sm">
+        <div class="card-header bg-primary text-white py-3">
+          <div class="d-flex align-items-center">
+            <span class="fs-4 me-2">🔬</span>
+            <div>
+              <h6 class="mb-0 fw-bold">Resultado de Biopsia</h6>
+              <small class="text-white-50">Resultados de estudios anatomopatológicos</small>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <form method="post" enctype="multipart/form-data" class="document-upload-form" data-category="resultado_biopsia">
+            {% csrf_token %}
+            <input type="hidden" name="document_type" value="resultado_biopsia">
+            <div class="upload-area text-center p-4 border border-2 rounded-3" 
+                 style="background-color: #f0f4f8; cursor: pointer; border-color: #0d6efd;"
+                 onclick="document.querySelector('#file-biopsia').click()"
+                 ondrop="handleDrop(event, 'resultado_biopsia')"
+                 ondragover="handleDragOver(event)"
+                 ondragleave="handleDragLeave(event)">
+              <input type="file" name="document" id="file-biopsia" class="d-none" 
+                     onchange="handleFileSelect(event, 'resultado_biopsia')" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+              <div class="upload-content">
+                <span class="fs-1 d-block mb-2">📁</span>
+                <p class="mb-1 fw-bold text-dark">Click para seleccionar archivo</p>
+                <p class="small text-muted mb-0">PDF, JPG, PNG, DOC (max. 10MB)</p>
+              </div>
+              <div class="upload-progress d-none">
+                <div class="spinner-border text-primary" role="status">
+                  <span class="visually-hidden">Subiendo...</span>
+                </div>
+                <p class="mt-2 mb-0 text-dark">Subiendo archivo...</p>
+              </div>
+            </div>
+          </form>
+          
+          <div class="mt-3">
+            {% for d in documents %}
+              {% if d.type == 'Resultado de Biopsia' %}
+                <div class="d-flex justify-content-between align-items-center p-2 rounded mb-2" style="background-color: #e8f0f8;">
+                  <div class="d-flex align-items-center">
+                    <span class="me-2">📄</span>
+                    <small class="text-dark text-truncate" style="max-width: 180px;">{{ d.name }}</small>
+                  </div>
+                  {% if d.id %}
+                    <a href="{% url 'cases:download_document' d.id %}" class="btn btn-sm btn-primary">Ver</a>
+                  {% endif %}
+                </div>
+              {% endif %}
+            {% empty %}
+              <p class="text-muted small text-center py-2">No hay documentos subidos</p>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Otros Documentos Relevantes -->
+    <div class="col-md-6">
+      <div class="card h-100 border-0 shadow-sm">
+        <div class="card-header bg-primary text-white py-3">
+          <div class="d-flex align-items-center">
+            <span class="fs-4 me-2">📑</span>
+            <div>
+              <h6 class="mb-0 fw-bold">Otros Documentos Relevantes</h6>
+              <small class="text-white-50">Cualquier otro documento médico relevante</small>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <form method="post" enctype="multipart/form-data" class="document-upload-form" data-category="otros_documentos">
+            {% csrf_token %}
+            <input type="hidden" name="document_type" value="otros_documentos">
+            <div class="upload-area text-center p-4 border border-2 rounded-3" 
+                 style="background-color: #f0f4f8; cursor: pointer; border-color: #0d6efd;"
+                 onclick="document.querySelector('#file-otros').click()"
+                 ondrop="handleDrop(event, 'otros_documentos')"
+                 ondragover="handleDragOver(event)"
+                 ondragleave="handleDragLeave(event)">
+              <input type="file" name="document" id="file-otros" class="d-none" 
+                     onchange="handleFileSelect(event, 'otros_documentos')" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+              <div class="upload-content">
+                <span class="fs-1 d-block mb-2">📁</span>
+                <p class="mb-1 fw-bold text-dark">Click para seleccionar archivo</p>
+                <p class="small text-muted mb-0">PDF, JPG, PNG, DOC (max. 10MB)</p>
+              </div>
+              <div class="upload-progress d-none">
+                <div class="spinner-border text-primary" role="status">
+                  <span class="visually-hidden">Subiendo...</span>
+                </div>
+                <p class="mt-2 mb-0 text-dark">Subiendo archivo...</p>
+              </div>
+            </div>
+          </form>
+          
+          <div class="mt-3">
+            {% for d in documents %}
+              {% if d.type == 'Otros Documentos Relevantes' %}
+                <div class="d-flex justify-content-between align-items-center p-2 rounded mb-2" style="background-color: #e8f0f8;">
+                  <div class="d-flex align-items-center">
+                    <span class="me-2">📄</span>
+                    <small class="text-dark text-truncate" style="max-width: 180px;">{{ d.name }}</small>
+                  </div>
+                  {% if d.id %}
+                    <a href="{% url 'cases:download_document' d.id %}" class="btn btn-sm btn-primary">Ver</a>
+                  {% endif %}
+                </div>
+              {% endif %}
+            {% empty %}
+              <p class="text-muted small text-center py-2">No hay documentos subidos</p>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <div class="d-flex justify-content-end">
+  <div class="d-flex justify-content-between mt-4">
+    <a href="{% url 'cases:sop_step2' %}" class="btn btn-outline-secondary">Volver</a>
     <a href="{% url 'cases:sop_step4' %}" class="btn btn-new-case">Ir a Revisión y Envío</a>
   </div>
+
+  <script>
+    function handleFileSelect(event, category) {
+      const file = event.target.files[0];
+      if (!file) return;
+      uploadFile(file, category);
+    }
+
+    function handleDragOver(event) {
+      event.preventDefault();
+      event.currentTarget.style.backgroundColor = '#d0e0f0';
+    }
+
+    function handleDragLeave(event) {
+      event.preventDefault();
+      event.currentTarget.style.backgroundColor = '#f0f4f8';
+    }
+
+    function handleDrop(event, category) {
+      event.preventDefault();
+      event.currentTarget.style.backgroundColor = '#f0f4f8';
+      const files = event.dataTransfer.files;
+      if (files.length > 0) {
+        uploadFile(files[0], category);
+      }
+    }
+
+    function uploadFile(file, category) {
+      const form = document.querySelector(`form[data-category="${category}"]`);
+      if (!form) return;
+
+      const uploadArea = form.querySelector('.upload-area');
+      const uploadContent = uploadArea.querySelector('.upload-content');
+      const uploadProgress = uploadArea.querySelector('.upload-progress');
+
+      uploadContent.classList.add('d-none');
+      uploadProgress.classList.remove('d-none');
+
+      const formData = new FormData(form);
+      
+      fetch(window.location.href, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+      })
+      .then(response => {
+        if (response.ok) {
+          window.location.reload();
+        } else {
+          alert('Error al subir el archivo. Por favor intenta de nuevo.');
+          resetUploadArea(uploadArea, uploadContent, uploadProgress);
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('Error al subir el archivo. Por favor intenta de nuevo.');
+        resetUploadArea(uploadArea, uploadContent, uploadProgress);
+      });
+    }
+
+    function resetUploadArea(uploadArea, uploadContent, uploadProgress) {
+      uploadProgress.classList.add('d-none');
+      uploadContent.classList.remove('d-none');
+      uploadArea.querySelector('input[type="file"]').value = '';
+      uploadArea.style.backgroundColor = '#f0f4f8';
+    }
+  </script>
 {% endblock %}

@@ -18,16 +18,16 @@
         
         <!-- Patient Info -->
         <div class="flex items-center gap-3 mb-4">
-            <div class="w-10 h-10 rounded-full {% if caso.especialidad.color %}{{ caso.especialidad.color }}{% else %}bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400{% endif %} flex items-center justify-center">
+            <div class="w-10 h-10 rounded-full {% if caso.tipo_cancer %}bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400{% else %}bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400{% endif %} flex items-center justify-center">
                 <span class="material-icons-outlined">
-                    {% if caso.especialidad.icono %}{{ caso.especialidad.icono }}{% else %}person{% endif %}
+                    {% if caso.tipo_cancer %}local_hospital{% else %}person{% endif %}
                 </span>
             </div>
             <div>
                 <h4 class="font-bold text-slate-900 dark:text-white text-lg">
-                    {{ caso.paciente.user.get_full_name|default:caso.paciente.user.username }}
+                    {{ caso.patient.get_full_name|default:caso.patient.email }}
                 </h4>
-                <p class="text-sm text-slate-500">{{ caso.especialidad.nombre|default:'Oncología' }}</p>
+                <p class="text-sm text-slate-500">{{ caso.tipo_cancer.nombre|default:'No especificada' }}</p>
             </div>
         </div>
         
@@ -35,7 +35,7 @@
         <div class="space-y-2 text-sm text-slate-600 dark:text-slate-400 mb-4">
             <div class="flex items-center gap-2">
                 <span class="material-icons-outlined text-base text-slate-400">calendar_today</span>
-                <span>Recibido: {{ caso.fecha_creacion|date:"d M Y" }}</span>
+                <span>Recibido: {{ caso.created_at|date:"d M Y" }}</span>
             </div>
             <div class="flex items-center gap-2">
                 <span class="material-icons-outlined text-base text-slate-400">folder_shared</span>

@@ -8,8 +8,8 @@
       <h5>Diagnóstico</h5>
       <p>{{ case.primary_diagnosis }}</p>
 
-      <h5>Especialidad requerida</h5>
-      <p>{{ case.specialty_required }}</p>
+      <h5>Localidad de la enfermedad</h5>
+      <p>{% if case.tipo_cancer %}{{ case.tipo_cancer.nombre }}{% else %}No especificado{% endif %}</p>
 
       <h5>Descripción / Síntomas</h5>
       <p>{{ case.description }}</p>

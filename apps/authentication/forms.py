@@ -109,6 +109,13 @@ class PatientRegistrationForm(forms.Form):
             'type': 'tel'
         })
     )
+    genero = forms.ChoiceField(
+        label="Género",
+        choices=PatientProfile.GENERO_CHOICES,
+        widget=forms.Select(attrs={
+            'class': 'form-control'
+        })
+    )
     consent = forms.BooleanField(
         label="Acepto los Términos y Condiciones y la Política de Privacidad",
         required=True,

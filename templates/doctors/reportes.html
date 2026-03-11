@@ -124,7 +124,7 @@
                 <tr>
                     <td class="px-4 py-2 font-mono text-sm text-primary">{{ caso.case_id }}</td>
                     <td class="px-4 py-2 text-sm text-slate-600">{{ caso.created_at|date:"d M Y" }}</td>
-                    <td class="px-4 py-2 text-sm text-slate-600">{{ caso.paciente.get_full_name }}</td>
+                    <td class="px-4 py-2 text-sm text-slate-600">{{ caso.patient.get_full_name|default:caso.patient.email }}</td>
                     <td class="px-4 py-2">
                         <span class="text-xs px-2 py-1 rounded-full 
                             {% if caso.status == 'CLOSED' %}bg-green-100 text-green-700

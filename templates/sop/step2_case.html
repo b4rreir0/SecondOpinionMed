@@ -15,6 +15,25 @@
           </div>
 
           <div class="col-md-6">
+            <label class="form-label">{{ form.tipo_cancer.label }}</label>
+            {{ form.tipo_cancer }}
+            {% if form.tipo_cancer.errors %}
+              <div class="text-danger small mt-1">{{ form.tipo_cancer.errors.as_text|striptags }}</div>
+            {% endif %}
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">{{ form.estadio.label }}</label>
+            {{ form.estadio }}
+            {% if form.estadio.errors %}
+              <div class="text-danger small mt-1">{{ form.estadio.errors.as_text|striptags }}</div>
+            {% endif %}
+            <div class="form-text text-muted" style="font-size: 0.75rem;">
+              Esta información se obtendrá de los documentos que suba
+            </div>
+          </div>
+
+          <div class="col-md-6">
             <label class="form-label">{{ form.diagnosis_date.label }}</label>
             {{ form.diagnosis_date }}
             {% if form.diagnosis_date.errors %}
@@ -23,14 +42,6 @@
             <div class="form-text text-muted" style="font-size: 0.75rem;">
               La fecha no puede ser futura (solo fechas pasadas o hoy)
             </div>
-          </div>
-
-          <div class="col-md-6">
-            <label class="form-label">{{ form.localidad.label }}</label>
-            {{ form.localidad }}
-            {% if form.localidad.errors %}
-              <div class="text-danger small mt-1">{{ form.localidad.errors.as_text|striptags }}</div>
-            {% endif %}
           </div>
 
           <div class="col-12">
@@ -61,7 +72,7 @@
   <script>
     // Validación de fecha de diagnóstico - no puede ser futura
     document.addEventListener('DOMContentLoaded', function() {
-      const dateInput = document.querySelector('input[name="case_diagnosis_date"]');
+      const dateInput = document.querySelector('input[name="diagnosis_date"]');
       if (dateInput) {
         // Obtener la fecha de hoy en formato YYYY-MM-DD
         const today = new Date();

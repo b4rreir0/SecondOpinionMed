@@ -70,8 +70,19 @@ def sop_step1(request):
                     profile.medical_history = pdata.get('medical_history')
                 if pdata.get('current_medications'):
                     profile.current_treatment = pdata.get('current_medications')
+                if pdata.get('known_allergies'):
+                    profile.medical_history = (profile.medical_history or '') + '\n\nAlergias:\n' + pdata.get('known_allergies')
+                # Guardar edad si se proporciona (como fecha de nacimiento calculada)
+                if pdata.get('age'):
+                    from datetime import date
+                    try:
+                        birth_year = date.today().year - int(pdata.get('age'))
+                        profile.date_of_birth = date(birth_year, 1, 1)  # Fecha aproximada
+                    except:
+                        pass
                 profile.save()
-            except Exception:
+            except Exception as e:
+                print(f"Error saving patient profile: {e}")
                 pass
             return redirect('cases:sop_step2')
     else:
@@ -88,15 +99,22 @@ def sop_step2(request):
             draft = request.session.get(SESSION_KEY, {})
             # copy cleaned_data and serialize non-serializable objects (Localidad -> pk)
             cleaned = dict(form.cleaned_data)
-            loc = cleaned.get('localidad')
-            cleaned['localidad'] = loc.pk if loc else None
-            cleaned['localidad_nombre'] = loc.nombre if loc else None
+            
+            # Serializar TipoCancer
+            tipo_cancer = cleaned.get('tipo_cancer')
+            cleaned['tipo_cancer'] = tipo_cancer.pk if tipo_cancer else None
+            cleaned['tipo_cancer_nombre'] = tipo_cancer.nombre if tipo_cancer else None
+            
+            # Guardar el estadio
+            cleaned['estadio'] = cleaned.get('estadio', '')
+            
             draft.update({'case_draft': _serialize_for_session(cleaned)})
             request.session[SESSION_KEY] = draft
             request.session.modified = True
             # Persist or update a draft Case so uploaded documents can be attached
             try:
                 Case = django_apps.get_model('cases', 'Case')
+                TipoCancer = django_apps.get_model('medicos', 'TipoCancer')
                 # Check for existing draft case pk in session
                 case_pk = draft.get('case_pk')
                 if case_pk:
@@ -104,28 +122,46 @@ def sop_step2(request):
                     if case:
                         case.primary_diagnosis = cleaned.get('primary_diagnosis')
                         case.diagnosis_date = cleaned.get('diagnosis_date') or None
-                        case.specialty_required = cleaned.get('referring_institution')
-                        case.description = cleaned.get('main_symptoms')
+                        case.description = cleaned.get('main_symptoms', '')
+                        # Guardar la institucion que refiere
+                        case.referring_institution = cleaned.get('referring_institution', '')
+                        # Guardar tipo de cancer
+                        tipo_cancer_pk = cleaned.get('tipo_cancer')
+                        if tipo_cancer_pk:
+                            case.tipo_cancer = TipoCancer.objects.get(pk=tipo_cancer_pk)
+                        # Guardar estadio
+                        case.estadio = cleaned.get('estadio', '')
                         case.status = 'DRAFT'
                         case.save()
                 else:
                     import uuid
                     case_id = f"CASO-{uuid.uuid4().hex[:12].upper()}"
+                    # Obtener tipo de cancer
+                    tipo_cancer_pk = cleaned.get('tipo_cancer')
+                    tipo_cancer_obj = TipoCancer.objects.get(pk=tipo_cancer_pk) if tipo_cancer_pk else None
+                    
                     case = Case.objects.create(
                         patient=request.user,
                         case_id=case_id,
                         primary_diagnosis=cleaned.get('primary_diagnosis', ''),
                         diagnosis_date=cleaned.get('diagnosis_date') or None,
-                        specialty_required=cleaned.get('referring_institution', ''),
+                        specialty_required='',  # Ya no se usa, se eliminó el campo especialidad
                         description=cleaned.get('main_symptoms', ''),
+                        tipo_cancer=tipo_cancer_obj,
+                        estadio=cleaned.get('estadio', ''),
+                        referring_institution=cleaned.get('referring_institution', ''),
                         status='DRAFT'
                     )
                     draft['case_pk'] = case.pk
                     request.session[SESSION_KEY] = draft
                     request.session.modified = True
-            except Exception:
+            except Exception as e:
+                print(f"Error guardando caso: {e}")
                 pass
             return redirect('cases:sop_step3')
+        else:
+            # Formulario no válido - mostrar errores
+            return render(request, 'sop/step2_case.html', {'form': form, 'current_step': 2})
     else:
         draft = request.session.get(SESSION_KEY, {})
         initial = draft.get('case_draft', {})
@@ -136,6 +172,16 @@ def sop_step2(request):
 
 @login_required
 def sop_step3(request):
+    # Mapeo de tipos de documento a etiquetas legibles
+    DOCUMENT_TYPE_LABELS = {
+        'resumen_historia_clinica': 'Resumen de Historia Clínica',
+        'resultado_laboratorios': 'Resultado de Laboratorios',
+        'resultado_imagenologia': 'Resultado de Imagenología',
+        'imagenes': 'Imágenes',
+        'resultado_biopsia': 'Resultado de Biopsia',
+        'otros_documentos': 'Otros Documentos Relevantes',
+    }
+    
     # we allow multiple uploads by repeating the form
     if request.method == 'POST':
         form = CaseDocumentForm(request.POST, request.FILES)
@@ -144,6 +190,9 @@ def sop_step3(request):
             draft = request.session.get(SESSION_KEY, {})
             docs = draft.get('documents', [])
             f = request.FILES['document']
+            doc_type = form.cleaned_data['document_type']
+            doc_type_label = DOCUMENT_TYPE_LABELS.get(doc_type, doc_type)
+            
             # Persist the uploaded file into CaseDocument if a draft Case exists
             try:
                 CaseDocument = django_apps.get_model('cases', 'CaseDocument')
@@ -154,7 +203,7 @@ def sop_step3(request):
                     # save file to media storage and create CaseDocument
                     cd = CaseDocument.objects.create(
                         case=case,
-                        document_type=form.cleaned_data['document_type'],
+                        document_type=doc_type,
                         file=f,
                         file_name=f.name,
                         uploaded_by=request.user
@@ -163,13 +212,13 @@ def sop_step3(request):
                     docs.append({'name': cd.file_name, 'type': cd.get_document_type_display(), 'id': cd.pk})
                 else:
                     # fallback: keep metadata only
-                    docs.append({'name': f.name, 'content_type': f.content_type, 'type': form.cleaned_data['document_type']})
+                    docs.append({'name': f.name, 'content_type': f.content_type, 'type': doc_type_label})
                 draft['documents'] = docs
                 request.session[SESSION_KEY] = draft
                 request.session.modified = True
             except Exception:
                 # fallback to session-only metadata
-                docs.append({'name': f.name, 'content_type': f.content_type, 'type': form.cleaned_data['document_type']})
+                docs.append({'name': f.name, 'content_type': f.content_type, 'type': doc_type_label})
                 draft['documents'] = docs
                 request.session[SESSION_KEY] = draft
                 request.session.modified = True
@@ -186,6 +235,17 @@ def sop_step3(request):
 @login_required
 def sop_step4(request):
     draft = request.session.get(SESSION_KEY, {})
+    
+    # Obtener el caso de la base de datos si existe
+    case = None
+    case_pk = draft.get('case_pk')
+    if case_pk:
+        try:
+            Case = django_apps.get_model('cases', 'Case')
+            case = Case.objects.filter(pk=case_pk, patient=request.user).first()
+        except Exception:
+            pass
+    
     if request.method == 'POST':
         form = ReviewConsentForm(request.POST)
         if form.is_valid():
@@ -196,7 +256,7 @@ def sop_step4(request):
             explicit = form.cleaned_data.get('explicit_consent', False)
             if not explicit:
                 form.add_error('explicit_consent', 'Debe aceptar el consentimiento informado para enviar la solicitud.')
-                return render(request, 'sop/step4_review.html', {'form': form, 'draft': draft, 'current_step': 4})
+                return render(request, 'sop/step4_review.html', {'form': form, 'draft': draft, 'current_step': 4, 'case': case})
             
             # Patient fields
             # Patient fields
@@ -214,11 +274,26 @@ def sop_step4(request):
 
             # Case fields
             c = draft.get('case_draft', {}) or {}
+            # Obtener el nombre de la especialidad
+            especialidad_pk = request.POST.get('case_especialidad', c.get('especialidad'))
+            especialidad_nombre = ''
+            if especialidad_pk:
+                try:
+                    from medicos.models import Especialidad
+                    esp = Especialidad.objects.filter(pk=especialidad_pk).first()
+                    if esp:
+                        especialidad_nombre = esp.nombre
+                except Exception:
+                    pass
             c.update({
                 'primary_diagnosis': request.POST.get('case_primary_diagnosis', c.get('primary_diagnosis')),
                 'diagnosis_date': request.POST.get('case_diagnosis_date', c.get('diagnosis_date')),
                 'referring_institution': request.POST.get('case_referring_institution', c.get('referring_institution')),
                 'main_symptoms': request.POST.get('case_main_symptoms', c.get('main_symptoms')),
+                'tipo_cancer': request.POST.get('case_tipo_cancer', c.get('tipo_cancer')),
+                'especialidad': especialidad_pk,
+                'especialidad_nombre': especialidad_nombre,
+                'estadio': request.POST.get('case_estadio', c.get('estadio')),
             })
             draft['case_draft'] = c
 
@@ -229,6 +304,7 @@ def sop_step4(request):
             # If we have a draft case persisted, update it and finalize instead of creating a duplicate
             try:
                 Case = django_apps.get_model('cases', 'Case')
+                TipoCancer = django_apps.get_model('medicos', 'TipoCancer')
                 case_pk = draft.get('case_pk')
                 if case_pk:
                     case = Case.objects.filter(pk=case_pk, patient=request.user).first()
@@ -237,8 +313,21 @@ def sop_step4(request):
                         c = draft.get('case_draft', {}) or {}
                         case.primary_diagnosis = c.get('primary_diagnosis', case.primary_diagnosis)
                         case.diagnosis_date = c.get('diagnosis_date', case.diagnosis_date)
-                        case.specialty_required = c.get('referring_institution', case.specialty_required)
+                        # Usar la especialidad guardada en lugar de la institucion
+                        case.specialty_required = c.get('especialidad_nombre', c.get('referring_institution', case.specialty_required))
                         case.description = c.get('main_symptoms', case.description)
+                        # Guardar la institucion que refiere
+                        case.referring_institution = c.get('referring_institution', case.referring_institution)
+                        case.description = c.get('main_symptoms', case.description)
+                        # Guardar tipo de cancer
+                        tipo_cancer_pk = c.get('tipo_cancer')
+                        if tipo_cancer_pk:
+                            try:
+                                case.tipo_cancer = TipoCancer.objects.get(pk=tipo_cancer_pk)
+                            except TipoCancer.DoesNotExist:
+                                pass
+                        # Guardar estadio
+                        case.estadio = c.get('estadio', case.estadio)
                         # ensure it's submitted
                         case.status = 'SUBMITTED'
                         case.save()
@@ -280,4 +369,4 @@ def sop_step4(request):
     else:
         form = ReviewConsentForm()
 
-    return render(request, 'sop/step4_review.html', {'form': form, 'draft': draft, 'current_step': 4})
+    return render(request, 'sop/step4_review.html', {'form': form, 'draft': draft, 'current_step': 4, 'case': case})

@@ -145,6 +145,13 @@ class Case(models.Model):
         related_name='cases'
     )
     
+    # Institución que refiere (hospital que emitió el diagnóstico)
+    referring_institution = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text="Hospital o institución que emitió el diagnóstico"
+    )
+    
     # Estado FSM
     status = FSMField(
         max_length=30,
@@ -251,11 +258,29 @@ class Case(models.Model):
 
 def case_document_upload_path(instance, filename):
     """
-    Función para generar la ruta de upload incluyendo el case_id.
-    Define la ruta como: cases/{case_id}/documents/{filename}
+    Función para generar la ruta de upload incluyendo el case_id y la carpeta específica.
+    Las carpetas son:
+    - resumen_historia_clinica
+    - resultado_laboratorios
+    - resultado_imagenologia
+    - imagenes
+    - resultado_biopsia
+    - otros_documentos
     """
     case_id = instance.case.case_id if instance.case else 'unknown'
-    return f'cases/{case_id}/documents/{filename}'
+    
+    # Mapear los tipos de documento a carpetas
+    folder_mapping = {
+        'resumen_historia_clinica': 'resumen_historia_clinica',
+        'resultado_laboratorios': 'resultado_laboratorios',
+        'resultado_imagenologia': 'resultado_imagenologia',
+        'imagenes': 'imagenes',
+        'resultado_biopsia': 'resultado_biopsia',
+        'otros_documentos': 'otros_documentos',
+    }
+    
+    folder = folder_mapping.get(instance.document_type, 'otros_documentos')
+    return f'cases/{case_id}/documents/{folder}/{filename}'
 
 
 class CaseDocument(models.Model):
@@ -267,12 +292,12 @@ class CaseDocument(models.Model):
     """
     
     DOCUMENT_TYPE_CHOICES = (
-        ('diagnostic_report', 'Informe Diagnóstico'),
-        ('biopsy_report', 'Informe de Biopsia'),
-        ('imaging', 'Imágenes Diagnósticas'),
-        ('lab_results', 'Resultados de Laboratorio'),
-        ('medical_history', 'Historial Médico'),
-        ('other', 'Otro'),
+        ('resumen_historia_clinica', 'Resumen de Historia Clínica'),
+        ('resultado_laboratorios', 'Resultado de Laboratorios'),
+        ('resultado_imagenologia', 'Resultado de Imagenología'),
+        ('imagenes', 'Imágenes'),
+        ('resultado_biopsia', 'Resultado de Biopsia'),
+        ('otros_documentos', 'Otros Documentos Relevantes'),
     )
     
     case = models.ForeignKey(

@@ -806,7 +806,8 @@ class MDTResponseService:
         
         # Información del paciente
         story.append(Paragraph("INFORMACIÓN DEL PACIENTE", heading_style))
-        story.append(Paragraph(f"Nombre: {paciente.get_full_name()}", normal_style))
+        nombre_paciente = paciente.get_full_name() or paciente.email
+        story.append(Paragraph(f"Nombre: {nombre_paciente}", normal_style))
         story.append(Spacer(1, 0.2*inch))
         
         # Resultado del Comité
@@ -847,17 +848,17 @@ class MDTResponseService:
             normal_style
         ))
         story.append(Paragraph(
-            f"Institución: {responsable.institucion_actual}",
+            f"Institución: Instituto Nacional de Oncología y Radioterapia",
             normal_style
         ))
         
-        # Footer
-        story.append(Spacer(1, 0.5*inch))
-        story.append(Paragraph(
-            "<i>Este documento es una segunda opinión consultiva. No sustituye la evaluación directa "
-            "por un profesional médico cualificado.</i>",
-            ParagraphStyle('Footer', parent=normal_style, fontSize=8, textColor=colors.grey)
-        ))
+        # Footer eliminado por solicitud
+        # story.append(Spacer(1, 0.5*inch))
+        # story.append(Paragraph(
+        #     "<i>Este documento es una segunda opinión consultiva. No sustituye la evaluación directa "
+        #     "por un profesional médico cualificado.</i>",
+        #     ParagraphStyle('Footer', parent=normal_style, fontSize=8, textColor=colors.grey)
+        # ))
         
         doc.build(story)
         buffer.seek(0)
@@ -868,7 +869,7 @@ class MDTResponseService:
         """Envía el correo con el PDF adjunto"""
         try:
             subject = f"Segunda Opinión Médica - Caso {caso.case_id}"
-            
+            nombre_paciente = paciente.get_full_name() or paciente.email
             if conformidad == 'conformidad':
                 message = f"""
 Estimado/a {paciente.get_full_name()},
@@ -877,10 +878,10 @@ Le informamos que el Comité Médico ha completado la revisión de su caso (ID: 
 
 El Comité está DE ACUERDO con el diagnóstico y tratamiento propuesto.
 
-Puede acceder al informe completo iniciando sesión en nuestro sistema.
+Puede acceder al informe completo descargando el archivo adjunto.
 
 Atentamente,
-Equipo OnCoMDT
+Equipo Multidisciplinario del Instituto Nacional de Oncología
 """
             else:
                 message = f"""
@@ -890,10 +891,10 @@ Le informamos que el Comité Médico ha completado la revisión de su caso (ID: 
 
 El Comité ha expresado DISCREPANCIAS respecto al diagnóstico y/o tratamiento propuesto. Por favor, revise el informe adjunto para más detalles.
 
-Puede acceder al informe completo iniciando sesión en nuestro sistema.
+Puede acceder al informe completo descargando el archivo adjunto.
 
 Atentamente,
-Equipo OnCoMDT
+Equipo Multidisciplinario del Instituto Nacional de Oncología
 """
             
             from django.core.mail import EmailMessage

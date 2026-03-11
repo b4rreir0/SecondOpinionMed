@@ -233,7 +233,7 @@
                                     <tr>
                                         <th>ID Caso</th>
                                         <th>Diagnóstico</th>
-                                        <th>Especialidad</th>
+                                        <th>Hospital que emitió el diagnóstico</th>
                                         <th>Estado</th>
                                         <th>Fecha de Creación</th>
                                         <th>Acciones</th>
@@ -244,7 +244,7 @@
                                     <tr>
                                         <td><strong>{{ case.case_id }}</strong></td>
                                         <td>{{ case.primary_diagnosis }}</td>
-                                        <td>{{ case.specialty_required }}</td>
+                                        <td>{{ case.referring_institution }}</td>
                                         <td>
                                             <span class="case-status status-{{ case.status|lower }}">
                                                 {{ case.get_status_display }}

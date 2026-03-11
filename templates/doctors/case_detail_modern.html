@@ -1,5 +1,6 @@
 {% extends "doctors/layout_doctor.html" %}
 {% load static %}
+{% load math_filters %}
 
 {% block title %}Caso {{ caso.case_id }} - OnCoMDT{% endblock %}
 
@@ -41,8 +42,15 @@
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
         {% if caso.primary_diagnosis %}
         <div class="bg-blue-50 rounded-lg p-3 border border-blue-100">
-            <p class="text-xs text-blue-600 uppercase font-semibold">Diagnóstico</p>
+            <p class="text-xs text-blue-600 uppercase font-semibold">Diagnostico</p>
             <p class="font-bold text-gray-800 mt-1">{{ caso.primary_diagnosis }}</p>
+        </div>
+        {% endif %}
+        
+        {% if caso.tipo_cancer %}
+        <div class="bg-gray-50 rounded-lg p-3 border border-gray-100">
+            <p class="text-xs text-gray-500 uppercase font-semibold">Tipo de Cancer</p>
+            <p class="font-bold text-gray-800 mt-1">{{ caso.tipo_cancer.nombre }}</p>
         </div>
         {% endif %}
         
@@ -53,17 +61,31 @@
         </div>
         {% endif %}
         
-        {% if caso.tipo_cancer %}
+        {% if caso.diagnosis_date %}
         <div class="bg-gray-50 rounded-lg p-3 border border-gray-100">
-            <p class="text-xs text-gray-500 uppercase font-semibold">Tipo de Cáncer</p>
-            <p class="font-bold text-gray-800 mt-1">{{ caso.tipo_cancer.nombre }}</p>
+            <p class="text-xs text-gray-500 uppercase font-semibold">Fecha Diagnostico</p>
+            <p class="font-bold text-gray-800 mt-1">{{ caso.diagnosis_date|date:"d M Y" }}</p>
         </div>
         {% endif %}
         
-        {% if caso.diagnosis_date %}
+        {% if caso.localidad %}
         <div class="bg-gray-50 rounded-lg p-3 border border-gray-100">
-            <p class="text-xs text-gray-500 uppercase font-semibold">Fecha</p>
-            <p class="font-bold text-gray-800 mt-1">{{ caso.diagnosis_date|date:"d M Y" }}</p>
+            <p class="text-xs text-gray-500 uppercase font-semibold">Localidad</p>
+            <p class="font-bold text-gray-800 mt-1">{{ caso.localidad.nombre }}</p>
+        </div>
+        {% endif %}
+        
+        {% if caso.referring_institution %}
+        <div class="bg-gray-50 rounded-lg p-3 border border-gray-100">
+            <p class="text-xs text-gray-500 uppercase font-semibold">Institución que Refiere</p>
+            <p class="font-bold text-gray-800 mt-1">{{ caso.referring_institution }}</p>
+        </div>
+        {% endif %}
+        
+        {% if caso.tipo_cancer %}
+        <div class="bg-gray-50 rounded-lg p-3 border border-gray-100">
+            <p class="text-xs text-gray-500 uppercase font-semibold">Localidad de la enfermedad</p>
+            <p class="font-bold text-gray-800 mt-1">{{ caso.tipo_cancer.nombre }}</p>
         </div>
         {% endif %}
     </div>
@@ -135,22 +157,180 @@
     </h3>
     
     {% if documents %}
-    <div class="space-y-2">
-        {% for doc in documents %}
-        <div class="flex items-center p-3 rounded-lg hover:bg-gray-50 border border-transparent hover:border-gray-200">
-            <span class="material-icons-outlined text-gray-400 mr-3">description</span>
-            <div class="flex-1">
-                <p class="font-medium text-gray-700">{{ doc.file_name|default:doc.description|default:'Documento' }}</p>
-                <p class="text-xs text-gray-400">{{ doc.fecha_creacion|date:"d M Y" }}</p>
+    
+    {# Definir las categorías #}
+    {% with documents_dict=''|add:'resumen_historia_clinica,resultado_laboratorios,resultado_imagenologia,imagenes,resultado_biopsia,otros_documentos,' %}
+    
+    {# Resumen de Historia Clínica #}
+    {% with type_docs=documents|filter_by_document_type:'resumen_historia_clinica' %}
+    {% if type_docs %}
+    <div class="mb-4">
+        <h4 class="text-md font-semibold text-gray-700 mb-2 border-b pb-1 bg-blue-50 px-3 py-1 rounded-t-lg">
+            Resumen de Historia Clínica
+            <span class="text-xs font-normal text-gray-500">({{ type_docs|length }})</span>
+        </h4>
+        <div class="space-y-2 pl-2">
+            {% for doc in type_docs %}
+            <div class="flex items-center p-3 rounded-lg hover:bg-gray-50 border border-gray-100">
+                <span class="material-icons-outlined text-gray-400 mr-3">description</span>
+                <div class="flex-1">
+                    <p class="font-medium text-gray-700">{{ doc.file_name }}</p>
+                    <p class="text-xs text-gray-400">{{ doc.uploaded_at|date:"d M Y" }}</p>
+                </div>
+                {% if doc.file %}
+                <a href="{{ doc.file.url }}" download target="_blank" class="text-blue-600 hover:text-blue-800">
+                    <span class="material-icons-outlined">download</span>
+                </a>
+                {% endif %}
             </div>
-            {% if doc.file %}
-            <a href="{{ doc.file.url }}" download class="text-blue-600">
-                <span class="material-icons-outlined">download</span>
-            </a>
-            {% endif %}
+            {% endfor %}
         </div>
-        {% endfor %}
     </div>
+    {% endif %}
+    {% endwith %}
+    
+    {# Resultado de Laboratorios #}
+    {% with type_docs=documents|filter_by_document_type:'resultado_laboratorios' %}
+    {% if type_docs %}
+    <div class="mb-4">
+        <h4 class="text-md font-semibold text-gray-700 mb-2 border-b pb-1 bg-green-50 px-3 py-1 rounded-t-lg">
+            Resultado de Laboratorios
+            <span class="text-xs font-normal text-gray-500">({{ type_docs|length }})</span>
+        </h4>
+        <div class="space-y-2 pl-2">
+            {% for doc in type_docs %}
+            <div class="flex items-center p-3 rounded-lg hover:bg-gray-50 border border-gray-100">
+                <span class="material-icons-outlined text-gray-400 mr-3">science</span>
+                <div class="flex-1">
+                    <p class="font-medium text-gray-700">{{ doc.file_name }}</p>
+                    <p class="text-xs text-gray-400">{{ doc.uploaded_at|date:"d M Y" }}</p>
+                </div>
+                {% if doc.file %}
+                <a href="{{ doc.file.url }}" download target="_blank" class="text-blue-600 hover:text-blue-800">
+                    <span class="material-icons-outlined">download</span>
+                </a>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    {% endwith %}
+    
+    {# Resultado de Imagenología #}
+    {% with type_docs=documents|filter_by_document_type:'resultado_imagenologia' %}
+    {% if type_docs %}
+    <div class="mb-4">
+        <h4 class="text-md font-semibold text-gray-700 mb-2 border-b pb-1 bg-purple-50 px-3 py-1 rounded-t-lg">
+            Resultado de Imagenología
+            <span class="text-xs font-normal text-gray-500">({{ type_docs|length }})</span>
+        </h4>
+        <div class="space-y-2 pl-2">
+            {% for doc in type_docs %}
+            <div class="flex items-center p-3 rounded-lg hover:bg-gray-50 border border-gray-100">
+                <span class="material-icons-outlined text-gray-400 mr-3">medical_information</span>
+                <div class="flex-1">
+                    <p class="font-medium text-gray-700">{{ doc.file_name }}</p>
+                    <p class="text-xs text-gray-400">{{ doc.uploaded_at|date:"d M Y" }}</p>
+                </div>
+                {% if doc.file %}
+                <a href="{{ doc.file.url }}" download target="_blank" class="text-blue-600 hover:text-blue-800">
+                    <span class="material-icons-outlined">download</span>
+                </a>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    {% endwith %}
+    
+    {# Imágenes #}
+    {% with type_docs=documents|filter_by_document_type:'imagenes' %}
+    {% if type_docs %}
+    <div class="mb-4">
+        <h4 class="text-md font-semibold text-gray-700 mb-2 border-b pb-1 bg-yellow-50 px-3 py-1 rounded-t-lg">
+            Imágenes
+            <span class="text-xs font-normal text-gray-500">({{ type_docs|length }})</span>
+        </h4>
+        <div class="space-y-2 pl-2">
+            {% for doc in type_docs %}
+            <div class="flex items-center p-3 rounded-lg hover:bg-gray-50 border border-gray-100">
+                <span class="material-icons-outlined text-gray-400 mr-3">image</span>
+                <div class="flex-1">
+                    <p class="font-medium text-gray-700">{{ doc.file_name }}</p>
+                    <p class="text-xs text-gray-400">{{ doc.uploaded_at|date:"d M Y" }}</p>
+                </div>
+                {% if doc.file %}
+                <a href="{{ doc.file.url }}" download target="_blank" class="text-blue-600 hover:text-blue-800">
+                    <span class="material-icons-outlined">download</span>
+                </a>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    {% endwith %}
+    
+    {# Resultado de Biopsia #}
+    {% with type_docs=documents|filter_by_document_type:'resultado_biopsia' %}
+    {% if type_docs %}
+    <div class="mb-4">
+        <h4 class="text-md font-semibold text-gray-700 mb-2 border-b pb-1 bg-red-50 px-3 py-1 rounded-t-lg">
+            Resultado de Biopsia
+            <span class="text-xs font-normal text-gray-500">({{ type_docs|length }})</span>
+        </h4>
+        <div class="space-y-2 pl-2">
+            {% for doc in type_docs %}
+            <div class="flex items-center p-3 rounded-lg hover:bg-gray-50 border border-gray-100">
+                <span class="material-icons-outlined text-gray-400 mr-3">biotech</span>
+                <div class="flex-1">
+                    <p class="font-medium text-gray-700">{{ doc.file_name }}</p>
+                    <p class="text-xs text-gray-400">{{ doc.uploaded_at|date:"d M Y" }}</p>
+                </div>
+                {% if doc.file %}
+                <a href="{{ doc.file.url }}" download target="_blank" class="text-blue-600 hover:text-blue-800">
+                    <span class="material-icons-outlined">download</span>
+                </a>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    {% endwith %}
+    
+    {# Otros Documentos #}
+    {% with type_docs=documents|filter_by_document_type:'otros_documentos' %}
+    {% if type_docs %}
+    <div class="mb-4">
+        <h4 class="text-md font-semibold text-gray-700 mb-2 border-b pb-1 bg-gray-50 px-3 py-1 rounded-t-lg">
+            Otros Documentos Relevantes
+            <span class="text-xs font-normal text-gray-500">({{ type_docs|length }})</span>
+        </h4>
+        <div class="space-y-2 pl-2">
+            {% for doc in type_docs %}
+            <div class="flex items-center p-3 rounded-lg hover:bg-gray-50 border border-gray-100">
+                <span class="material-icons-outlined text-gray-400 mr-3">folder</span>
+                <div class="flex-1">
+                    <p class="font-medium text-gray-700">{{ doc.file_name }}</p>
+                    <p class="text-xs text-gray-400">{{ doc.uploaded_at|date:"d M Y" }}</p>
+                </div>
+                {% if doc.file %}
+                <a href="{{ doc.file.url }}" download target="_blank" class="text-blue-600 hover:text-blue-800">
+                    <span class="material-icons-outlined">download</span>
+                </a>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    {% endwith %}
+    
+    {% endwith %}
+    
     {% else %}
     <p class="text-gray-400 text-center py-4">No hay documentos</p>
     {% endif %}

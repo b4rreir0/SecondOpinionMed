@@ -72,6 +72,13 @@ class PatientProfile(models.Model):
     de campo en futuras implementaciones.
     """
     
+    GENERO_CHOICES = (
+        ('masculino', 'Masculino'),
+        ('femenino', 'Femenino'),
+        ('otro', 'Otro'),
+        ('no_especificado', 'No especificado'),
+    )
+    
     user = models.OneToOneField(
         CustomUser,
         on_delete=models.CASCADE,
@@ -88,6 +95,12 @@ class PatientProfile(models.Model):
         max_length=50,
         unique=True,
         help_text="Cédula de identidad o pasaporte"
+    )
+    genero = models.CharField(
+        max_length=20,
+        choices=GENERO_CHOICES,
+        default='no_especificado',
+        help_text="Género del paciente"
     )
     phone_number = EncryptedCharField(
         max_length=20,

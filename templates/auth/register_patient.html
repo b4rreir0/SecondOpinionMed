@@ -237,6 +237,26 @@
                 {% endif %}
             </div>
 
+            <!-- Genero -->
+            <div class="form-group">
+                <label for="id_genero">Género</label>
+                <select 
+                    class="form-control {% if form.genero.errors %}is-invalid{% endif %}" 
+                    id="id_genero" 
+                    name="genero"
+                >
+                    <option value="">Seleccione...</option>
+                    {% for value, label in form.fields.genero.choices %}
+                        <option value="{{ value }}" {% if form.genero.value == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+                {% if form.genero.errors %}
+                <div class="invalid-feedback d-block">
+                    {% for error in form.genero.errors %}{{ error }}{% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
             <!-- Password -->
             <div class="form-group">
                 <label for="id_password">Contraseña</label>
