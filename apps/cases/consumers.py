@@ -13,6 +13,7 @@ from datetime import datetime
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 
 
 class MDTChatConsumer(AsyncWebsocketConsumer):
@@ -48,7 +49,7 @@ class MDTChatConsumer(AsyncWebsocketConsumer):
             {
                 'type': 'system_message',
                 'message': 'Usuario conectado al chat MDT',
-                'timestamp': timezone.now().isoformat()
+                'timestamp': timezone.now().strftime('%Y-%m-%dT%H:%M:%SZ')
             }
         )
     
@@ -69,15 +70,18 @@ class MDTChatConsumer(AsyncWebsocketConsumer):
             # Guardar mensaje en BD
             mensaje_data = await self.guardar_mensaje(data)
             
-            # Distribuir a todos en el grupo
+            # Obtener el ID del autor actual (quien envía el mensaje)
+            autor_id_enviando = data.get('autor_id')
+            
+            # Distribuir a todos en el grupo incluyendo flag is_me
             await self.channel_layer.group_send(
                 self.channel_group,
                 {
                     'type': 'chat_message',
                     'message': data.get('message', ''),
                     'autor': data.get('autor', 'Anonymous'),
-                    'autor_id': data.get('autor_id'),
-                    'timestamp': timezone.now().isoformat(),
+                    'autor_id': autor_id_enviando,
+                    'timestamp': timezone.now().strftime('%Y-%m-%dT%H:%M:%SZ'),
                     'message_id': mensaje_data.get('id') if mensaje_data else None
                 }
             )
@@ -112,9 +116,40 @@ class MDTChatConsumer(AsyncWebsocketConsumer):
             from cases.models import Case
             from medicos.models import Medico, MedicalGroup
             
-            caso = Case.objects.get(case_id=self.caso_id) if self.caso_id else None
-            grupo = MedicalGroup.objects.get(id=self.grupo_id) if self.grupo_id else None
-            autor = Medico.objects.get(id=data.get('autor_id')) if data.get('autor_id') else None
+            caso = None
+            # Verificar que caso_id exista y no sea None o vacío
+            if self.caso_id and str(self.caso_id).strip():
+                try:
+                    caso = Case.objects.get(case_id=self.caso_id)
+                except Case.DoesNotExist:
+                    print(f"Caso no encontrado: {self.caso_id}")
+                    caso = None
+            
+            grupo = None
+            # Verificar que grupo_id exista y no sea None o vacío
+            if self.grupo_id and str(self.grupo_id).strip():
+                try:
+                    grupo = MedicalGroup.objects.get(id=self.grupo_id)
+                except MedicalGroup.DoesNotExist:
+                    print(f"Grupo no encontrado: {self.grupo_id}")
+                    grupo = None
+            
+            autor = None
+            autor_id = data.get('autor_id')
+            if autor_id:
+                try:
+                    autor = Medico.objects.get(id=autor_id)
+                except Medico.DoesNotExist:
+                    print(f"Médico no encontrado: {autor_id}")
+                    autor = None
+            
+            if not grupo:
+                print("Error: No se pudo identificar el grupo")
+                return None
+            
+            if not autor:
+                print("Error: No se pudo identificar el autor")
+                return None
             
             mensaje = MDTMessage.objects.create(
                 caso=caso,
@@ -127,14 +162,19 @@ class MDTChatConsumer(AsyncWebsocketConsumer):
             return {'id': mensaje.id}
         except Exception as e:
             print(f"Error guardando mensaje: {e}")
+            import traceback
+            traceback.print_exc()
             return None
     
     async def chat_message(self, event):
-        """Envía mensaje al WebSocket"""
+        """Envía mensaje al WebSocket con flag is_me"""
+        # El flag is_me se determinará en el cliente JavaScript
+        # comparando el autor_id del mensaje con el usuario actual
         await self.send(text_data=json.dumps({
             'type': 'chat_message',
             'message': event['message'],
             'autor': event['autor'],
+            'autor_id': event.get('autor_id'),
             'timestamp': event['timestamp'],
             'message_id': event.get('message_id')
         }))

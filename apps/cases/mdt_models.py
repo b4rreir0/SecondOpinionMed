@@ -90,7 +90,8 @@ class MDTMessage(TimeStampedModel):
         ]
     
     def __str__(self):
-        return f"Mensaje de {self.autor.nombre_completo} en caso {self.caso.case_id}"
+        caso_info = f"caso {self.caso.case_id}" if self.caso else "chat general del grupo"
+        return f"Mensaje de {self.autor.nombre_completo} en {caso_info}"
 
 
 class MDTMessageAttachment(TimeStampedModel):

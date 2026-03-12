@@ -3,121 +3,689 @@
 
 {% block title %}Chat MDT - OnCoMDT{% endblock %}
 
+{% block extra_css %}
+{{ block.super }}
+<script>
+    console.log('[chat_mdt.html] Cargando estilos del chat');
+</script>
+<style>
+    /* Estilos específicos del Chat - Aislamiento con prefijo chat-wa- */
+    
+    /* Layout de dos columnas */
+    .chat-wa-wrapper {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        height: calc(100vh - 220px);
+        min-height: 500px;
+    }
+    
+    /* Panel izquierdo - Lista de Comités */
+    .chat-wa-sidebar {
+        background-color: #ffffff;
+        border-right: 1px solid #e2e8f0;
+        display: flex;
+        flex-direction: column;
+        border-radius: 12px 0 0 12px;
+        overflow: hidden;
+    }
+    
+    .chat-wa-sidebar-header {
+        padding: 16px;
+        border-bottom: 1px solid #e2e8f0;
+        background-color: #f8fafc;
+    }
+    
+    .chat-wa-sidebar-title {
+        font-size: 15px;
+        font-weight: 600;
+        color: #1e293b;
+    }
+    
+    .chat-wa-committee-list {
+        flex: 1;
+        overflow-y: auto;
+    }
+    
+    .chat-wa-committee-item {
+        display: flex;
+        align-items: center;
+        padding: 12px 16px;
+        gap: 12px;
+        cursor: pointer;
+        transition: background-color 0.15s;
+        border-bottom: 1px solid #f1f5f9;
+        text-decoration: none;
+    }
+    
+    .chat-wa-committee-item:hover {
+        background-color: #f1f5f9;
+    }
+    
+    .chat-wa-committee-item.chat-wa-active {
+        background-color: #e0f2fe;
+        border-left: 3px solid #0ea5e9;
+    }
+    
+    .chat-wa-avatar {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #0ea5e9, #38bdf8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 600;
+        flex-shrink: 0;
+    }
+    
+    .chat-wa-info {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .chat-wa-name {
+        font-size: 13px;
+        font-weight: 600;
+        color: #1e293b;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .chat-wa-types {
+        font-size: 11px;
+        color: #64748b;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    /* Panel derecho - Chat */
+    .chat-wa-main {
+        background-color: #efe7dd;
+        background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 20.5V28M20 20.5C20 20.5 27 20.5 32 14M20 20.5C20 20.5 13 20.5 8 14' stroke='%23d1d7db' stroke-width='1' fill='none'/%3E%3C/svg%3E");
+        display: flex;
+        flex-direction: column;
+        border-radius: 0 12px 12px 0;
+        overflow: hidden;
+    }
+    
+    /* Chat Header */
+    .chat-wa-header {
+        padding: 12px 16px;
+        background-color: #ffffff;
+        border-bottom: 1px solid #e2e8f0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .chat-wa-header-avatar {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #0ea5e9, #38bdf8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+    }
+    
+    .chat-wa-header-info h3 {
+        font-size: 14px;
+        font-weight: 600;
+        color: #1e293b;
+    }
+    
+    .chat-wa-header-info p {
+        font-size: 11px;
+        color: #64748b;
+    }
+    
+    .chat-wa-status {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11px;
+        color: #059669;
+    }
+    
+    .chat-wa-status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: #10b981;
+    }
+    
+    /* Messages Area */
+    .chat-wa-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+    
+    /* Burbujas de mensaje */
+    .chat-wa-bubble {
+        max-width: 60%;
+        padding: 7px 10px;
+        border-radius: 8px;
+        position: relative;
+        word-wrap: break-word;
+        font-size: 13px;
+        line-height: 1.4;
+    }
+    
+    .chat-wa-received {
+        align-self: flex-start;
+        background-color: #ffffff;
+        border-top-left-radius: 2px;
+    }
+    
+    .chat-wa-received .chat-wa-author {
+        color: #0284c7;
+        font-size: 10px;
+        font-weight: 600;
+        margin-bottom: 1px;
+    }
+    
+    .chat-wa-sent {
+        align-self: flex-end;
+        background-color: #dcfce7;
+        border-top-right-radius: 2px;
+    }
+    
+    .chat-wa-meta {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 3px;
+        margin-top: 3px;
+    }
+    
+    .chat-wa-time {
+        font-size: 10px;
+        color: #64748b;
+    }
+    
+    .chat-wa-check {
+        font-size: 11px;
+        color: #64748b;
+    }
+    
+    /* Input Area */
+    .chat-wa-input-area {
+        padding: 10px 14px;
+        background-color: #f8fafc;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .chat-wa-input {
+        flex: 1;
+        padding: 9px 14px;
+        border-radius: 20px;
+        border: none;
+        background-color: #ffffff;
+        font-size: 13px;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+    
+    .chat-wa-input:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px #0ea5e9;
+    }
+    
+    .chat-wa-send-btn {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background-color: #0ea5e9;
+        border: none;
+        color: white;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background-color 0.2s;
+    }
+    
+    .chat-wa-send-btn:hover {
+        background-color: #0284c7;
+    }
+    
+    /* Typing Indicator */
+    .chat-wa-typing {
+        padding: 6px 14px;
+        font-size: 11px;
+        color: #64748b;
+        font-style: italic;
+    }
+    
+    /* Empty State */
+    .chat-wa-empty {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: #64748b;
+    }
+    
+    .chat-wa-empty-icon {
+        font-size: 44px;
+        margin-bottom: 10px;
+        color: #94a3b8;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .chat-wa-wrapper {
+            grid-template-columns: 1fr;
+        }
+        
+        .chat-wa-sidebar {
+            display: none;
+        }
+        
+        .chat-wa-main {
+            border-radius: 12px;
+        }
+        
+        .chat-wa-bubble {
+            max-width: 75%;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block main_content %}
+<script>
+    console.log('[chat_mdt.html] Bloque main_content iniciado');
+    console.log('[chat_mdt.html] Grupo actual:', '{{ grupo|default:"None" }}');
+    console.log('[chat_mdt.html] Número de grupos:', '{{ grupos|length|default:0 }}');
+</script>
 <!-- Page Header -->
-<div class="mb-8">
+<div class="mb-4">
     <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Chat del Comité MDT</h1>
     <p class="text-sm text-slate-500 mt-1">
         Comunícate con los miembros de tu comité multidisciplinario
     </p>
 </div>
 
-<div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-    <!-- Lista de Comités -->
-    <div class="lg:col-span-1">
-        <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
-            <h2 class="text-lg font-semibold text-slate-800 dark:text-white mb-4">Mis Comités</h2>
-            
-            <div class="space-y-2">
-                {% for g in grupos %}
-                <a href="{% url 'cases:mdt_chat_grupo' g.id %}" 
-                   class="flex items-center p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors {% if grupo and grupo.id == g.id %}bg-primary/10 border border-primary{% endif %}">
-                    <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary">
-                        <span class="material-icons-outlined">groups</span>
+<!-- Chat Layout de Dos Columnas -->
+<div class="chat-wa-wrapper bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-lg">
+    <!-- Columna Izquierda: Lista de Comités -->
+    <div class="chat-wa-sidebar">
+        <div class="chat-wa-sidebar-header">
+            <h2 class="chat-wa-sidebar-title">Mis Comités</h2>
+        </div>
+        
+        <div class="chat-wa-committee-list">
+            {% for g in grupos %}
+            <a href="{% url 'cases:mdt_chat_grupo' g.id %}" 
+               class="chat-wa-committee-item {% if grupo and grupo.id == g.id %}chat-wa-active{% endif %}">
+                <div class="chat-wa-avatar">
+                    <span class="material-icons-outlined" style="font-size: 20px;">groups</span>
+                </div>
+                <div class="chat-wa-info">
+                    <div class="chat-wa-name">{{ g.nombre }}</div>
+                    <div class="chat-wa-types">
+                        {% with g.tipos_cancer.all as tcs %}
+                            {% if tcs %}{% for tc in tcs %}{% if forloop.counter > 1 %}, {% endif %}{{ tc.codigo }}{% endfor %}{% else %}General{% endif %}
+                        {% endwith %}
                     </div>
-                    <div class="ml-3">
-                        <p class="text-sm font-medium text-slate-700 dark:text-white">{{ g.nombre }}</p>
-                        <p class="text-xs text-slate-500">
-                            {% with g.tipos_cancer.all as tcs %}
-                                {% if tcs %}{% for tc in tcs %}{% if forloop.counter > 1 %}, {% endif %}{{ tc.nombre }}{% endfor %}{% else %}Sin tipos{% endif %}
-                            {% endwith %}
-                        </p>
-                    </div>
-                </a>
-                {% empty %}
-                <p class="text-sm text-slate-500">No tienes comités asignados.</p>
-                {% endfor %}
+                </div>
+            </a>
+            {% empty %}
+            <div class="p-4 text-center text-slate-500">
+                <span class="material-icons-outlined text-4xl block mb-2">groups</span>
+                <p class="text-sm">No tienes comités asignados</p>
             </div>
+            {% endfor %}
         </div>
     </div>
-
-    <!-- Área de Chat -->
-    <div class="lg:col-span-3">
-        <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 h-[600px] flex flex-col">
-            {% if grupo %}
-            <!-- Chat Header -->
-            <div class="p-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary">
-                        <span class="material-icons-outlined">groups</span>
-                    </div>
-                    <div>
-                        <h3 class="font-semibold text-slate-800 dark:text-white">{{ grupo.nombre }}</h3>
-                        <p class="text-xs text-slate-500">
-                            {% with grupo.tipos_cancer.all as tcs %}
-                                {% if tcs %}{% for tc in tcs %}{% if forloop.counter > 1 %}, {% endif %}{{ tc.nombre }}{% endfor %}{% endif %}
-                            {% endwith %}
-                            - 
-                            {% if miembros %}{{ miembros.count }} miembros{% else %}1 miembro{% endif %}
-                        </p>
-                    </div>
-                </div>
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                    En línea
-                </span>
+    
+    <!-- Columna Derecha: Chat -->
+    <div class="chat-wa-main">
+        {% if grupo %}
+        <!-- Chat Header -->
+        <div class="chat-wa-header">
+            <div class="chat-wa-header-avatar">
+                <span class="material-icons-outlined">groups</span>
             </div>
-
-            <!-- Messages Area -->
-            <div class="flex-1 p-4 overflow-y-auto space-y-4" id="chat-messages">
-                {% for msg in mensajes %}
-                <div class="flex items-start gap-3">
-                    <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-sm font-bold">
-                        {{ msg.autor.nombres|slice:":1" }}{{ msg.autor.apellidos|slice:":1" }}
-                    </div>
-                    <div class="flex-1">
-                        <div class="bg-slate-100 dark:bg-slate-700 rounded-lg p-3">
-                            <p class="text-sm text-slate-700 dark:text-slate-200">
-                                {{ msg.contenido }}
-                            </p>
-                        </div>
-                        <p class="text-xs text-slate-400 mt-1">
-                            Dr. {{ msg.autor.nombre_completo }} - {{ msg.creado_en|date:"g:i A" }}
-                        </p>
-                    </div>
-                </div>
-                {% empty %}
-                <div class="text-center py-8 text-slate-500">
-                    <p>No hay mensajes aún. ¡Sé el primero en escribir!</p>
-                </div>
-                {% endfor %}
+            <div class="chat-wa-header-info">
+                <h3>{{ grupo.nombre }}</h3>
+                <p>{% if miembros %}{{ miembros.count }} miembros{% else %}1 miembro{% endif %}</p>
             </div>
-
-            <!-- Message Input -->
-            <div class="p-4 border-t border-slate-200 dark:border-slate-700">
-                <form method="post" class="flex items-center gap-3">
-                    {% csrf_token %}
-                    <button type="button" class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
-                        <span class="material-icons-outlined">attach_file</span>
-                    </button>
-                    <input type="text" 
-                           name="mensaje"
-                           placeholder="Escribe un mensaje..." 
-                           class="flex-1 px-4 py-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary">
-                    <button type="submit" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90">
-                        <span class="material-icons-outlined">send</span>
-                    </button>
-                </form>
+            <div class="chat-wa-status">
+                <span class="chat-wa-status-dot"></span>
+                En línea
             </div>
-            {% else %}
-            <!-- Sin grupo seleccionado -->
-            <div class="flex-1 flex items-center justify-center text-slate-500">
-                <div class="text-center">
-                    <span class="material-icons-outlined text-4xl mb-2">chat</span>
-                    <p>Selecciona un comité de la lista para comenzar a chatear</p>
-                </div>
-            </div>
-            {% endif %}
         </div>
+        
+        <!-- Messages Area -->
+        <div class="chat-wa-messages" id="chat-messages" data-grupo-id="{{ grupo.id }}" data-medico-id="{{ medico.id }}">
+            {% for msg in mensajes %}
+            <div class="chat-wa-bubble {% if msg.autor.id == medico.id %}chat-wa-sent{% else %}chat-wa-received{% endif %}"
+                 data-autor-id="{{ msg.autor.id }}">
+                {% if msg.autor.id != medico.id %}
+                <div class="chat-wa-author">Dr. {{ msg.autor.apellidos }}</div>
+                {% endif %}
+                <div class="message-content">{{ msg.contenido }}</div>
+                <div class="chat-wa-meta">
+                    <span class="chat-wa-time" data-timestamp="{{ msg.creado_en|date:'c' }}"></span>
+                    {% if msg.autor.id == medico.id %}
+                    <span class="chat-wa-check">✓</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% empty %}
+            <div class="chat-wa-empty">
+                <span class="material-icons-outlined chat-wa-empty-icon">chat</span>
+                <p class="text-base font-medium">No hay mensajes aún</p>
+                <p class="text-sm">¡Sé el primero en escribir!</p>
+            </div>
+            {% endfor %}
+            
+            <!-- Typing Indicator -->
+            <div class="chat-wa-typing" id="typing-indicator" style="display: none;">
+                <span id="typing-author"></span> está escribiendo...
+            </div>
+        </div>
+        
+        <!-- Input Area -->
+        <div class="chat-wa-input-area">
+            <button type="button" class="p-2 text-slate-500 hover:text-slate-700">
+                <span class="material-icons-outlined">attach_file</span>
+            </button>
+            <input type="text" 
+                   id="message-input"
+                   placeholder="Escribe un mensaje..." 
+                   class="chat-wa-input">
+            <button type="button" id="send-button" class="chat-wa-send-btn">
+                <span class="material-icons-outlined">send</span>
+            </button>
+        </div>
+        {% else %}
+        <!-- Sin grupo seleccionado -->
+        <div class="chat-wa-empty" style="background-color: #f8fafc;">
+            <span class="material-icons-outlined chat-wa-empty-icon">forum</span>
+            <p class="text-base font-medium">Selecciona un Comité</p>
+            <p class="text-sm">Elige un comité de la lista para comenzar a chatear</p>
+        </div>
+        {% endif %}
     </div>
 </div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Configuración del WebSocket para Chat estilo WhatsApp
+    const chatMessages = document.getElementById('chat-messages');
+    const messageInput = document.getElementById('message-input');
+    const sendButton = document.getElementById('send-button');
+    const typingIndicator = document.getElementById('typing-indicator');
+    const typingAuthor = document.getElementById('typing-author');
+    
+    let websocket = null;
+    let currentGrupoId = chatMessages?.dataset.grupoId;
+    let currentMedicoId = chatMessages?.dataset.medicoId;
+    let lastAutorId = null;
+    
+    // Función para conectar al WebSocket
+    function connectWebSocket() {
+        if (!currentGrupoId || !currentMedicoId) return;
+        
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${protocol}//${window.location.host}/ws/mdt/${currentGrupoId}/`;
+        
+        websocket = new WebSocket(wsUrl);
+        
+        websocket.onopen = function() {
+            console.log('WebSocket conectado');
+        };
+        
+        websocket.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            
+            if (data.type === 'chat_message') {
+                handleNewMessage(data);
+            } else if (data.type === 'typing') {
+                handleTypingIndicator(data);
+            }
+        };
+        
+        websocket.onclose = function() {
+            console.log('WebSocket desconectado, intentando reconectar...');
+            setTimeout(connectWebSocket, 3000);
+        };
+        
+        websocket.onerror = function(error) {
+            console.error('Error en WebSocket:', error);
+        };
+    }
+    
+    // Función para manejar nuevos mensajes
+    function handleNewMessage(data) {
+        const isMe = data.autor_id == currentMedicoId;
+        
+        // Ocultar indicador de escritura
+        if (typingIndicator) typingIndicator.style.display = 'none';
+        
+        // Crear elemento de mensaje
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `chat-wa-bubble ${isMe ? 'chat-wa-sent' : 'chat-wa-received'}`;
+        messageDiv.dataset.autorId = data.autor_id;
+        
+        let messageHtml = '';
+        
+        // Si no es mi mensaje, mostrar autor (pero agrupar si es del mismo)
+        if (!isMe && lastAutorId != data.autor_id) {
+            messageHtml += `<div class="chat-wa-author">Dr. ${data.autor}</div>`;
+        }
+        
+        messageHtml += `<div class="message-content">${escapeHtml(data.message)}</div>`;
+        messageHtml += `<div class="chat-wa-meta">`;
+        messageHtml += `<span class="chat-wa-time">${formatTime(data.timestamp)}</span>`;
+        if (isMe) {
+            messageHtml += `<span class="chat-wa-check">✓</span>`;
+        }
+        messageHtml += `</div>`;
+        
+        messageDiv.innerHTML = messageHtml;
+        
+        // Agregar al contenedor
+        chatMessages.appendChild(messageDiv);
+        
+        // Actualizar último autor
+        lastAutorId = data.autor_id;
+        
+        // Scroll al final
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+    
+    // Función para manejar indicador de escritura
+    function handleTypingIndicator(data) {
+        if (data.is_typing && data.autor_id != currentMedicoId) {
+            typingAuthor.textContent = data.autor;
+            typingIndicator.style.display = 'block';
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        } else {
+            typingIndicator.style.display = 'none';
+        }
+    }
+    
+    // Función para enviar mensaje
+    function sendMessage() {
+        const message = messageInput.value.trim();
+        
+        if (message && websocket && websocket.readyState === WebSocket.OPEN) {
+            const messageData = {
+                type: 'chat_message',
+                message: message,
+                autor: '{{ medico.nombre_completo|default:"Médico" }}',
+                autor_id: currentMedicoId
+            };
+            
+            websocket.send(JSON.stringify(messageData));
+            messageInput.value = '';
+            
+            // Actualizar último autor
+            lastAutorId = currentMedicoId;
+        }
+    }
+    
+    // Función para enviar indicador de escritura
+    let typingTimeout = null;
+    function sendTypingIndicator() {
+        if (websocket && websocket.readyState === WebSocket.OPEN) {
+            websocket.send(JSON.stringify({
+                type: 'typing',
+                autor: '{{ medico.nombre_completo|default:"Médico" }}',
+                autor_id: currentMedicoId,
+                is_typing: true
+            }));
+            
+            // Limpiar timeout anterior
+            if (typingTimeout) clearTimeout(typingTimeout);
+            
+            // Enviar "no escribiendo" después de 2 segundos
+            typingTimeout = setTimeout(() => {
+                websocket.send(JSON.stringify({
+                    type: 'typing',
+                    autor: '{{ medico.nombre_completo|default:"Médico" }}',
+                    autor_id: currentMedicoId,
+                    is_typing: false
+                }));
+            }, 2000);
+        }
+    }
+    
+    // Funciones auxiliares
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    function formatTime(timestamp) {
+        // El timestamp viene en UTC desde el servidor, JavaScript lo convierte automáticamente
+        // a la hora local del dispositivo del usuario
+        if (!timestamp) return '';
+        
+        const date = new Date(timestamp);
+        
+        // Verificar si la fecha es válida
+        if (isNaN(date.getTime())) {
+            return timestamp; // Mostrar el string original si no se puede parsear
+        }
+        
+        // toLocaleTimeString convierte automáticamente a la zona horaria del dispositivo
+        return date.toLocaleTimeString('es-ES', { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            hour12: true
+        });
+    }
+    
+    // Event listeners
+    if (sendButton) {
+        sendButton.addEventListener('click', sendMessage);
+    }
+    
+    if (messageInput) {
+        messageInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            } else {
+                sendTypingIndicator();
+            }
+        });
+        
+        // Restaurar scroll al cargar página
+        messageInput.addEventListener('focus', function() {
+            if (chatMessages) {
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+        });
+    }
+    
+    // Función para convertir todos los timestamps a hora local
+    function convertAllTimestampsToLocal() {
+        console.log('[UTC] convertAllTimestampsToLocal iniciado');
+        const timeElements = document.querySelectorAll('.chat-wa-time[data-timestamp]');
+        console.log('[UTC] Encontrados elementos de tiempo:', timeElements.length);
+        
+        timeElements.forEach(function(el) {
+            const timestamp = el.dataset.timestamp;
+            console.log('[UTC] Timestamp encontrado:', timestamp);
+            if (timestamp) {
+                const localTime = formatTime(timestamp);
+                console.log('[UTC] Hora local convertida:', localTime);
+                el.textContent = localTime;
+            }
+        });
+    }
+    
+    // Función para formatear hora - asegura conversión UTC a local
+    function formatTime(timestamp) {
+        console.log('[UTC] formatTime recibido:', timestamp);
+        
+        if (!timestamp) return '';
+        
+        // Si el timestamp no tiene 'Z' al final, agregarla para asegurar que se interprete como UTC
+        let utcTimestamp = timestamp;
+        if (!timestamp.endsWith('Z') && !timestamp.includes('+')) {
+            utcTimestamp = timestamp + 'Z';
+        }
+        
+        const date = new Date(utcTimestamp);
+        
+        console.log('[UTC] Date object:', date.toISOString());
+        
+        // Verificar si la fecha es válida
+        if (isNaN(date.getTime())) {
+            console.log('[UTC] Fecha inválida, mostrando original');
+            return timestamp; // Mostrar el string original si no se puede parsear
+        }
+        
+        // toLocaleTimeString convierte automáticamente a la zona horaria del dispositivo
+        // Usar la configuración regional del usuario para formato consistente (12h o 24h según su sistema)
+        const result = date.toLocaleTimeString([], { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            hour12: true  // Forzar formato 12 horas (AM/PM) para consistencia visual
+        });
+        console.log('[UTC] Resultado convertido:', result);
+        return result;
+    }
+    
+    // Ejecutar cuando el DOM esté listo
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('[UTC] DOM listo, inicializando...');
+        
+        // Inicializar WebSocket si estamos en una sala de chat
+        if (currentGrupoId && currentMedicoId) {
+            connectWebSocket();
+        }
+        
+        // Convertir horas de mensajes iniciales a hora local del dispositivo
+        convertAllTimestampsToLocal();
+        
+        // Scroll inicial al final
+        if (chatMessages) {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+    });
+</script>
+<script>
+    console.log('[chat_mdt.html] Template cargado completamente');
+</script>
 {% endblock %}
