@@ -1,11 +1,12 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import Http404
-from django.http import FileResponse
+from django.http import Http404, HttpResponseRedirect, FileResponse
+from django.urls import reverse
 from django.utils import timezone
 
 from .models import Case
+from .mdt_models import MDTMessage
 from .services import CaseService
 
 
@@ -149,7 +150,23 @@ class DoctorCaseDetailView(LoginRequiredMixin, View):
         if case.doctor == request.user:
             puede_ver = True
         
-        # 2. Si es miembro del comité de la localidad del caso
+        # 2. Si pertenece al grupo médico del caso (vía DoctorGroupMembership)
+        if not puede_ver and case.medical_group:
+            try:
+                from medicos.models import Medico, DoctorGroupMembership
+                medico = Medico.objects.get(usuario=request.user)
+                # Verificar membresía activa en el grupo
+                membresia = DoctorGroupMembership.objects.filter(
+                    medico=medico,
+                    grupo=case.medical_group,
+                    activo=True
+                ).exists()
+                if membresia:
+                    puede_ver = True
+            except Exception:
+                pass
+        
+        # 3. Si es miembro del comité de la localidad del caso
         if not puede_ver and case.localidad:
             try:
                 from medicos.models import Medico
@@ -382,7 +399,7 @@ class CasosPendientesView(LoginRequiredMixin, View):
         print(f"[CasosPendientes] Casos asignados (sin filtro): {casos_asignados.count()}")
         
         pending_cases = casos_asignados.filter(
-            status__in=['PAID', 'IN_REVIEW', 'CLARIFICATION_NEEDED', 'ASSIGNED', 'PROCESSING']
+            status__in=['SUBMITTED', 'PAID', 'IN_REVIEW', 'CLARIFICATION_NEEDED', 'ASSIGNED', 'PROCESSING']
         ).order_by('-created_at')
         
         print(f"[CasosPendientes] Casos pendientes (filtrados): {pending_cases.count()}")
@@ -495,6 +512,9 @@ class ReportesView(LoginRequiredMixin, View):
 class MDTChatView(LoginRequiredMixin, View):
     """
     Vista para el chat del Comité MDT.
+    
+    Muestra los grupos médicos (MedicalGroup) a los que pertenece el médico.
+    Cada grupo tiene su propio chat donde los miembros pueden interactuar.
     """
     template_name = 'doctors/chat_mdt.html'
     login_url = 'auth:login'
@@ -503,18 +523,151 @@ class MDTChatView(LoginRequiredMixin, View):
         if not request.user.is_doctor():
             raise Http404()
         
-        # Por ahora, obtener todos los comités MDT disponibles
+        medico = None
+        grupos = []
+        
         try:
-            from medicos.models import ComiteMultidisciplinario
-            committees = ComiteMultidisciplinario.objects.all()
-        except Exception:
-            committees = []
+            medico = request.user.medico
+            from medicos.models import DoctorGroupMembership
+            # Obtener los grupos a los que pertenece el médico
+            memberships = DoctorGroupMembership.objects.filter(
+                medico=medico,
+                activo=True
+            ).select_related('grupo')
+            
+            grupos = [m.grupo for m in memberships if m.grupo.activo]
+        except Exception as e:
+            print(f"Error getting groups: {e}")
         
         context = {
-            'committees': committees,
-            'user_role': 'doctor'
+            'grupos': grupos,
+            'grupo': None,
+            'mensajes': [],
+            'miembros': [],
+            'user_role': 'doctor',
+            'medico': medico
         }
         return render(request, self.template_name, context)
+
+
+class MDTChatGrupoView(LoginRequiredMixin, View):
+    """
+    Vista para el chat de un grupo médico específico.
+    Muestra los mensajes del grupo y permite enviar nuevos mensajes.
+    """
+    template_name = 'doctors/chat_mdt.html'
+    login_url = 'auth:login'
+    
+    def get(self, request, grupo_id):
+        if not request.user.is_doctor():
+            raise Http404()
+        
+        medico = None
+        grupo = None
+        grupos = []
+        mensajes = []
+        miembros = []
+        error_msg = None
+        
+        try:
+            # Obtener médico del usuario
+            try:
+                medico = request.user.medico
+            except Exception:
+                error_msg = "No tienes perfil de médico asociado"
+                raise Exception(error_msg)
+            
+            from medicos.models import MedicalGroup, DoctorGroupMembership
+            
+            # Verificar que el médico pertenece al grupo
+            membership = DoctorGroupMembership.objects.filter(
+                medico=medico,
+                grupo_id=grupo_id,
+                activo=True
+            ).first()
+            
+            if not membership:
+                error_msg = "No perteneces a este grupo"
+                raise Exception(error_msg)
+            
+            grupo = membership.grupo
+            
+            # Obtener todos los grupos del médico para la lista lateral
+            memberships = DoctorGroupMembership.objects.filter(
+                medico=medico,
+                activo=True
+            ).select_related('grupo')
+            grupos = [m.grupo for m in memberships if m.grupo.activo]
+            
+            # Obtener mensajes del grupo (sin caso específico)
+            from .mdt_models import MDTMessage
+            mensajes = MDTMessage.objects.filter(
+                grupo=grupo,
+                caso__isnull=True  # Solo mensajes generales del grupo
+            ).select_related('autor').order_by('creado_en')
+            
+            # Obtener miembros del grupo
+            miembros = DoctorGroupMembership.objects.filter(
+                grupo=grupo,
+                activo=True
+            ).select_related('medico')
+            
+        except Exception as e:
+            print(f"Error in MDTChatGrupoView GET: {e}")
+        
+        context = {
+            'grupo': grupo,
+            'grupos': grupos,
+            'mensajes': mensajes,
+            'miembros': miembros,
+            'user_role': 'doctor',
+            'medico': medico
+        }
+        return render(request, self.template_name, context)
+    
+    def post(self, request, grupo_id):
+        """Guardar nuevo mensaje en el chat del grupo"""
+        if not request.user.is_doctor():
+            raise Http404()
+        
+        mensaje = request.POST.get('mensaje', '').strip()
+        
+        if mensaje:
+            try:
+                medico = request.user.medico
+                from medicos.models import DoctorGroupMembership
+                from .mdt_models import MDTMessage
+                
+                # Verificar pertenencia al grupo
+                membership = DoctorGroupMembership.objects.filter(
+                    medico=medico,
+                    grupo_id=grupo_id,
+                    activo=True
+                ).first()
+                
+                if membership:
+                    grupo = membership.grupo
+                    
+                    # Crear mensaje (sin caso - chat general del grupo)
+                    # Usar 0 o un ID válido para caso si es None (problema de FK en SQLite)
+                    from cases.models import Case
+                    caso_vacio = None
+                    try:
+                        # Intentar crear sin caso primero
+                        MDTMessage.objects.create(
+                            grupo=grupo,
+                            autor=medico,
+                            contenido=mensaje,
+                            tipo='mensaje',
+                            caso=None  # Chat general
+                        )
+                    except Exception as e:
+                        print(f"Error creating message with caso=None: {e}")
+            except Exception as e:
+                print(f"Error saving message: {e}")
+        
+        # Redirect back to the same view
+        return HttpResponseRedirect(reverse('cases:mdt_chat_grupo', args=[grupo_id]))
 
 
 # =============================================================================

@@ -19,6 +19,7 @@ urlpatterns = [
     
     # Chat MDT
     path('doctors/chat/', views.MDTChatView.as_view(), name='mdt_chat'),
+    path('doctors/chat/<int:grupo_id>/', views.MDTChatGrupoView.as_view(), name='mdt_chat_grupo'),
     
     # Guía del Sistema
     path('doctors/guia/', views.GuiaSistemaView.as_view(), name='guia_sistema'),

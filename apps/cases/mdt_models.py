@@ -18,7 +18,11 @@ class MDTMessage(TimeStampedModel):
     """
     Mensaje en el chat del comité MDT.
     
-    Cada mensaje pertenece a un caso específico y un grupo médico específico.
+    Cada mensaje pertenece a un grupo médico específico y opcionalmente a un caso.
+    Hay dos tipos de chat:
+    1. Chat general del grupo (sin caso): Para discusiones generales entre miembros
+    2. Chat de caso específico: Para discutir un caso particular
+    
     Solo los miembros del grupo pueden ver y enviar mensajes.
     """
     
@@ -31,7 +35,10 @@ class MDTMessage(TimeStampedModel):
     caso = models.ForeignKey(
         'cases.Case',
         on_delete=models.CASCADE,
-        related_name='mdt_messages'
+        null=True,
+        blank=True,
+        related_name='mdt_messages',
+        help_text="Caso associated (optional for general group chat)"
     )
     grupo = models.ForeignKey(
         'medicos.MedicalGroup',

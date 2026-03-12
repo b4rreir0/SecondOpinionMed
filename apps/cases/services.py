@@ -205,7 +205,8 @@ class CaseService:
         Implementa Permisos a Nivel de Objeto (OLP).
         Un médico puede ver:
         1. Los casos donde es el doctor asignado directamente
-        2. Los casos de su comité multidisciplinario
+        2. Los casos de su grupo médico (MedicalGroup)
+        3. Los casos de su comité multidisciplinario (por localidad)
         
         Args:
             doctor: Usuario médico
@@ -217,27 +218,69 @@ class CaseService:
         print(f"[get_doctor_assigned_cases] Doctor: {getattr(doctor, 'email', doctor)}")
         print(f"[get_doctor_assigned_cases] Tiene atributo medico: {hasattr(doctor, 'medico')}")
         
+        # Los estados correctos del modelo Case (cases/models.py)
+        # STATUS_CHOICES = (
+        #     ('DRAFT', 'Borrador'),
+        #     ('SUBMITTED', 'Enviado'),
+        #     ('ASSIGNED', 'Asignado'),
+        #     ('PROCESSING', 'Procesando'),
+        #     ('MDT_IN_PROGRESS', 'En Análisis por MDT'),
+        #     ('MDT_COMPLETED', 'Discusión MDT Cerrada'),
+        #     ('REPORT_DRAFT', 'Informe en Redacción'),
+        #     ('REPORT_COMPLETED', 'Informe Completado'),
+        #     ('OPINION_COMPLETE', 'Opinión Completa'),
+        #     ('CLOSED', 'Cerrado'),
+        #     ('CANCELLED', 'Cancelado'),
+        # )
+        
         # Determinar estados a incluir
         if include_completed:
-            statuses = ['PAID', 'IN_REVIEW', 'CLARIFICATION_NEEDED', 'ASSIGNED', 'PROCESSING', 'COMPLETED']
+            # Incluir todos los estados excepto cancelados
+            statuses = [
+                'SUBMITTED', 'ASSIGNED', 'PROCESSING', 
+                'MDT_IN_PROGRESS', 'MDT_COMPLETED',
+                'REPORT_DRAFT', 'REPORT_COMPLETED', 
+                'OPINION_COMPLETE', 'CLOSED',
+                'COMPLETED', 'IN_REVIEW'  # Por compatibilidad con datos existentes
+            ]
         else:
-            statuses = ['PAID', 'IN_REVIEW', 'CLARIFICATION_NEEDED', 'ASSIGNED', 'PROCESSING']
+            # Casos que necesitan atención activa
+            statuses = ['SUBMITTED', 'ASSIGNED', 'PROCESSING', 'MDT_IN_PROGRESS', 'IN_REVIEW']
         
         # Casos donde es el doctor asignado
         qs = Case.objects.filter(
             doctor=doctor,
             status__in=statuses
         )
-        print(f"[get_doctor_assigned_cases] Casos propios (sin filtro estado): {Case.objects.filter(doctor=doctor).count()}")
+        print(f"[get_doctor_assigned_cases] Casos propios (doctor={doctor}): {qs.count()}")
         
-        # También obtener los casos del comité al que pertenece el médico
+        # También obtener los casos del grupo médico al que pertenece el médico
         try:
             # Obtener el objeto Medico relacionado con este usuario
             medico = getattr(doctor, 'medico', None)
             print(f"[get_doctor_assigned_cases] Medico: {medico}")
             
             if medico:
-                # Obtener los comités del médico
+                # Obtener los grupos médicos del médico (vía DoctorGroupMembership)
+                from medicos.models import DoctorGroupMembership
+                memberships = DoctorGroupMembership.objects.filter(
+                    medico=medico,
+                    activo=True
+                ).select_related('grupo')
+                
+                if memberships.exists():
+                    grupos = [m.grupo for m in memberships]
+                    print(f"[get_doctor_assigned_cases] Grupos del medico: {[g.nombre for g in grupos]}")
+                    
+                    # Casos asignados al grupo médico
+                    casos_grupo = Case.objects.filter(
+                        medical_group__in=grupos,
+                        status__in=statuses
+                    )
+                    print(f"[get_doctor_assigned_cases] Casos del grupo: {casos_grupo.count()}")
+                    qs = qs | casos_grupo
+                
+                # Obtener los comités del médico (para casos por localidad)
                 comites = medico.comites.all()
                 print(f"[get_doctor_assigned_cases] Comites del medico: {comites.count()}")
                 
@@ -252,9 +295,9 @@ class CaseService:
                         localidad__in=localidades,
                         status__in=statuses
                     )
-                    print(f"[get_doctor_assigned_cases] Casos del comite (sin filtro estado): {casos_comite.count()}")
+                    print(f"[get_doctor_assigned_cases] Casos del comite: {casos_comite.count()}")
                     
-                    # Combinar: casos propios + casos del comité
+                    # Combinar: casos propios + casos del grupo + casos del comité
                     qs = qs | casos_comite
         except Exception as e:
             # Si hay algún error, simplemente devolver los casos propios

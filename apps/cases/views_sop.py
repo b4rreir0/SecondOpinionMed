@@ -331,6 +331,16 @@ def sop_step4(request):
                         # ensure it's submitted
                         case.status = 'SUBMITTED'
                         case.save()
+                        
+                        # Asignar automáticamente al grupo médico basado en tipo_cancer
+                        try:
+                            from cases.services import asignar_caso_automatico
+                            resultado = asignar_caso_automatico(case)
+                            if resultado:
+                                print(f"Asignación automática: {resultado}")
+                        except Exception as e:
+                            print(f"Error en asignación automática: {e}")
+                        
                         # Ensure localidad is linked if present
                         loc_id = c.get('localidad')
                         if loc_id:
@@ -353,6 +363,17 @@ def sop_step4(request):
                 case = final_case
             except Exception:
                 case = CaseService.finalize_submission(request.user, draft, explicit_consent=explicit)
+            
+            # Asignar automáticamente al grupo médico basado en tipo_cancer
+            try:
+                from cases.services import asignar_caso_automatico
+                if case and case.status == 'SUBMITTED' and not case.medical_group:
+                    resultado = asignar_caso_automatico(case)
+                    if resultado:
+                        print(f"Asignación automática: {resultado}")
+            except Exception as e:
+                print(f"Error en asignación automática: {e}")
+            
             # Audit log of creation
             CaseService.log_case_access(case, request.user, action='create')
             # Clean session

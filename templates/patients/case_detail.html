@@ -5,16 +5,73 @@
   <div class="card">
     <div class="card-header">Detalle de la Solicitud <strong>{{ case.case_id }}</strong></div>
     <div class="card-body">
-      <h5>Diagnóstico</h5>
-      <p>{{ case.primary_diagnosis }}</p>
+      <!-- Información del Paciente -->
+      <div class="mb-4 p-3 bg-light rounded">
+        <h5 class="text-primary mb-3">Información del Paciente</h5>
+        <div class="row">
+          <div class="col-md-6 mb-2">
+            <strong>Nombre:</strong> {{ case.patient.get_full_name|default:case.patient.email }}
+          </div>
+          <div class="col-md-6 mb-2">
+            <strong>Email:</strong> {{ case.patient.email }}
+          </div>
+          <div class="col-md-6 mb-2">
+            <strong>Teléfono:</strong> {{ case.patient.phone|default:'No proporcionado' }}
+          </div>
+        </div>
+      </div>
 
-      <h5>Localidad de la enfermedad</h5>
-      <p>{% if case.tipo_cancer %}{{ case.tipo_cancer.nombre }}{% else %}No especificado{% endif %}</p>
+      <!-- Diagnóstico y Antecedentes -->
+      <h5 class="text-primary mb-3">Diagnóstico y Antecedentes</h5>
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <h6 class="text-muted">Diagnóstico Principal</h6>
+          <p>{{ case.primary_diagnosis }}</p>
+        </div>
+        <div class="col-md-6 mb-3">
+          <h6 class="text-muted">Tipo de Cancer</h6>
+          <p>{% if case.tipo_cancer %}{{ case.tipo_cancer.nombre }}{% else %}No especificado{% endif %}</p>
+        </div>
+        <div class="col-md-6 mb-3">
+          <h6 class="text-muted">Estadio</h6>
+          <p>{% if case.estadio %}{{ case.estadio }}{% else %}No especificado{% endif %}</p>
+        </div>
+        <div class="col-md-6 mb-3">
+          <h6 class="text-muted">Localidad de la enfermedad</h6>
+          <p>{% if case.localidad %}{{ case.localidad.nombre }}{% elif case.tipo_cancer %}{{ case.tipo_cancer.nombre }}{% else %}No especificado{% endif %}</p>
+        </div>
+        <div class="col-md-6 mb-3">
+          <h6 class="text-muted">Fecha de Diagnóstico</h6>
+          <p>{% if case.diagnosis_date %}{{ case.diagnosis_date|date:"d/m/Y" }}{% else %}No especificada{% endif %}</p>
+        </div>
+        <div class="col-md-6 mb-3">
+          <h6 class="text-muted">Institución que Refiere</h6>
+          <p>{% if case.referring_institution %}{{ case.referring_institution }}{% else %}No especificada{% endif %}</p>
+        </div>
+      </div>
 
-      <h5>Descripción / Síntomas</h5>
+      <!-- Síntomas y Descripción -->
+      <h5 class="text-primary mb-3 mt-4">Síntomas y Descripción</h5>
       <p>{{ case.description }}</p>
 
-      <div class="mt-3">
+      <!-- Información Adicional -->
+      {% if case.objetivo_consulta or case.tratamiento_propuesto_original %}
+      <h5 class="text-primary mb-3 mt-4">Información Adicional</h5>
+      {% if case.objetivo_consulta %}
+      <div class="mb-3">
+        <h6 class="text-muted">Objetivo de la Consulta</h6>
+        <p>{{ case.objetivo_consulta }}</p>
+      </div>
+      {% endif %}
+      {% if case.tratamiento_propuesto_original %}
+      <div class="mb-3">
+        <h6 class="text-muted">Tratamiento Propuesto Original</h6>
+        <p>{{ case.tratamiento_propuesto_original }}</p>
+      </div>
+      {% endif %}
+      {% endif %}
+
+      <div class="mt-4">
         <span class="case-status status-{{ case.status|lower }}">{{ case.get_status_display }}</span>
         <small class="text-muted ms-2">Creada: {{ case.created_at|date:"d/m/Y H:i" }}</small>
       </div>
