@@ -6,6 +6,7 @@ from django.urls import reverse
 from django.http import JsonResponse
 from django.db.models import Count, Q
 from django.utils import timezone
+from django.utils.decorators import method_decorator
 import os
 
 from authentication.models import CustomUser
@@ -13,103 +14,7 @@ from authentication.services import DoctorService
 from cases.models import Case as CasoMDT, MedicalOpinion
 from medicos.models import Medico, Especialidad, Localidad, MedicalGroup
 from pacientes.models import Paciente
-
-
-def _get_admin_credentials():
-    email = getattr(settings, 'ADMIN_PORTAL_EMAIL', None)
-    password = getattr(settings, 'ADMIN_PORTAL_PASSWORD', None)
-    # Fallback: try reading ADMIN_CREDENTIALS.txt in project root
-    if not email or not password:
-        cred_path = os.path.join(settings.BASE_DIR, 'ADMIN_CREDENTIALS.txt')
-        try:
-            with open(cred_path, 'r', encoding='utf-8') as f:
-                for line in f:
-                    if line.startswith('ADMIN_EMAIL='):
-                        email = email or line.strip().split('=', 1)[1]
-                    if line.startswith('ADMIN_PASSWORD='):
-                        password = password or line.strip().split('=', 1)[1]
-        except Exception:
-            pass
-    return email, password
-
-
-class AdminLoginView(View):
-    template_name = 'administracion/portal_login.html'
-
-    def get(self, request):
-        return render(request, self.template_name)
-
-    def post(self, request):
-        email = request.POST.get('email')
-        password = request.POST.get('password')
-        admin_email, admin_password = _get_admin_credentials()
-        if admin_email and admin_password and email == admin_email and password == admin_password:
-            request.session['is_custom_admin'] = True
-            return redirect(reverse('administracion:portal_dashboard'))
-        messages.error(request, 'Credenciales inválidas')
-        return render(request, self.template_name)
-
-
-class AdminLogoutView(View):
-    def get(self, request):
-        request.session.pop('is_custom_admin', None)
-        return redirect(reverse('administracion:portal_login'))
-
-
-from functools import wraps
-
-
-def admin_required_portal(view_func):
-    @wraps(view_func)
-    def wrapped(*args, **kwargs):
-        # args may be (request, ...) for function-based views
-        # or (self, request, ...) for class-based view methods
-        request = None
-        if len(args) >= 1 and hasattr(args[0], 'session'):
-            request = args[0]
-        elif len(args) >= 2 and hasattr(args[1], 'session'):
-            request = args[1]
-
-        if request is None:
-            return redirect(reverse('administracion:portal_login'))
-
-        if not request.session.get('is_custom_admin'):
-            return redirect(reverse('administracion:portal_login'))
-
-        return view_func(*args, **kwargs)
-
-    return wrapped
-
-
-class AdminPanelView(View):
-    template_name = 'administracion/portal_panel.html'
-
-    @admin_required_portal
-    def get(self, request):
-        # Only one section: Invitar doctores
-        return render(request, self.template_name, {'section': 'invite'})
-
-
-class InviteDoctorView(View):
-    @admin_required_portal
-    def post(self, request):
-        email = request.POST.get('email')
-        if not email:
-            messages.error(request, 'Introduce un correo válido')
-            return redirect(reverse('administracion:portal_dashboard'))
-
-        # Try to find admin user as invited_by
-        invited_by = None
-        admin_email, _ = _get_admin_credentials()
-        if admin_email:
-            try:
-                invited_by = CustomUser.objects.filter(email=admin_email).first()
-            except Exception:
-                invited_by = None
-
-        DoctorService.invite_doctor(email, invited_by)
-        messages.success(request, f'Invitación enviada a {email} (en cola)')
-        return redirect(reverse('administracion:portal_dashboard'))
+from core.decorators import admin_required
 
 
 # ============================================================================
@@ -120,7 +25,7 @@ class AdminDashboardView(View):
     """Dashboard principal del panel de administración"""
     template_name = 'admin/dashboard_admin.html'
     
-    @admin_required_portal
+    @method_decorator(admin_required)
     def get(self, request):
         # Estadísticas del sistema
         casos_mdt = CasoMDT.objects.all()
@@ -135,8 +40,8 @@ class AdminDashboardView(View):
             'comites': MedicalGroup.objects.filter(activo=True).count(),
         }
         
-        # Casos recientes
-        casos_recientes = casos_mdt.order_by('-created_at')[:10]
+        # Casos recientes - select_related para acceder al paciente
+        casos_recientes = casos_mdt.select_related('patient').order_by('-created_at')[:10]
         
         context = {
             'stats': stats,
@@ -149,13 +54,13 @@ class GestionCasosView(View):
     """Lista de todos los casos del sistema"""
     template_name = 'admin/casos_list.html'
     
-    @admin_required_portal
+    @method_decorator(admin_required)
     def get(self, request):
         # Filtrar por estado
         estado = request.GET.get('estado')
         search = request.GET.get('search')
         
-        casos = CasoMDT.objects.all().select_related('paciente', 'paciente__user', 'especialidad', 'localidad')
+        casos = CasoMDT.objects.all().select_related('patient', 'medical_group', 'responsable', 'localidad')
         
         if estado:
             casos = casos.filter(status=estado)
@@ -178,10 +83,10 @@ class CasoDetalleView(View):
     """Detalle de un caso específico"""
     template_name = 'admin/caso_detalle.html'
     
-    @admin_required_portal
+    @method_decorator(admin_required)
     def get(self, request, case_id):
         caso = get_object_or_404(CasoMDT, case_id=case_id)
-        opiniones = MedicalOpinion.objects.filter(caso=caso).select_related('medico', 'medico__user')
+        opiniones = MedicalOpinion.objects.filter(caso=caso).select_related('doctor', 'doctor__usuario')
         
         context = {
             'caso': caso,
@@ -194,7 +99,7 @@ class AsignarCasoView(View):
     """Asignar caso a un médico"""
     template_name = 'admin/caso_asignar.html'
     
-    @admin_required_portal
+    @method_decorator(admin_required)
     def get(self, request, case_id):
         caso = get_object_or_404(CasoMDT, case_id=case_id)
         medicos = Medico.objects.filter(estado='activo').select_related('usuario')
@@ -205,7 +110,7 @@ class AsignarCasoView(View):
         }
         return render(request, self.template_name, context)
     
-    @admin_required_portal
+    @method_decorator(admin_required)
     def post(self, request, case_id):
         caso = get_object_or_404(CasoMDT, case_id=case_id)
         medico_id = request.POST.get('medico_id')
@@ -222,7 +127,7 @@ class GestionMedicosView(View):
     """Lista de todos los médicos"""
     template_name = 'admin/medicos_list.html'
     
-    @admin_required_portal
+    @method_decorator(admin_required)
     def get(self, request):
         search = request.GET.get('search')
         especialidad = request.GET.get('especialidad')
@@ -251,7 +156,7 @@ class MedicoDetalleView(View):
     """Detalle de un médico específico"""
     template_name = 'admin/medico_detalle.html'
     
-    @admin_required_portal
+    @method_decorator(admin_required)
     def get(self, request, medico_id):
         medico = get_object_or_404(Medico, id=medico_id)
         casos = CasoMDT.objects.filter(medico_asignado=medico).order_by('-created_at')[:10]
@@ -267,11 +172,11 @@ class GestionPacientesView(View):
     """Lista de todos los pacientes"""
     template_name = 'admin/pacientes_list.html'
     
-    @admin_required_portal
+    @method_decorator(admin_required)
     def get(self, request):
         search = request.GET.get('search')
         
-        pacientes = Paciente.objects.select_related('user')
+        pacientes = Paciente.objects.select_related('usuario')
         
         if search:
             pacientes = pacientes.filter(
@@ -289,7 +194,7 @@ class PacienteDetalleView(View):
     """Detalle de un paciente específico"""
     template_name = 'admin/paciente_detalle.html'
     
-    @admin_required_portal
+    @method_decorator(admin_required)
     def get(self, request, paciente_id):
         paciente = get_object_or_404(Paciente, id=paciente_id)
         casos = CasoMDT.objects.filter(paciente=paciente).order_by('-created_at')
@@ -305,9 +210,9 @@ class GestionComitesView(View):
     """Lista de comités MDT"""
     template_name = 'admin/comites_list.html'
     
-    @admin_required_portal
+    @method_decorator(admin_required)
     def get(self, request):
-        comites = MedicalGroup.objects.select_related('especialidad', 'localidad').prefetch_related('miembros', 'miembros__user')
+        comites = MedicalGroup.objects.select_related('responsable_por_defecto').prefetch_related('miembros', 'miembros__medico__usuario', 'tipos_cancer')
         
         context = {
             'comites': comites,
@@ -319,7 +224,7 @@ class ConfiguracionView(View):
     """Configuración del sistema"""
     template_name = 'admin/configuracion.html'
     
-    @admin_required_portal
+    @method_decorator(admin_required)
     def get(self, request):
         especialidades = Especialidad.objects.all()
         localidades = Localidad.objects.all()
@@ -329,3 +234,25 @@ class ConfiguracionView(View):
             'localidades': localidades,
         }
         return render(request, self.template_name, context)
+
+
+class InviteDoctorView(View):
+    """Vista para invitar médicos al sistema"""
+    
+    @method_decorator(admin_required)
+    def post(self, request):
+        email = request.POST.get('email')
+        if not email:
+            messages.error(request, 'Introduce un correo válido')
+            return redirect(reverse('administracion:portal_dashboard'))
+
+        # Usar el usuario actual como invitado por
+        invited_by = request.user
+
+        try:
+            DoctorService.invite_doctor(email, invited_by)
+            messages.success(request, f'Invitación enviada a {email}')
+        except Exception as e:
+            messages.error(request, f'Error al enviar invitación: {str(e)}')
+        
+        return redirect(reverse('administracion:portal_dashboard'))

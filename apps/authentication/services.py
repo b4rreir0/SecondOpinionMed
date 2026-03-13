@@ -161,9 +161,10 @@ class AuthenticationService:
         Returns:
             str: URL de redirección
         """
-        # Superusers (administradores de Django) deben ir al admin
+        # Superusers (administradores) van al panel de admin personalizado
         if getattr(user, 'is_superuser', False):
-            return '/admin/'
+            # Redirigir directamente al dashboard del portal de admin
+            return '/admin-portal/'
 
         if user.is_doctor():
             return '/doctors/dashboard/'

@@ -14,7 +14,8 @@ from core.decorators import admin_required
 from core.services import AsignacionService, ReporteService, AuditoriaService
 from pacientes.models import Paciente, CasoClinico
 from medicos.models import Medico, ComiteMultidisciplinario
-from django.contrib.auth.models import User
+from django.contrib.auth.models import Group
+from authentication.models import CustomUser
 from cases.models import Case as CasoMDT, MedicalOpinion
 
 @admin_required
@@ -48,7 +49,7 @@ def panel_gestion(request):
     Panel de Gestión Integral - Administración completa del sistema
     Muestra todas las entidades del sistema con opciones de gestión
     """
-    from django.contrib.auth.models import User, Group
+    from authentication.models import CustomUser
     from medicos.models import Medico, ComiteMultidisciplinario, MedicalGroup, TipoCancer, Especialidad, Localidad, DoctorGroupMembership
     from pacientes.models import Paciente
     from cases.models import Case as CasoMDT, MedicalOpinion, CaseDocument, FinalReport, CaseAuditLog
@@ -57,8 +58,8 @@ def panel_gestion(request):
     # Contadores para cada modelo
     stats = {
         # Autenticación
-        'usuarios_total': User.objects.count(),
-        'usuarios_activos': User.objects.filter(is_active=True).count(),
+        'usuarios_total': CustomUser.objects.count(),
+        'usuarios_activos': CustomUser.objects.filter(is_active=True).count(),
         'grupos': Group.objects.count(),
         
         # Médicos
@@ -92,7 +93,7 @@ def panel_gestion(request):
     # Últimas acciones
     recientes = {
         'ultimos_casos': CasoMDT.objects.order_by('-created_at')[:5],
-        'ultimos_usuarios': User.objects.order_by('-date_joined')[:5],
+        'ultimos_usuarios': CustomUser.objects.order_by('-date_joined')[:5],
         'ultimas_opiniones': MedicalOpinion.objects.order_by('-fecha_emision')[:5],
     }
     

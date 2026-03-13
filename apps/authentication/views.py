@@ -55,6 +55,11 @@ class LoginView(View):
 class LogoutView(View):
     """Vista para cerrar sesión"""
     
+    def get(self, request):
+        """Cierra la sesión del usuario mediante GET"""
+        logout(request)
+        return redirect('/')
+    
     def post(self, request):
         """Cierra la sesión del usuario"""
         logout(request)

@@ -43,10 +43,14 @@ def medico_required(view_func):
     return _wrapped_view
 
 def admin_required(view_func):
-    """Decorador que requiere que el usuario sea un administrador activo"""
+    """Decorador que requiere que el usuario sea un administrador activo o superuser"""
     @wraps(view_func)
     @login_required
     def _wrapped_view(request, *args, **kwargs):
+        # Los superusers siempre tienen acceso
+        if getattr(request.user, 'is_superuser', False):
+            return view_func(request, *args, **kwargs)
+        
         try:
             admin = request.user.administrador
             if admin.estado == 'activo':
@@ -66,6 +70,10 @@ def role_required(*roles):
         @login_required
         def _wrapped_view(request, *args, **kwargs):
             user = request.user
+            
+            # Los superusers siempre tienen acceso completo
+            if getattr(user, 'is_superuser', False):
+                return view_func(request, *args, **kwargs)
             
             # Verificar roles
             has_role = False

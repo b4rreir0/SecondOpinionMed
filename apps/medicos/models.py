@@ -251,7 +251,7 @@ class MedicalGroup(TimeStampedModel):
     @property
     def miembros_activos(self):
         """Retorna los miembros activos del grupo"""
-        return self.miembros.filter(estado='activo', disponible_segundas_opiniones=True)
+        return self.miembros.filter(activo=True, disponible_asignacion_auto=True)
     
     @property
     def numero_miembros(self):

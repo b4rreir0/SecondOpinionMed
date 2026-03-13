@@ -88,6 +88,7 @@ celerybeat-schedule
 *.sage.py
 
 # Environments
+.env
 .venv
 env/
 venv/
@@ -112,6 +113,11 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Node/npm
+node_modules/
+npm-debug.log
+yarn-error.log
 
 # IDE
 .vscode/

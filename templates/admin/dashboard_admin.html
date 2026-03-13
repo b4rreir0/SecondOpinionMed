@@ -134,16 +134,16 @@
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex items-center gap-2">
                                     <div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-500 text-xs font-bold">
-                                        {{ caso.paciente.user.get_first_name|make_list|first|upper }}
+                                        {{ caso.patient.get_first_name|make_list|first|upper }}
                                     </div>
                                     <span class="text-sm text-slate-700 dark:text-slate-300">
-                                        {{ caso.paciente.user.get_first_name|default:caso.paciente.user.username|truncatechars:15 }}
+                                        {{ caso.patient.get_first_name|default:caso.patient.username|truncatechars:15 }}
                                     </span>
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <span class="text-sm text-slate-600 dark:text-slate-400">
-                                    {{ caso.tipo_cancer.nombre|default:caso.especialidad.nombre|default:'-' }}
+                                    {{ caso.tipo_cancer.nombre|default:'-' }}
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
@@ -162,7 +162,7 @@
                                 {% endif %}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
-                                {{ caso.fecha_creacion|date:"d M Y" }}
+                                {{ caso.created_at|date:"d M Y" }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right">
                                 <a href="{% url 'administracion:portal_caso_detalle' caso.case_id %}" 

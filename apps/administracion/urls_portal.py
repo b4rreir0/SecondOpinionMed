@@ -5,10 +5,6 @@ from . import views
 app_name = 'administracion'
 
 urlpatterns = [
-    # Login/Logout
-    path('login/', portal_views.AdminLoginView.as_view(), name='portal_login'),
-    path('logout/', portal_views.AdminLogoutView.as_view(), name='portal_logout'),
-    
     # Dashboard principal
     path('', portal_views.AdminDashboardView.as_view(), name='portal_dashboard'),
     

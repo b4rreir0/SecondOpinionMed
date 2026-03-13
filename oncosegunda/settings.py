@@ -135,7 +135,7 @@ TIME_ZONE = 'Europe/Madrid'
 USE_I18N = True
 USE_TZ = True
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
@@ -143,7 +143,25 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 LOGIN_URL = '/auth/login/'
-LOGIN_REDIRECT_URL = '/'
+
+def get_login_redirect_url(request):
+    """Redirige según el rol del usuario después del login"""
+    if request.user.is_authenticated:
+        if getattr(request.user, 'is_superuser', False):
+            return '/admin-portal/'
+        # Importar aquí para evitar importación circular
+        from authentication.models import CustomUser
+        try:
+            user = request.user
+            if hasattr(user, 'role') and user.role == 'doctor':
+                return '/doctors/dashboard/'
+            elif hasattr(user, 'role') and user.role == 'patient':
+                return '/patients/dashboard/'
+        except:
+            pass
+    return '/'
+
+LOGIN_REDIRECT_URL = get_login_redirect_url
 LOGOUT_REDIRECT_URL = '/auth/login/'
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"

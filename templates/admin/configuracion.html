@@ -1,0 +1,167 @@
+{% extends "admin/layout_admin.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Configuración - Administración{% endblock %}
+
+{% block extra_css %}
+<style>
+    .bg-primary { background-color: #1392ec; }
+    .text-primary { color: #1392ec; }
+    .border-primary { border-color: #1392ec; }
+    .bg-primary\/10 { background-color: rgba(19, 146, 236, 0.1); }
+</style>
+{% endblock %}
+
+{% block main_content %}
+<div class="max-w-7xl mx-auto space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+            <h1 class="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">
+                Configuración del Sistema
+            </h1>
+            <p class="text-slate-500 dark:text-slate-400 mt-1">Administra la configuración global de OncoMDT</p>
+        </div>
+    </div>
+
+    <!-- Settings Sections -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Sidebar -->
+        <div class="lg:col-span-1">
+            <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 space-y-2">
+                <a href="#general" class="flex items-center gap-3 px-4 py-3 bg-primary/10 text-primary rounded-xl font-semibold">
+                    <span class="material-icons-round">settings</span>
+                    General
+                </a>
+                <a href="#notificaciones" class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl font-medium transition-colors">
+                    <span class="material-icons-round">notifications</span>
+                    Notificaciones
+                </a>
+                <a href="#seguridad" class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl font-medium transition-colors">
+                    <span class="material-icons-round">security</span>
+                    Seguridad
+                </a>
+                <a href="#email" class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl font-medium transition-colors">
+                    <span class="material-icons-round">email</span>
+                    Email
+                </a>
+                <a href="#backup" class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl font-medium transition-colors">
+                    <span class="material-icons-round">backup</span>
+                    Backup
+                </a>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- General Settings -->
+            <div id="general" class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
+                <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                    <span class="material-icons-round text-primary">settings</span>
+                    Configuración General
+                </h2>
+                <form class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                                Nombre del Sistema
+                            </label>
+                            <input type="text" class="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary" value="OncoMDT - Segunda Opinión">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                                Versión
+                            </label>
+                            <input type="text" class="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-500" value="1.0.0" disabled>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                            Descripción
+                        </label>
+                        <textarea rows="3" class="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary">Sistema de gestión de segundos opiniones médicas para comités oncológicos multidisciplinarios.</textarea>
+                    </div>
+                    <div class="flex justify-end">
+                        <button type="submit" class="px-4 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-primary-dark transition-colors">
+                            Guardar Cambios
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Notifications Settings -->
+            <div id="notificaciones" class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
+                <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                    <span class="material-icons-round text-primary">notifications</span>
+                    Configuración de Notificaciones
+                </h2>
+                <form class="space-y-4">
+                    <div class="space-y-3">
+                        <label class="flex items-center gap-3">
+                            <input type="checkbox" class="w-5 h-5 text-primary border-slate-300 rounded focus:ring-primary" checked>
+                            <span class="text-slate-700 dark:text-slate-300">Notificaciones por email</span>
+                        </label>
+                        <label class="flex items-center gap-3">
+                            <input type="checkbox" class="w-5 h-5 text-primary border-slate-300 rounded focus:ring-primary" checked>
+                            <span class="text-slate-700 dark:text-slate-300">Notificaciones de nuevos casos</span>
+                        </label>
+                        <label class="flex items-center gap-3">
+                            <input type="checkbox" class="w-5 h-5 text-primary border-slate-300 rounded focus:ring-primary" checked>
+                            <span class="text-slate-700 dark:text-slate-300">Notificaciones de opiniones médicas</span>
+                        </label>
+                        <label class="flex items-center gap-3">
+                            <input type="checkbox" class="w-5 h-5 text-primary border-slate-300 rounded focus:ring-primary">
+                            <span class="text-slate-700 dark:text-slate-300">Notificaciones de alertas del sistema</span>
+                        </label>
+                    </div>
+                    <div class="flex justify-end">
+                        <button type="submit" class="px-4 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-primary-dark transition-colors">
+                            Guardar Cambios
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Security Settings -->
+            <div id="seguridad" class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
+                <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                    <span class="material-icons-round text-primary">security</span>
+                    Configuración de Seguridad
+                </h2>
+                <form class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                                Timeout de Sesión (minutos)
+                            </label>
+                            <input type="number" class="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary" value="30">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                                Intentos de Login
+                            </label>
+                            <input type="number" class="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary" value="5">
+                        </div>
+                    </div>
+                    <div class="space-y-3">
+                        <label class="flex items-center gap-3">
+                            <input type="checkbox" class="w-5 h-5 text-primary border-slate-300 rounded focus:ring-primary" checked>
+                            <span class="text-slate-700 dark:text-slate-300">Requerir contraseña fuerte</span>
+                        </label>
+                        <label class="flex items-center gap-3">
+                            <input type="checkbox" class="w-5 h-5 text-primary border-slate-300 rounded focus:ring-primary">
+                            <span class="text-slate-700 dark:text-slate-300">Autenticación de dos factores</span>
+                        </label>
+                    </div>
+                    <div class="flex justify-end">
+                        <button type="submit" class="px-4 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-primary-dark transition-colors">
+                            Guardar Cambios
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

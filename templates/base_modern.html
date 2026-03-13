@@ -6,21 +6,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}OncoMDT - Segunda Opinión Médica{% endblock %}</title>
     
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <script>
-        console.log('[base_modern.html] Tailwind CSS cargado');
-    </script>
-    
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
     
-    <!-- OncoMDT Design System -->
-    <link href="{% static 'css/oncomdt-design-system.css' %}" rel="stylesheet">
+    <!-- Tailwind CSS (local compiled) -->
+    <link href="{% static 'css/output.css' %}" rel="stylesheet">
     <script>
-        console.log('[base_modern.html] Design system CSS cargado');
+        console.log('[base_modern.html] Tailwind CSS local cargado');
     </script>
     
     <!-- Tailwind Config -->
