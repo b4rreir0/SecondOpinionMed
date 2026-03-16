@@ -75,7 +75,15 @@
                 {% for voto in todos_votos %}
                     <div class="border-l-4 border-primary pl-4 py-2">
                         <div class="flex items-center gap-2 mb-1">
-                            <span class="font-bold text-gray-800">Dr. {{ voto.medico.nombre_completo }}</span>
+                            <span class="font-bold text-gray-800">
+                                {% if voto.medico.nombre_completo %}
+                                    Dr. {{ voto.medico.nombre_completo }}
+                                {% elif voto.medico.nombres %}
+                                    Dr. {{ voto.medico.nombres }} {{ voto.medico.apellidos }}
+                                {% else %}
+                                    Dr. (sin nombre - {{ voto.medico.usuario.email }})
+                                {% endif %}
+                            </span>
                             <span class="px-2 py-0.5 text-xs rounded-full 
                                 {% if voto.voto == 'aprueba' %}bg-green-100 text-green-800
                                 {% elif voto.voto == 'aprueba_mod' %}bg-blue-100 text-blue-800
