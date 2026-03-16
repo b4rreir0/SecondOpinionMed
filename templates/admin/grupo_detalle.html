@@ -1,0 +1,160 @@
+{% extends 'admin/layout_admin.html' %}
+
+{% block title %}{{ grupo.nombre }} - Panel de Administración{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2>{{ grupo.nombre }}</h2>
+            <p class="text-muted mb-0">{{ grupo.descripcion|default:'Sin descripcion' }}</p>
+        </div>
+        <div>
+            <a href="{% url 'administracion:portal_grupos' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Volver
+            </a>
+            <a href="{% url 'administracion:portal_grupo_editar' grupo.id %}" class="btn btn-outline-primary">
+                <i class="bi bi-pencil"></i> Editar
+            </a>
+        </div>
+    </div>
+
+    <!-- Estado -->
+    <div class="alert {% if grupo.activo %}alert-success{% else %}alert-warning{% endif %}">
+        <strong>Estado:</strong> {% if grupo.activo %}Activo{% else %}Inactivo{% endif %}
+        | <strong>Quorum:</strong> {{ grupo.quorum_config }} medicos
+        | <strong>Responsable:</strong> {{ grupo.responsable_por_defecto.nombre_completo|default:'No asignado' }}
+    </div>
+
+    <div class="row">
+        <!-- Tipos de Cancer Asignados -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Tipos de Cancer Asignados</h5>
+                </div>
+                <div class="card-body">
+                    {% if tipos_asignados %}
+                    <ul class="list-group">
+                        {% for tc in tipos_asignados %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ tc.nombre }}</strong>
+                                <br><small class="text-muted">{{ tc.codigo }}</small>
+                            </div>
+                            <form method="post" action="{% url 'administracion:portal_grupo_quitar_tipo' grupo.id %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="tipo_id" value="{{ tc.id }}">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Quitar</button>
+                            </form>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <p class="text-muted">No hay tipos de cancer asignados.</p>
+                    {% endif %}
+
+                    <!-- Asignar nuevo tipo -->
+                    {% if tipos_disponibles %}
+                    <hr>
+                    <h6>Asignar Tipo de Cancer</h6>
+                    <form method="post" action="{% url 'administracion:portal_grupo_asignar_tipo' grupo.id %}" class="d-flex gap-2">
+                        {% csrf_token %}
+                        <select name="tipo_id" class="form-select" required>
+                            <option value="">Seleccionar...</option>
+                            {% for tc in tipos_disponibles %}
+                            <option value="{{ tc.id }}">{{ tc.nombre }} ({{ tc.codigo }})</option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit" class="btn btn-primary btn-sm">Asignar</button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Miembros del Grupo -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Miembros del Grupo</h5>
+                    <span class="badge bg-primary">{{ membresias.count }}</span>
+                </div>
+                <div class="card-body">
+                    {% if membresias %}
+                    <ul class="list-group">
+                        {% for m in membresias %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>Dr. {{ m.medico.nombre_completo }}</strong>
+                                <br><small class="text-muted">{{ m.get_rol_display }}</small>
+                                {% if m.es_responsable %}
+                                <span class="badge bg-warning">Responsable</span>
+                                {% endif %}
+                            </div>
+                            <form method="post" action="{% url 'administracion:portal_grupo_eliminar_miembro' grupo.id %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="membresia_id" value="{{ m.id }}">
+                                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('¿Eliminar miembro?')">Quitar</button>
+                            </form>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <p class="text-muted">No hay miembros en el grupo.</p>
+                    {% endif %}
+
+                    <!-- Agregar nuevo miembro -->
+                    {% if medicos_no_members %}
+                    <hr>
+                    <h6>Agregar Miembro</h6>
+                    <form method="post" action="{% url 'administracion:portal_grupo_agregar_miembro' grupo.id %}" class="row g-2">
+                        {% csrf_token %}
+                        <div class="col-md-5">
+                            <select name="medico_id" class="form-select form-select-sm" required>
+                                <option value="">Seleccionar...</option>
+                                {% for m in medicos_no_members %}
+                                <option value="{{ m.id }}">Dr. {{ m.nombre_completo }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select name="rol" class="form-select form-select-sm">
+                                <option value="miembro_regular">Miembro Regular</option>
+                                <option value="miembro_senior">Miembro Senior</option>
+                                <option value="coordinador">Coordinador</option>
+                                <option value="invitado">Invitado</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="es_responsable" id="es_resp">
+                                <label class="form-check-label" for="es_resp">Responsable</label>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary btn-sm w-100">Agregar</button>
+                        </div>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Eliminar Grupo -->
+    <div class="card mt-4 border-danger">
+        <div class="card-body text-center">
+            <h5 class="text-danger">Zona de Peligro</h5>
+            <p>Esta accion eliminara el grupo permanentemente.</p>
+            <form method="post" action="{% url 'administracion:portal_grupo_eliminar' grupo.id %}" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger" onclick="return confirm('¿Esta seguro de eliminar este grupo? Esta accion no se puede deshacer.')">
+                    <i class="bi bi-trash"></i> Eliminar Grupo
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

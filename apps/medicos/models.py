@@ -25,6 +25,8 @@ class TipoCancer(models.Model):
     Catálogo de tipos de cáncer para clasificar los casos.
     
     Se usa para determinar qué grupo médico (Comité) debe evaluar cada caso.
+    IMPORTANTE: Un tipo de cáncer solo puede ser manejado por UN grupo médico.
+    Un grupo médico puede manejar varios tipos de cáncer.
     """
     nombre = models.CharField(max_length=100, unique=True)
     codigo = models.CharField(max_length=20, unique=True, help_text="Código interno (ej: PULMON, MAMA)")
@@ -35,6 +37,15 @@ class TipoCancer(models.Model):
         null=True, 
         blank=True,
         related_name='tipos_cancer'
+    )
+    # Relación con MedicalGroup: un tipo de cáncer solo puede pertenecer a un grupo
+    grupo_medico = models.ForeignKey(
+        'MedicalGroup',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='tipos_cancer',
+        help_text="Grupo médico que maneja este tipo de cáncer (uno solo)"
     )
     activo = models.BooleanField(default=True)
     
@@ -210,18 +221,19 @@ class MedicalGroup(TimeStampedModel):
     Representa un comité multidisciplinario (MDT) especializado en uno o varios
     tipos de cáncer. Cada caso se asigna a un grupo según su tipo_cancer.
     
+    IMPORTANTE: Un grupo puede manejar VARIOS tipos de cáncer.
+    Pero CADA tipo de cáncer solo puede ser manejado por UN grupo.
+    La relación se define en el modelo TipoCancer.grupo_medico.
+    
     Ejemplos:
     - "Comité de Tumores Torácicos" -> maneja: Cancer de pulmon, Cancer de esófago
     - "Comité de Tumores Digestivos" -> maneja: Cancer de colon, Cancer de estomago, Cancer de recto
     """
     nombre = models.CharField(max_length=100, unique=True, help_text="Nombre del comité (ej: Comité de Tumores Torácicos)")
-    # Un grupo puede atender varios tipos de cancer (ManyToMany)
-    tipos_cancer = models.ManyToManyField(
-        TipoCancer, 
-        related_name='grupos_medicos',
-        help_text="Tipos de cáncer que atiende este grupo"
-    )
     descripcion = models.TextField(blank=True)
+    
+    # NOTA: La relación con tipos de cáncer ahora está en el modelo TipoCancer.grupo_medico
+    # Un grupo puede tener muchos tipos de cáncer (accesible via: grupo.tipos_cancer.all())
     
     # Miembros del grupo (relación a través de DoctorGroupMembership)
     # Esta relación se maneja a través del modelo de membresía
@@ -263,7 +275,7 @@ class MedicalGroup(TimeStampedModel):
         return self.activo and self.numero_miembros >= self.quorum_config
     
     def get_tipos_cancer_names(self):
-        """Retorna los nombres de los tipos de癌症 como string"""
+        """Retorna los nombres de los tipos de cancer como string"""
         return ', '.join([tc.nombre for tc in self.tipos_cancer.all()[:3]])
     
     def __str__(self):

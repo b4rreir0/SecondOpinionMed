@@ -1,0 +1,72 @@
+{% extends 'admin/layout_admin.html' %}
+
+{% block title %}{{ action }} Grupo Medico - Panel de Administración{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>{{ action }} Grupo Medico</h2>
+        <a href="{% url 'administracion:portal_grupos' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Volver a la lista
+        </a>
+    </div>
+
+    <!-- Formulario -->
+    <div class="card">
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    <label for="nombre" class="form-label">Nombre *</label>
+                    <input type="text" class="form-control" id="nombre" name="nombre" 
+                           value="{{ grupo.nombre|default:'' }}" required>
+                    <div class="form-text">Nombre del comite MDT (ej: Comite de Tumores Toracicos)</div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="descripcion" class="form-label">Descripcion</label>
+                    <textarea class="form-control" id="descripcion" name="descripcion" rows="3">{{ grupo.descripcion|default:'' }}</textarea>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="responsable_por_defecto" class="form-label">Responsable por Defecto</label>
+                        <select class="form-select" id="responsable_por_defecto" name="responsable_por_defecto">
+                            <option value="">Seleccionar responsable...</option>
+                            {% for medico in medicos %}
+                            <option value="{{ medico.id }}" {% if grupo.responsable_por_defecto_id == medico.id %}selected{% endif %}>
+                                Dr. {{ medico.nombre_completo }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label for="quorum_config" class="form-label">Quorum (minimo de medicos)</label>
+                        <input type="number" class="form-control" id="quorum_config" name="quorum_config" 
+                               value="{{ grupo.quorum_config|default:3 }}" min="1" max="20">
+                        <div class="form-text">Numero minimo de medicos para tomar decisiones</div>
+                    </div>
+                </div>
+
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="activo" name="activo" 
+                           {% if grupo.activo or grupo is None %}checked{% endif %}>
+                    <label class="form-check-label" for="activo">
+                        Grupo activo
+                    </label>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="{% url 'administracion:portal_grupos' %}" class="btn btn-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> Guardar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

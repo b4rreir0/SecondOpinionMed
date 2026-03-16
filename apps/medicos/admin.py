@@ -19,9 +19,10 @@ class EspecialidadAdmin(admin.ModelAdmin):
 
 @admin.register(TipoCancer)
 class TipoCancerAdmin(admin.ModelAdmin):
-    list_display = ('nombre', 'codigo', 'especialidad_principal', 'activo')
-    list_filter = ('activo', 'especialidad_principal')
+    list_display = ('nombre', 'codigo', 'especialidad_principal', 'grupo_medico', 'activo')
+    list_filter = ('activo', 'especialidad_principal', 'grupo_medico')
     search_fields = ('nombre', 'codigo')
+    raw_id_fields = ('grupo_medico',)
 
 
 @admin.register(Medico)
@@ -41,9 +42,8 @@ class LocalidadAdmin(admin.ModelAdmin):
 @admin.register(MedicalGroup)
 class MedicalGroupAdmin(admin.ModelAdmin):
     list_display = ('nombre', 'tipos_cancer_display', 'quorum_config', 'activo', 'numero_miembros')
-    list_filter = ('activo', 'tipos_cancer')
+    list_filter = ('activo',)
     search_fields = ('nombre',)
-    filter_horizontal = ('tipos_cancer',)
     
     def tipos_cancer_display(self, obj):
         return ', '.join([tc.nombre for tc in obj.tipos_cancer.all()[:3]])

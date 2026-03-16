@@ -11,8 +11,8 @@ import os
 
 from authentication.models import CustomUser
 from authentication.services import DoctorService
-from cases.models import Case as CasoMDT, MedicalOpinion
-from medicos.models import Medico, Especialidad, Localidad, MedicalGroup
+from cases.models import Case as CasoMDT, MedicalOpinion, CaseDocument
+from medicos.models import Medico, Especialidad, Localidad, MedicalGroup, TipoCancer, DoctorGroupMembership
 from pacientes.models import Paciente
 from core.decorators import admin_required
 
@@ -86,11 +86,13 @@ class CasoDetalleView(View):
     @method_decorator(admin_required)
     def get(self, request, case_id):
         caso = get_object_or_404(CasoMDT, case_id=case_id)
-        opiniones = MedicalOpinion.objects.filter(caso=caso).select_related('doctor', 'doctor__usuario')
+        opiniones = MedicalOpinion.objects.filter(case=caso).select_related('doctor', 'doctor__usuario')
+        documentos = CaseDocument.objects.filter(case=caso).order_by('-uploaded_at')
         
         context = {
             'caso': caso,
             'opiniones': opiniones,
+            'documentos': documentos,
         }
         return render(request, self.template_name, context)
 
@@ -159,11 +161,13 @@ class MedicoDetalleView(View):
     @method_decorator(admin_required)
     def get(self, request, medico_id):
         medico = get_object_or_404(Medico, id=medico_id)
-        casos = CasoMDT.objects.filter(medico_asignado=medico).order_by('-created_at')[:10]
+        casos = CasoMDT.objects.filter(responsable=medico).order_by('-created_at')[:10]
+        grupos = MedicalGroup.objects.filter(miembros__medico=medico, miembros__activo=True)
         
         context = {
             'medico': medico,
             'casos': casos,
+            'grupos': grupos,
         }
         return render(request, self.template_name, context)
 
@@ -180,7 +184,7 @@ class GestionPacientesView(View):
         
         if search:
             pacientes = pacientes.filter(
-                Q(user__email__icontains=search) |
+                Q(usuario__email__icontains=search) |
                 Q(numero_documento__icontains=search)
             )
         
@@ -197,7 +201,7 @@ class PacienteDetalleView(View):
     @method_decorator(admin_required)
     def get(self, request, paciente_id):
         paciente = get_object_or_404(Paciente, id=paciente_id)
-        casos = CasoMDT.objects.filter(paciente=paciente).order_by('-created_at')
+        casos = CasoMDT.objects.filter(patient=paciente.usuario).order_by('-created_at')
         
         context = {
             'paciente': paciente,
@@ -256,3 +260,387 @@ class InviteDoctorView(View):
             messages.error(request, f'Error al enviar invitación: {str(e)}')
         
         return redirect(reverse('administracion:portal_dashboard'))
+
+
+# ============================================================================
+# GESTIÓN DE TIPOS DE CÁNCER
+# ============================================================================
+
+class GestionTiposCancerView(View):
+    """Lista de tipos de cáncer del sistema"""
+    template_name = 'admin/tipos_cancer_list.html'
+    
+    @method_decorator(admin_required)
+    def get(self, request):
+        search = request.GET.get('search')
+        grupo = request.GET.get('grupo')
+        
+        tipos = TipoCancer.objects.select_related('especialidad_principal', 'grupo_medico')
+        
+        if search:
+            tipos = tipos.filter(
+                Q(nombre__icontains=search) |
+                Q(codigo__icontains=search)
+            )
+        if grupo:
+            tipos = tipos.filter(grupo_medico__id=grupo)
+        
+        grupos = MedicalGroup.objects.filter(activo=True)
+        especialidades = Especialidad.objects.filter(activa=True)
+        
+        context = {
+            'tipos_cancer': tipos,
+            'grupos': grupos,
+            'especialidades': especialidades,
+        }
+        return render(request, self.template_name, context)
+
+
+class TipoCancerCrearView(View):
+    """Crear un nuevo tipo de cáncer"""
+    template_name = 'admin/tipo_cancer_form.html'
+    
+    @method_decorator(admin_required)
+    def get(self, request):
+        grupos = MedicalGroup.objects.filter(activo=True)
+        especialidades = Especialidad.objects.filter(activa=True)
+        
+        context = {
+            'tipo_cancer': None,
+            'grupos': grupos,
+            'especialidades': especialidades,
+            'action': 'Crear'
+        }
+        return render(request, self.template_name, context)
+    
+    @method_decorator(admin_required)
+    def post(self, request):
+        nombre = request.POST.get('nombre')
+        codigo = request.POST.get('codigo').upper()
+        descripcion = request.POST.get('descripcion')
+        especialidad_id = request.POST.get('especialidad_principal')
+        grupo_id = request.POST.get('grupo_medico')
+        activo = request.POST.get('activo') == 'on'
+        
+        if TipoCancer.objects.filter(codigo=codigo).exists():
+            messages.error(request, 'Ya existe un tipo de cáncer con ese código')
+            return redirect(reverse('administracion:portal_tipos_cancer'))
+        
+        especialidad = None
+        if especialidad_id:
+            especialidad = get_object_or_404(Especialidad, id=especialidad_id)
+        
+        grupo = None
+        if grupo_id:
+            grupo = get_object_or_404(MedicalGroup, id=grupo_id)
+        
+        TipoCancer.objects.create(
+            nombre=nombre,
+            codigo=codigo,
+            descripcion=descripcion,
+            especialidad_principal=especialidad,
+            grupo_medico=grupo,
+            activo=activo
+        )
+        
+        messages.success(request, f'Tipo de cáncer "{nombre}" creado exitosamente')
+        return redirect(reverse('administracion:portal_tipos_cancer'))
+
+
+class TipoCancerEditarView(View):
+    """Editar un tipo de cáncer"""
+    template_name = 'admin/tipo_cancer_form.html'
+    
+    @method_decorator(admin_required)
+    def get(self, request, tipo_id):
+        tipo = get_object_or_404(TipoCancer, id=tipo_id)
+        grupos = MedicalGroup.objects.filter(activo=True)
+        especialidades = Especialidad.objects.filter(activa=True)
+        
+        context = {
+            'tipo_cancer': tipo,
+            'grupos': grupos,
+            'especialidades': especialidades,
+            'action': 'Editar'
+        }
+        return render(request, self.template_name, context)
+    
+    @method_decorator(admin_required)
+    def post(self, request, tipo_id):
+        tipo = get_object_or_404(TipoCancer, id=tipo_id)
+        
+        nombre = request.POST.get('nombre')
+        codigo = request.POST.get('codigo').upper()
+        descripcion = request.POST.get('descripcion')
+        especialidad_id = request.POST.get('especialidad_principal')
+        grupo_id = request.POST.get('grupo_medico')
+        activo = request.POST.get('activo') == 'on'
+        
+        # Verificar código duplicado (excluyendo el actual)
+        if TipoCancer.objects.exclude(id=tipo_id).filter(codigo=codigo).exists():
+            messages.error(request, 'Ya existe otro tipo de cáncer con ese código')
+            return redirect(reverse('administracion:portal_tipo_cancer_editar', args=[tipo_id]))
+        
+        tipo.nombre = nombre
+        tipo.codigo = codigo
+        tipo.descripcion = descripcion
+        tipo.activo = activo
+        
+        if especialidad_id:
+            tipo.especialidad_principal = get_object_or_404(Especialidad, id=especialidad_id)
+        else:
+            tipo.especialidad_principal = None
+        
+        if grupo_id:
+            tipo.grupo_medico = get_object_or_404(MedicalGroup, id=grupo_id)
+        else:
+            tipo.grupo_medico = None
+        
+        tipo.save()
+        
+        messages.success(request, f'Tipo de cáncer "{nombre}" actualizado exitosamente')
+        return redirect(reverse('administracion:portal_tipos_cancer'))
+
+
+class TipoCancerEliminarView(View):
+    """Eliminar un tipo de cáncer"""
+    
+    @method_decorator(admin_required)
+    def post(self, request, tipo_id):
+        tipo = get_object_or_404(TipoCancer, id=tipo_id)
+        nombre = tipo.nombre
+        tipo.delete()
+        messages.success(request, f'Tipo de cáncer "{nombre}" eliminado')
+        return redirect(reverse('administracion:portal_tipos_cancer'))
+
+
+# ============================================================================
+# GESTIÓN DE GRUPOS MÉDICOS / COMITÉS
+# ============================================================================
+
+class GestionGruposView(View):
+    """Lista de grupos médicos del sistema"""
+    template_name = 'admin/grupos_list.html'
+    
+    @method_decorator(admin_required)
+    def get(self, request):
+        search = request.GET.get('search')
+        
+        grupos = MedicalGroup.objects.select_related('responsable_por_defecto').prefetch_related('tipos_cancer', 'miembros', 'miembros__medico')
+        
+        if search:
+            grupos = grupos.filter(nombre__icontains=search)
+        
+        context = {
+            'grupos': grupos,
+        }
+        return render(request, self.template_name, context)
+
+
+class GrupoCrearView(View):
+    """Crear un nuevo grupo médico"""
+    template_name = 'admin/grupo_form.html'
+    
+    @method_decorator(admin_required)
+    def get(self, request):
+        medicos = Medico.objects.filter(estado='activo').select_related('usuario')
+        tipos = TipoCancer.objects.filter(activo=True)
+        
+        context = {
+            'grupo': None,
+            'medicos': medicos,
+            'tipos_cancer': tipos,
+            'action': 'Crear'
+        }
+        return render(request, self.template_name, context)
+    
+    @method_decorator(admin_required)
+    def post(self, request):
+        nombre = request.POST.get('nombre')
+        descripcion = request.POST.get('descripcion')
+        responsable_id = request.POST.get('responsable_por_defecto')
+        quorum = int(request.POST.get('quorum_config', 3))
+        activo = request.POST.get('activo') == 'on'
+        
+        if MedicalGroup.objects.filter(nombre=nombre).exists():
+            messages.error(request, 'Ya existe un grupo con ese nombre')
+            return redirect(reverse('administracion:portal_grupos'))
+        
+        responsable = None
+        if responsable_id:
+            responsable = get_object_or_404(Medico, id=responsable_id)
+        
+        grupo = MedicalGroup.objects.create(
+            nombre=nombre,
+            descripcion=descripcion,
+            responsable_por_defecto=responsable,
+            quorum_config=quorum,
+            activo=activo
+        )
+        
+        messages.success(request, f'Grupo médico "{nombre}" creado exitosamente')
+        return redirect(reverse('administracion:portal_grupos'))
+
+
+class GrupoEditarView(View):
+    """Editar un grupo médico"""
+    template_name = 'admin/grupo_form.html'
+    
+    @method_decorator(admin_required)
+    def get(self, request, grupo_id):
+        grupo = get_object_or_404(MedicalGroup, id=grupo_id)
+        medicos = Medico.objects.filter(estado='activo').select_related('usuario')
+        tipos = TipoCancer.objects.filter(activo=True)
+        
+        context = {
+            'grupo': grupo,
+            'medicos': medicos,
+            'tipos_cancer': tipos,
+            'action': 'Editar'
+        }
+        return render(request, self.template_name, context)
+    
+    @method_decorator(admin_required)
+    def post(self, request, grupo_id):
+        grupo = get_object_or_404(MedicalGroup, id=grupo_id)
+        
+        nombre = request.POST.get('nombre')
+        descripcion = request.POST.get('descripcion')
+        responsable_id = request.POST.get('responsable_por_defecto')
+        quorum = int(request.POST.get('quorum_config', 3))
+        activo = request.POST.get('activo') == 'on'
+        
+        # Verificar nombre duplicado
+        if MedicalGroup.objects.exclude(id=grupo_id).filter(nombre=nombre).exists():
+            messages.error(request, 'Ya existe otro grupo con ese nombre')
+            return redirect(reverse('administracion:portal_grupo_editar', args=[grupo_id]))
+        
+        grupo.nombre = nombre
+        grupo.descripcion = descripcion
+        grupo.quorum_config = quorum
+        grupo.activo = activo
+        
+        if responsable_id:
+            grupo.responsable_por_defecto = get_object_or_404(Medico, id=responsable_id)
+        else:
+            grupo.responsable_por_defecto = None
+        
+        grupo.save()
+        
+        messages.success(request, f'Grupo médico "{nombre}" actualizado exitosamente')
+        return redirect(reverse('administracion:portal_grupos'))
+
+
+class GrupoDetalleView(View):
+    """Detalle de un grupo médico con gestión de miembros"""
+    template_name = 'admin/grupo_detalle.html'
+    
+    @method_decorator(admin_required)
+    def get(self, request, grupo_id):
+        grupo = get_object_or_404(MedicalGroup, id=grupo_id)
+        membresias = DoctorGroupMembership.objects.filter(grupo=grupo).select_related('medico', 'medico__usuario')
+        medicos_no_members = Medico.objects.filter(estado='activo').exclude(
+            id__in=membresias.values('medico_id')
+        ).select_related('usuario')
+        
+        # Tipos de cáncer disponibles (que no están asignados a ningún grupo o al actual)
+        tipos_asignados = TipoCancer.objects.filter(grupo_medico=grupo)
+        tipos_disponibles = TipoCancer.objects.filter(activo=True).exclude(
+            id__in=tipos_asignados.values('id')
+        ).exclude(grupo_medico__isnull=False)
+        
+        context = {
+            'grupo': grupo,
+            'membresias': membresias,
+            'medicos_no_members': medicos_no_members,
+            'tipos_asignados': tipos_asignados,
+            'tipos_disponibles': tipos_disponibles,
+        }
+        return render(request, self.template_name, context)
+
+
+class GrupoAgregarMiembroView(View):
+    """Agregar un médico a un grupo"""
+    
+    @method_decorator(admin_required)
+    def post(self, request, grupo_id):
+        grupo = get_object_or_404(MedicalGroup, id=grupo_id)
+        medico_id = request.POST.get('medico_id')
+        rol = request.POST.get('rol', 'miembro_regular')
+        es_responsable = request.POST.get('es_responsable') == 'on'
+        
+        medico = get_object_or_404(Medico, id=medico_id)
+        
+        # Verificar si ya es miembro
+        if DoctorGroupMembership.objects.filter(medico=medico, grupo=grupo).exists():
+            messages.error(request, f'{medico.nombre_completo} ya es miembro del grupo')
+        else:
+            DoctorGroupMembership.objects.create(
+                medico=medico,
+                grupo=grupo,
+                rol=rol,
+                es_responsable=es_responsable,
+                activo=True
+            )
+            messages.success(request, f'{medico.nombre_completo} agregado al grupo')
+        
+        return redirect(reverse('administracion:portal_grupo_detalle', args=[grupo_id]))
+
+
+class GrupoEliminarMiembroView(View):
+    """Eliminar un médico de un grupo"""
+    
+    @method_decorator(admin_required)
+    def post(self, request, grupo_id):
+        membresia_id = request.POST.get('membresia_id')
+        membresia = get_object_or_404(DoctorGroupMembership, id=membresia_id, grupo_id=grupo_id)
+        nombre = membresia.medico.nombre_completo
+        membresia.delete()
+        messages.success(request, f'{nombre} eliminado del grupo')
+        return redirect(reverse('administracion:portal_grupo_detalle', args=[grupo_id]))
+
+
+class GrupoAsignarTipoCancerView(View):
+    """Asignar un tipo de cáncer a un grupo"""
+    
+    @method_decorator(admin_required)
+    def post(self, request, grupo_id):
+        grupo = get_object_or_404(MedicalGroup, id=grupo_id)
+        tipo_id = request.POST.get('tipo_id')
+        tipo = get_object_or_404(TipoCancer, id=tipo_id)
+        
+        # Verificar si ya tiene grupo asignado
+        if tipo.grupo_medico and tipo.grupo_medico.id != grupo.id:
+            messages.error(request, f'El tipo de cáncer "{tipo.nombre}" ya está asignado a otro grupo')
+        else:
+            tipo.grupo_medico = grupo
+            tipo.save()
+            messages.success(request, f'Tipo de cáncer "{tipo.nombre}" asignado al grupo')
+        
+        return redirect(reverse('administracion:portal_grupo_detalle', args=[grupo_id]))
+
+
+class GrupoQuitarTipoCancerView(View):
+    """Quitar un tipo de cáncer de un grupo"""
+    
+    @method_decorator(admin_required)
+    def post(self, request, grupo_id):
+        tipo_id = request.POST.get('tipo_id')
+        tipo = get_object_or_404(TipoCancer, id=tipo_id, grupo_medico_id=grupo_id)
+        nombre = tipo.nombre
+        tipo.grupo_medico = None
+        tipo.save()
+        messages.success(request, f'Tipo de cáncer "{nombre}" quitado del grupo')
+        return redirect(reverse('administracion:portal_grupo_detalle', args=[grupo_id]))
+
+
+class GrupoEliminarView(View):
+    """Eliminar un grupo médico"""
+    
+    @method_decorator(admin_required)
+    def post(self, request, grupo_id):
+        grupo = get_object_or_404(MedicalGroup, id=grupo_id)
+        nombre = grupo.nombre
+        grupo.delete()
+        messages.success(request, f'Grupo médico "{nombre}" eliminado')
+        return redirect(reverse('administracion:portal_grupos'))

@@ -588,14 +588,10 @@ def asignar_caso_automatico(case):
     from medicos.models import MedicalGroup, DoctorGroupMembership, Medico
     
     with transaction.atomic():
-        # Buscar grupo por tipo_cancer del caso
-        if case.tipo_cancer:
-            try:
-                grupo = MedicalGroup.objects.filter(
-                    tipos_cancer=case.tipo_cancer,
-                    activo=True
-                ).first()
-            except Exception:
+        # Buscar grupo por tipo_cancer del caso (ahora es FK directa)
+        if case.tipo_cancer and case.tipo_cancer.grupo_medico:
+            grupo = case.tipo_cancer.grupo_medico
+            if not grupo.activo:
                 grupo = None
         else:
             grupo = None

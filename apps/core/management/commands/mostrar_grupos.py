@@ -46,9 +46,9 @@ class Command(BaseCommand):
         self.stdout.write('=' * 70)
         tipos_cancer = TipoCancer.objects.all()
         for tc in tipos_cancer:
-            grupos_asignados = tc.grupos_medicos.all()
-            if grupos_asignados:
-                grupos_str = ', '.join([g.nombre for g in grupos_asignados])
+            grupo_asignado = tc.grupo_medico
+            if grupo_asignado:
+                grupos_str = grupo_asignado.nombre
             else:
                 grupos_str = 'Sin grupo asignado'
             self.stdout.write(f'• {tc.nombre} ({tc.codigo}) -> {grupos_str}')

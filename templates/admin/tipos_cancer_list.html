@@ -1,0 +1,165 @@
+{% extends "admin/layout_admin.html" %}
+{% load static %}
+
+{% block title %}Tipos de Cancer - Panel de Administración{% endblock %}
+
+{% block extra_css %}
+<style>
+    .bg-primary { background-color: #1392ec; }
+    .text-primary { color: #1392ec; }
+    .border-primary { border-color: #1392ec; }
+    .bg-primary\/10 { background-color: rgba(19, 146, 236, 0.1); }
+    .bg-primary\/20 { background-color: rgba(19, 146, 236, 0.2); }
+</style>
+{% endblock %}
+
+{% block main_content %}
+<div class="max-w-7xl mx-auto space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+            <h1 class="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">
+                Tipos de Cancer
+            </h1>
+            <p class="text-slate-500 dark:text-slate-400 mt-1">Gestion de tipos de cancer del sistema</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <a href="{% url 'administracion:portal_tipo_cancer_crear' %}" class="px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl flex items-center gap-2 inline-flex">
+                <span class="material-icons-round text-sm">add</span>
+                Nuevo Tipo de Cancer
+            </a>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
+        <form method="get" class="flex flex-wrap gap-4 items-end">
+            <div class="flex-1 min-w-[200px]">
+                <label class="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">Buscar por nombre o codigo</label>
+                <input type="text" name="search" value="{{ request.GET.search|default:'' }}" 
+                       placeholder="Buscar por nombre o codigo..."
+                       class="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white">
+            </div>
+            <div class="min-w-[200px]">
+                <label class="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">Grupo</label>
+                <select name="grupo" class="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white">
+                    <option value="">Todos los grupos</option>
+                    {% for grupo in grupos %}
+                    <option value="{{ grupo.id }}" {% if request.GET.grupo == grupo.id|stringformat:"s" %}selected{% endif %}>
+                        {{ grupo.nombre }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors">
+                Filtrar
+            </button>
+            <a href="{% url 'administracion:portal_tipos_cancer' %}" class="px-4 py-2 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors">
+                Limpiar
+            </a>
+        </form>
+    </div>
+
+    <!-- Lista de Tipos de Cancer -->
+    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700">
+                    <tr>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                            Codigo
+                        </th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                            Nombre
+                        </th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                            Especialidad
+                        </th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                            Grupo Medico
+                        </th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                            Estado
+                        </th>
+                        <th class="px-6 py-4 text-right text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                            Acciones
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
+                    {% for tipo in tipos_cancer %}
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors">
+                        <td class="px-6 py-4">
+                            <span class="px-2 py-1 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded">
+                                {{ tipo.codigo }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="font-medium text-slate-900 dark:text-white">
+                                {{ tipo.nombre }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="text-slate-600 dark:text-slate-400">
+                                {{ tipo.especialidad_principal|default:'-' }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4">
+                            {% if tipo.grupo_medico %}
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20">
+                                {{ tipo.grupo_medico.nombre }}
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-600 border border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800">
+                                Sin asignar
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4">
+                            {% if tipo.activo %}
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-green-50 text-green-600 border border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800">
+                                <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                                Activo
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-50 text-slate-600 border border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700">
+                                <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                                Inactivo
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <div class="flex items-center justify-end gap-2">
+                                <a href="{% url 'administracion:portal_tipo_cancer_editar' tipo.id %}" class="p-2 text-slate-500 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors" title="Editar">
+                                    <span class="material-icons-round text-sm">edit</span>
+                                </a>
+                                <form method="post" action="{% url 'administracion:portal_tipo_cancer_eliminar' tipo.id %}" class="inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="p-2 text-slate-500 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Eliminar" onclick="return confirm('¿Esta seguro de eliminar este tipo de cancer?')">
+                                        <span class="material-icons-round text-sm">delete</span>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="px-6 py-12 text-center">
+                            <div class="flex flex-col items-center gap-3">
+                                <div class="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                                    <span class="material-icons-round text-3xl text-slate-400">biotech</span>
+                                </div>
+                                <p class="text-slate-500 dark:text-slate-400">No hay tipos de cancer registrados</p>
+                                <a href="{% url 'administracion:portal_tipo_cancer_crear' %}" class="px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary-dark transition-colors inline-block">
+                                    Crear el primer tipo de cancer
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

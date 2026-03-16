@@ -75,9 +75,18 @@
             <span class="material-icons-round group-hover:scale-110 transition-transform">person</span>
             Pacientes
         </a>
-        <a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-primary dark:hover:text-primary rounded-xl transition-all duration-200 font-medium group" href="{% url 'administracion:portal_comites' %}">
+
+        <!-- MDT Admin Section -->
+        <div class="pt-4 pb-2">
+            <p class="px-4 text-xs font-bold text-slate-400 uppercase tracking-wider">MDT Admin</p>
+        </div>
+        <a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-primary dark:hover:text-primary rounded-xl transition-all duration-200 font-medium group" href="{% url 'administracion:portal_grupos' %}">
             <span class="material-icons-round group-hover:scale-110 transition-transform">groups</span>
-            Comités MDT
+            Grupos Médicos
+        </a>
+        <a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-primary dark:hover:text-primary rounded-xl transition-all duration-200 font-medium group" href="{% url 'administracion:portal_tipos_cancer' %}">
+            <span class="material-icons-round group-hover:scale-110 transition-transform">biotech</span>
+            Tipos de Cancer
         </a>
 
         <!-- Configuration Section -->

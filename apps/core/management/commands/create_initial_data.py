@@ -193,8 +193,14 @@ class Command(BaseCommand):
             
             grupo, created = MedicalGroup.objects.get_or_create(
                 nombre=grp['nombre'],
-                defaults={'tipo_cancer': tc, 'descripcion': grp['descripcion'], 'quorum_config': grp['quorum'], 'responsable_por_defecto': responsable, 'activo': True}
+                defaults={'descripcion': grp['descripcion'], 'quorum_config': grp['quorum'], 'responsable_por_defecto': responsable, 'activo': True}
             )
+            
+            # Asignar el grupo al tipo de cáncer (ahora es FK en TipoCancer)
+            if tc and not tc.grupo_medico:
+                tc.grupo_medico = grupo
+                tc.save()
+            
             grupos.append(grupo)
             status = 'CREATED' if created else 'EXISTS'
             self.stdout.write(f'  [{status}] Committee: {grp["nombre"]}')
