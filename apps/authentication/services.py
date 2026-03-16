@@ -326,10 +326,12 @@ class DoctorService:
         return user, invite
 
     @staticmethod
-    def complete_registration(token, password, full_name, medical_license, specialty, phone_number, institution=''):
+    def complete_registration(token, password, full_name, medical_license, specialty, phone_number, institution='', tipos_cancer_ids=None, tipo_documento='cc', numero_documento='', nombres='', apellidos='', fecha_nacimiento=None, genero='otro', experiencia_anios=0):
         from notifications.models import DoctorInvitation
+        from medicos.models import Medico, MedicalGroup, DoctorGroupMembership, TipoCancer
         from django.core.exceptions import ValidationError
         from django.db import transaction
+        from datetime import date
 
         try:
             invite = DoctorInvitation.objects.get(token=token)
@@ -376,8 +378,66 @@ class DoctorService:
                 institution=institution
             )
 
+            # Procesar nombres y apellidos del full_name si no se proporcionan
+            if not nombres and full_name:
+                partes_nombre = full_name.split()
+                nombres = partes_nombre[0] if partes_nombre else ''
+                apellidos = ' '.join(partes_nombre[1:]) if len(partes_nombre) > 1 else ''
+
+            # Usar fecha por defecto si no se proporciona
+            fecha_nac = fecha_nacimiento if fecha_nacimiento else date(1990, 1, 1)
+
+            # Verificar si el numero_documento ya existe, si es así generar uno único
+            numero_doc_final = numero_documento or medical_license
+            if numero_doc_final:
+                if Medico.objects.filter(numero_documento=numero_doc_final).exists():
+                    # Generar un número único
+                    import uuid
+                    numero_doc_final = f"DOC-{uuid.uuid4().hex[:8].upper()}"
+            
+            # Crear el modelo Medico con los datos completos
+            medico = Medico.objects.create(
+                usuario=user,
+                tipo_documento=tipo_documento,
+                numero_documento=numero_doc_final,
+                nombres=nombres,
+                apellidos=apellidos,
+                fecha_nacimiento=fecha_nac,
+                genero=genero,
+                registro_medico=medical_license,
+                experiencia_anios=experiencia_anios,
+                institucion_actual=institution,
+                telefono=phone_number,
+                email_institucional=email,
+                estado='activo',
+            )
+
+            # Procesar los tipos de cáncer seleccionados
+            if tipos_cancer_ids:
+                tipos_cancer = TipoCancer.objects.filter(id__in=tipos_cancer_ids)
+                # Guardar los tipos de cáncer en la invitación
+                invite.tipos_cancer_seleccionados.set(tipos_cancer)
+
+                # Obtener los grupos médicos asociados a estos tipos de cáncer
+                grupos_a_unirse = MedicalGroup.objects.filter(
+                    tipos_cancer__in=tipos_cancer,
+                    activo=True
+                ).distinct()
+
+                # Agregar el médico a cada grupo multidisciplinario
+                for grupo in grupos_a_unirse:
+                    # Verificar si ya es miembro
+                    if not DoctorGroupMembership.objects.filter(medico=medico, grupo=grupo).exists():
+                        DoctorGroupMembership.objects.create(
+                            medico=medico,
+                            grupo=grupo,
+                            rol='miembro_regular',
+                            activo=True,
+                            disponible_asignacion_auto=True
+                        )
+
             # Marcar invitación como usada
             invite.mark_used()
 
             # Devolver tupla
-            return user, doctor_profile
+            return user, doctor_profile, medico

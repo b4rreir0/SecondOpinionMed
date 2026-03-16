@@ -68,6 +68,13 @@ class DoctorInvitation(models.Model):
     expires_at = models.DateTimeField()
     is_used = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
+    # Tipos de cáncer seleccionados por el médico durante el registro
+    tipos_cancer_seleccionados = models.ManyToManyField(
+        'medicos.TipoCancer', 
+        blank=True, 
+        related_name='invitaciones',
+        help_text='Tipos de cáncer que el médico podrá tratar'
+    )
 
     def is_valid(self):
         return (not self.is_used) and (self.expires_at >= timezone.now())

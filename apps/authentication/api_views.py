@@ -31,7 +31,7 @@ class CompleteRegistrationAPIView(APIView):
         data = serializer.validated_data
 
         try:
-            user, profile = DoctorService.complete_registration(
+            user, profile, medico = DoctorService.complete_registration(
                 token=data['token'],
                 password=data['password'],
                 full_name=data['full_name'],
@@ -39,7 +39,15 @@ class CompleteRegistrationAPIView(APIView):
                 specialty=data['specialty'],
                 phone_number=data['phone_number'],
                 institution=data.get('institution', ''),
+                tipos_cancer_ids=data.get('tipos_cancer_ids'),
+                tipo_documento=data.get('tipo_documento', 'cc'),
+                numero_documento=data.get('numero_documento', ''),
+                nombres=data.get('nombres', ''),
+                apellidos=data.get('apellidos', ''),
+                fecha_nacimiento=data.get('fecha_nacimiento'),
+                genero=data.get('genero', 'otro'),
+                experiencia_anios=data.get('experiencia_anios', 0),
             )
-            return Response({'detail': 'Registro completado. Cuenta activada.'}, status=status.HTTP_200_OK)
+            return Response({'detail': 'Registro completado. Cuenta activada.', 'medico_id': medico.id}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)

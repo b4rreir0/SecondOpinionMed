@@ -257,7 +257,18 @@ class CaseService:
         # También obtener los casos del grupo médico al que pertenece el médico
         try:
             # Obtener el objeto Medico relacionado con este usuario
+            # Primero intentamos con el related_name
             medico = getattr(doctor, 'medico', None)
+            
+            # Si no tiene el atributo o es None, hacer una consulta directa
+            if medico is None:
+                try:
+                    from medicos.models import Medico
+                    medico = Medico.objects.get(usuario=doctor)
+                except Medico.DoesNotExist:
+                    medico = None
+                    print(f"[get_doctor_assigned_cases] No se encontró objeto Medico para el usuario {doctor.email}")
+            
             print(f"[get_doctor_assigned_cases] Medico: {medico}")
             
             if medico:

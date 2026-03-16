@@ -1,10 +1,12 @@
 {% extends 'base.html' %}
 {% block content %}
   <div class="row justify-content-center">
-    <div class="col-md-7 col-lg-6">
+    <div class="col-md-8 col-lg-7">
       <div class="card">
         <div class="card-body">
           <h3 class="card-title mb-3">Completar registro como médico</h3>
+          <p class="text-muted mb-4">Selecciona los tipos de cáncer que tratarás. Serás incluido automáticamente en los grupos multidisciplinarios correspondientes.</p>
+          
           <form method="post" novalidate>
             {% csrf_token %}
 
@@ -13,27 +15,70 @@
               <input type="email" class="form-control-plaintext" value="{{ invite.invited_email }}" readonly />
             </div>
 
-            <div class="mb-3">
-              <label for="id_full_name" class="form-label">Nombre completo</label>
-              <input id="id_full_name" name="full_name" class="form-control" required />
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="id_nombres" class="form-label">Nombres</label>
+                <input id="id_nombres" name="nombres" class="form-control" required />
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="id_apellidos" class="form-label">Apellidos</label>
+                <input id="id_apellidos" name="apellidos" class="form-control" required />
+              </div>
             </div>
 
-            <div class="mb-3">
-              <label for="id_medical_license" class="form-label">Número de licencia médica</label>
-              <input id="id_medical_license" name="medical_license" class="form-control" required />
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="id_tipo_documento" class="form-label">Tipo de documento</label>
+                <select id="id_tipo_documento" name="tipo_documento" class="form-select" required>
+                  <option value="ci">Carnet de Identidad</option>
+                  <option value="pasaporte">Pasaporte</option>
+                </select>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="id_numero_documento" class="form-label">Número de documento</label>
+                <input id="id_numero_documento" name="numero_documento" class="form-control" required />
+              </div>
             </div>
 
-            <div class="mb-3">
-              <label for="id_specialty" class="form-label">Especialidad</label>
-              <select id="id_specialty" name="specialty" class="form-select" required>
-                <option value="">-- Selecciona --</option>
-                <option value="oncology">Oncología</option>
-                <option value="cardiology">Cardiología</option>
-                <option value="neurology">Neurología</option>
-                <option value="orthopedics">Ortopedia</option>
-                <option value="general">Medicina General</option>
-                <option value="other">Otra</option>
-              </select>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="id_fecha_nacimiento" class="form-label">Fecha de nacimiento</label>
+                <input id="id_fecha_nacimiento" name="fecha_nacimiento" type="date" class="form-control" required />
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="id_genero" class="form-label">Género</label>
+                <select id="id_genero" name="genero" class="form-select" required>
+                  <option value="masculino">Masculino</option>
+                  <option value="femenino">Femenino</option>
+                  <option value="otro">Otro</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="id_experiencia" class="form-label">Años de experiencia</label>
+                <select id="id_experiencia" name="experiencia_anios" class="form-select" required>
+                  <option value="0">Menos de 5 años</option>
+                  <option value="5">5 - 10 años</option>
+                  <option value="10">10 - 15 años</option>
+                  <option value="15">15 - 20 años</option>
+                  <option value="20">Más de 20 años</option>
+                </select>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="id_specialty" class="form-label">Especialidad</label>
+                <select id="id_specialty" name="specialty" class="form-select" required>
+                  <option value="">-- Selecciona --</option>
+                  <option value="oncology">Oncología</option>
+                  <option value="imagenology">Imagenología</option>
+                  <option value="surgery">Cirugía</option>
+                  <option value="radiotherapy">Radioterapia</option>
+                  <option value="pathology">Patología</option>
+                  <option value="general">Medicina General</option>
+                  <option value="other">Otra</option>
+                </select>
+              </div>
             </div>
 
             <div class="mb-3">
@@ -41,9 +86,32 @@
               <input id="id_phone_number" name="phone_number" class="form-control" required />
             </div>
 
-            <div class="mb-3">
-              <label for="id_institution" class="form-label">Institución (opcional)</label>
-              <input id="id_institution" name="institution" class="form-control" />
+            <!-- Selección de tipos de cáncer -->
+            <div class="mb-4">
+              <label class="form-label fw-bold">Tipos de cáncer que tratás</label>
+              <p class="text-muted small">Selecciona uno o más tipos de cáncer. Serás incluido automáticamente en los comités multidisciplinarios correspondientes.</p>
+              
+              {% if tipos_cancer %}
+              <div class="row">
+                {% for tipo in tipos_cancer %}
+                <div class="col-md-6 mb-2">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="tipos_cancer" value="{{ tipo.id }}" id="tipo_cancer_{{ tipo.id }}">
+                    <label class="form-check-label" for="tipo_cancer_{{ tipo.id }}">
+                      {{ tipo.nombre }}
+                      {% if tipo.grupo_medico %}
+                      <span class="text-muted small">({{ tipo.grupo_medico.nombre }})</span>
+                      {% endif %}
+                    </label>
+                  </div>
+                </div>
+                {% endfor %}
+              </div>
+              {% else %}
+              <div class="alert alert-info">
+                No hay tipos de cáncer disponibles para seleccionar. Contacta al administrador.
+              </div>
+              {% endif %}
             </div>
 
             <div class="mb-4">
@@ -53,7 +121,7 @@
 
             <div class="d-flex justify-content-between align-items-center">
               <a href="/" class="text-muted">Volver</a>
-              <button type="submit" class="btn btn-primary">Crear cuenta</button>
+              <button type="submit" class="btn btn-primary btn-lg px-5">Completar Registro</button>
             </div>
           </form>
         </div>

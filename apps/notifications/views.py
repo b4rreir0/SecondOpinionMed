@@ -6,6 +6,7 @@ from django.urls import reverse
 from authentication.models import CustomUser
 from authentication.services import DoctorService
 from django.core.exceptions import ValidationError
+from medicos.models import TipoCancer
 from .models import DoctorInvitation, PatientVerification
 
 
@@ -21,7 +22,13 @@ class DoctorRegisterView(View):
         if not invite.is_valid():
             return render(request, 'registration/invalid_invite.html', {'reason': 'expired'})
 
-        return render(request, self.template_name, {'invite': invite})
+        # Obtener todos los tipos de cáncer disponibles para la selección
+        tipos_cancer = TipoCancer.objects.filter(activo=True).select_related('grupo_medico')
+
+        return render(request, self.template_name, {
+            'invite': invite,
+            'tipos_cancer': tipos_cancer
+        })
 
     def post(self, request, token):
         # Simple registration: create user and doctor profile minimal fields
@@ -37,35 +44,90 @@ class DoctorRegisterView(View):
 
         email = invite.invited_email
         password = request.POST.get('password')
-        full_name = request.POST.get('full_name', '')
-        medical_license = request.POST.get('medical_license', '')
+        
+        # Construir full_name desde nombres y apellidos
+        nombres = request.POST.get('nombres', '')
+        apellidos = request.POST.get('apellidos', '')
+        full_name = f"{nombres} {apellidos}".strip()
+        
+        # Usar número de documento como registro médico
+        numero_documento = request.POST.get('numero_documento', '')
+        medical_license = numero_documento
+        
         specialty = request.POST.get('specialty', '')
         phone_number = request.POST.get('phone_number', '')
-        institution = request.POST.get('institution', '')
+        
+        # Datos adicionales del médico
+        tipo_documento = request.POST.get('tipo_documento', 'cc')
+        fecha_nacimiento = request.POST.get('fecha_nacimiento', '')
+        genero = request.POST.get('genero', 'otro')
+        experiencia_anios_str = request.POST.get('experiencia_anios', '0')
+        try:
+            experiencia_anios = int(experiencia_anios_str)
+        except ValueError:
+            experiencia_anios = 0
+
+        # Tipos de cáncer seleccionados
+        tipos_cancer_ids = request.POST.getlist('tipos_cancer')
 
         if not password:
-            messages.error(request, 'Password requerida')
-            return render(request, self.template_name, {'invite': invite})
+            messages.error(request, 'La contraseña es requerida')
+            tipos_cancer = TipoCancer.objects.filter(activo=True)
+            return render(request, self.template_name, {
+                'invite': invite,
+                'tipos_cancer': tipos_cancer
+            })
 
         try:
-            user, profile = DoctorService.complete_registration(
+            # Convertir fecha de nacimiento
+            fecha_nac = None
+            if fecha_nacimiento:
+                from datetime import date
+                try:
+                    fecha_nac = date.fromisoformat(fecha_nacimiento)
+                except ValueError:
+                    pass
+
+            print(f"[DEBUG] Intentando registro con: email={email}, nombres={nombres}, numero_doc={numero_documento}")
+            
+            user, profile, medico = DoctorService.complete_registration(
                 token=token,
                 password=password,
                 full_name=full_name,
                 medical_license=medical_license,
                 specialty=specialty,
                 phone_number=phone_number,
-                institution=institution,
+                institution='',
+                tipos_cancer_ids=tipos_cancer_ids,
+                tipo_documento=tipo_documento,
+                numero_documento=numero_documento,
+                nombres=nombres,
+                apellidos=apellidos,
+                fecha_nacimiento=fecha_nac,
+                genero=genero,
+                experiencia_anios=experiencia_anios,
             )
+            
+            print(f"[DEBUG] Registro exitoso: user={user.email}, medico={medico.id}")
+            messages.success(request, 'Registro completado. Ya puedes iniciar sesión.')
+            return redirect(reverse('auth:login'))
+            
         except ValidationError as e:
+            print(f"[DEBUG] ValidationError: {str(e)}")
             messages.error(request, str(e))
-            return render(request, self.template_name, {'invite': invite})
+            tipos_cancer = TipoCancer.objects.filter(activo=True)
+            return render(request, self.template_name, {
+                'invite': invite,
+                'tipos_cancer': tipos_cancer
+            })
         except Exception as e:
-            messages.error(request, 'Error al completar el registro')
-            return render(request, self.template_name, {'invite': invite})
-
-        messages.success(request, 'Registro completado. Ya puedes iniciar sesión.')
-        return redirect(reverse('auth:login'))
+            print(f"[DEBUG] Exception: {type(e).__name__}: {str(e)}")
+            messages.error(request, f'Error al completar el registro: {str(e)}')
+            tipos_cancer = TipoCancer.objects.filter(activo=True)
+            return render(request, self.template_name, {
+                'invite': invite,
+                'tipos_cancer': tipos_cancer
+            })
 
 
 class VerifyPatientView(View):

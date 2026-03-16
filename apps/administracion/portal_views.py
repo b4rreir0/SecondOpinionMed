@@ -242,13 +242,18 @@ class ConfiguracionView(View):
 
 class InviteDoctorView(View):
     """Vista para invitar médicos al sistema"""
+    template_name = 'admin/invite_doctor.html'
+    
+    @method_decorator(admin_required)
+    def get(self, request):
+        return render(request, self.template_name)
     
     @method_decorator(admin_required)
     def post(self, request):
         email = request.POST.get('email')
         if not email:
             messages.error(request, 'Introduce un correo válido')
-            return redirect(reverse('administracion:portal_dashboard'))
+            return redirect(reverse('administracion:portal_invite'))
 
         # Usar el usuario actual como invitado por
         invited_by = request.user
@@ -256,10 +261,11 @@ class InviteDoctorView(View):
         try:
             DoctorService.invite_doctor(email, invited_by)
             messages.success(request, f'Invitación enviada a {email}')
+            return redirect(reverse('administracion:portal_medicos'))
         except Exception as e:
             messages.error(request, f'Error al enviar invitación: {str(e)}')
         
-        return redirect(reverse('administracion:portal_dashboard'))
+        return redirect(reverse('administracion:portal_invite'))
 
 
 # ============================================================================
