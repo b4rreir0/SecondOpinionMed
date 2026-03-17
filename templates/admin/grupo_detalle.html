@@ -3,155 +3,166 @@
 {% block title %}{{ grupo.nombre }} - Panel de Administración{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
+<div class="container-fluid py-4">
     <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
         <div>
-            <h2>{{ grupo.nombre }}</h2>
-            <p class="text-muted mb-0">{{ grupo.descripcion|default:'Sin descripcion' }}</p>
+            <h2 class="text-2xl font-bold text-gray-800">{{ grupo.nombre }}</h2>
+            <p class="text-gray-500 mb-0">{{ grupo.descripcion|default:'Sin descripcion' }}</p>
         </div>
-        <div>
-            <a href="{% url 'administracion:portal_grupos' %}" class="btn btn-outline-secondary">
-                <i class="bi bi-arrow-left"></i> Volver
+        <div class="flex items-center gap-3">
+            <a href="{% url 'administracion:portal_grupos' %}" class="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium text-sm">
+                <span class="material-icons-round text-sm">arrow_back</span>
+                Volver
             </a>
-            <a href="{% url 'administracion:portal_grupo_editar' grupo.id %}" class="btn btn-outline-primary">
-                <i class="bi bi-pencil"></i> Editar
+            <a href="{% url 'administracion:portal_grupo_editar' grupo.id %}" class="flex items-center gap-2 px-4 py-2 bg-[#1392ec] text-white rounded-lg hover:bg-[#0e7ccb] transition-colors font-medium text-sm">
+                <span class="material-icons-round text-sm">edit</span>
+                Editar
             </a>
         </div>
     </div>
 
     <!-- Estado -->
-    <div class="alert {% if grupo.activo %}alert-success{% else %}alert-warning{% endif %}">
-        <strong>Estado:</strong> {% if grupo.activo %}Activo{% else %}Inactivo{% endif %}
-        | <strong>Quorum:</strong> {{ grupo.quorum_config }} medicos
-        | <strong>Responsable:</strong> {{ grupo.responsable_por_defecto.nombre_completo|default:'No asignado' }}
+    <div class="{% if grupo.activo %}bg-green-50 border-green-200{% else %}bg-yellow-50 border-yellow-200{% endif %} border rounded-xl p-4 mb-6">
+        <div class="flex flex-wrap items-center gap-4 text-sm">
+            <span class="font-semibold {% if grupo.activo %}text-green-700{% else %}text-yellow-700{% endif %}">
+                Estado: {% if grupo.activo %}Activo{% else %}Inactivo{% endif %}
+            </span>
+            <span class="text-gray-500">|</span>
+            <span class="text-gray-700">Quorum: {{ grupo.quorum_config }} medicos</span>
+            <span class="text-gray-500">|</span>
+            <span class="text-gray-700">Responsable: {{ grupo.responsable_por_defecto.nombre_completo|default:'No asignado' }}</span>
+        </div>
     </div>
 
-    <div class="row">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <!-- Tipos de Cancer Asignados -->
-        <div class="col-md-6 mb-4">
-            <div class="card h-100">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Tipos de Cancer Asignados</h5>
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="bg-gray-50 px-5 py-4 border-b border-gray-100 flex justify-between items-center">
+                <h5 class="mb-0 font-bold text-gray-800">Tipos de Cancer Asignados</h5>
+            </div>
+            <div class="p-5">
+                {% if tipos_asignados %}
+                <div class="space-y-3">
+                    {% for tc in tipos_asignados %}
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                        <div>
+                            <strong class="text-gray-800">{{ tc.nombre }}</strong>
+                            <br><small class="text-gray-500">{{ tc.codigo }}</small>
+                        </div>
+                        <form method="post" action="{% url 'administracion:portal_grupo_quitar_tipo' grupo.id %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="tipo_id" value="{{ tc.id }}">
+                            <button type="submit" class="px-3 py-1.5 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors text-sm font-medium">
+                                Quitar
+                            </button>
+                        </form>
+                    </div>
+                    {% endfor %}
                 </div>
-                <div class="card-body">
-                    {% if tipos_asignados %}
-                    <ul class="list-group">
-                        {% for tc in tipos_asignados %}
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <div>
-                                <strong>{{ tc.nombre }}</strong>
-                                <br><small class="text-muted">{{ tc.codigo }}</small>
-                            </div>
-                            <form method="post" action="{% url 'administracion:portal_grupo_quitar_tipo' grupo.id %}">
-                                {% csrf_token %}
-                                <input type="hidden" name="tipo_id" value="{{ tc.id }}">
-                                <button type="submit" class="btn btn-sm btn-outline-danger">Quitar</button>
-                            </form>
-                        </li>
-                        {% endfor %}
-                    </ul>
-                    {% else %}
-                    <p class="text-muted">No hay tipos de cancer asignados.</p>
-                    {% endif %}
+                {% else %}
+                <p class="text-gray-500">No hay tipos de cancer asignados.</p>
+                {% endif %}
 
-                    <!-- Asignar nuevo tipo -->
-                    {% if tipos_disponibles %}
-                    <hr>
-                    <h6>Asignar Tipo de Cancer</h6>
-                    <form method="post" action="{% url 'administracion:portal_grupo_asignar_tipo' grupo.id %}" class="d-flex gap-2">
-                        {% csrf_token %}
-                        <select name="tipo_id" class="form-select" required>
-                            <option value="">Seleccionar...</option>
-                            {% for tc in tipos_disponibles %}
-                            <option value="{{ tc.id }}">{{ tc.nombre }} ({{ tc.codigo }})</option>
-                            {% endfor %}
-                        </select>
-                        <button type="submit" class="btn btn-primary btn-sm">Asignar</button>
-                    </form>
-                    {% endif %}
-                </div>
+                <!-- Asignar nuevo tipo -->
+                {% if tipos_disponibles %}
+                <hr class="my-4 border-gray-200">
+                <h6 class="font-semibold text-gray-800 mb-3">Asignar Tipo de Cancer</h6>
+                <form method="post" action="{% url 'administracion:portal_grupo_asignar_tipo' grupo.id %}" class="flex gap-3">
+                    {% csrf_token %}
+                    <select name="tipo_id" class="flex-1 px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-[#1392ec] focus:ring-4 focus:ring-[#1392ec]/10 transition-all outline-none bg-white" required>
+                        <option value="">Seleccionar...</option>
+                        {% for tc in tipos_disponibles %}
+                        <option value="{{ tc.id }}">{{ tc.nombre }} ({{ tc.codigo }})</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="px-4 py-2 bg-[#1392ec] text-white rounded-xl hover:bg-[#0e7ccb] transition-colors font-medium text-sm">
+                        Asignar
+                    </button>
+                </form>
+                {% endif %}
             </div>
         </div>
 
         <!-- Miembros del Grupo -->
-        <div class="col-md-6 mb-4">
-            <div class="card h-100">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Miembros del Grupo</h5>
-                    <span class="badge bg-primary">{{ membresias.count }}</span>
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="bg-gray-50 px-5 py-4 border-b border-gray-100 flex justify-between items-center">
+                <h5 class="mb-0 font-bold text-gray-800">Miembros del Grupo</h5>
+                <span class="px-3 py-1 bg-[#1392ec] text-white rounded-full text-sm font-semibold">{{ membresias.count }}</span>
+            </div>
+            <div class="p-5">
+                {% if membresias %}
+                <div class="space-y-3">
+                    {% for m in membresias %}
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                        <div>
+                            <strong class="text-gray-800">Dr. {{ m.medico.nombre_completo }}</strong>
+                            <br><small class="text-gray-500">{{ m.get_rol_display }}</small>
+                            {% if m.es_responsable %}
+                            <span class="ml-2 px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded-full text-xs font-semibold">Responsable</span>
+                            {% endif %}
+                        </div>
+                        <form method="post" action="{% url 'administracion:portal_grupo_eliminar_miembro' grupo.id %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="membresia_id" value="{{ m.id }}">
+                            <button type="submit" class="px-3 py-1.5 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors text-sm font-medium" onclick="return confirm('¿Eliminar miembro?')">
+                                Quitar
+                            </button>
+                        </form>
+                    </div>
+                    {% endfor %}
                 </div>
-                <div class="card-body">
-                    {% if membresias %}
-                    <ul class="list-group">
-                        {% for m in membresias %}
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <div>
-                                <strong>Dr. {{ m.medico.nombre_completo }}</strong>
-                                <br><small class="text-muted">{{ m.get_rol_display }}</small>
-                                {% if m.es_responsable %}
-                                <span class="badge bg-warning">Responsable</span>
-                                {% endif %}
-                            </div>
-                            <form method="post" action="{% url 'administracion:portal_grupo_eliminar_miembro' grupo.id %}">
-                                {% csrf_token %}
-                                <input type="hidden" name="membresia_id" value="{{ m.id }}">
-                                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('¿Eliminar miembro?')">Quitar</button>
-                            </form>
-                        </li>
-                        {% endfor %}
-                    </ul>
-                    {% else %}
-                    <p class="text-muted">No hay miembros en el grupo.</p>
-                    {% endif %}
+                {% else %}
+                <p class="text-gray-500">No hay miembros en el grupo.</p>
+                {% endif %}
 
-                    <!-- Agregar nuevo miembro -->
-                    {% if medicos_no_members %}
-                    <hr>
-                    <h6>Agregar Miembro</h6>
-                    <form method="post" action="{% url 'administracion:portal_grupo_agregar_miembro' grupo.id %}" class="row g-2">
-                        {% csrf_token %}
-                        <div class="col-md-5">
-                            <select name="medico_id" class="form-select form-select-sm" required>
+                <!-- Agregar nuevo miembro -->
+                {% if medicos_no_members %}
+                <hr class="my-4 border-gray-200">
+                <h6 class="font-semibold text-gray-800 mb-3">Agregar Miembro</h6>
+                <form method="post" action="{% url 'administracion:portal_grupo_agregar_miembro' grupo.id %}" class="space-y-3">
+                    {% csrf_token %}
+                    <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
+                        <div class="md:col-span-2">
+                            <select name="medico_id" class="w-full px-3 py-2 border-2 border-gray-200 rounded-xl focus:border-[#1392ec] focus:ring-4 focus:ring-[#1392ec]/10 transition-all outline-none bg-white text-sm" required>
                                 <option value="">Seleccionar...</option>
                                 {% for m in medicos_no_members %}
                                 <option value="{{ m.id }}">Dr. {{ m.nombre_completo }}</option>
                                 {% endfor %}
                             </select>
                         </div>
-                        <div class="col-md-3">
-                            <select name="rol" class="form-select form-select-sm">
+                        <div class="md:col-span-2">
+                            <select name="rol" class="w-full px-3 py-2 border-2 border-gray-200 rounded-xl focus:border-[#1392ec] focus:ring-4 focus:ring-[#1392ec]/10 transition-all outline-none bg-white text-sm">
                                 <option value="miembro_regular">Miembro Regular</option>
                                 <option value="miembro_senior">Miembro Senior</option>
                                 <option value="coordinador">Coordinador</option>
                                 <option value="invitado">Invitado</option>
                             </select>
                         </div>
-                        <div class="col-md-2">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="es_responsable" id="es_resp">
-                                <label class="form-check-label" for="es_resp">Responsable</label>
-                            </div>
+                        <div class="md:col-span-1 flex items-center gap-2">
+                            <input type="checkbox" name="es_responsable" id="es_resp" class="w-4 h-4 text-[#1392ec] rounded focus:ring-[#1392ec]">
+                            <label for="es_resp" class="text-sm text-gray-700">Responsable</label>
                         </div>
-                        <div class="col-md-2">
-                            <button type="submit" class="btn btn-primary btn-sm w-100">Agregar</button>
-                        </div>
-                    </form>
-                    {% endif %}
-                </div>
+                    </div>
+                    <button type="submit" class="w-full md:w-auto px-4 py-2 bg-[#1392ec] text-white rounded-xl hover:bg-[#0e7ccb] transition-colors font-medium text-sm">
+                        Agregar
+                    </button>
+                </form>
+                {% endif %}
             </div>
         </div>
     </div>
 
     <!-- Eliminar Grupo -->
-    <div class="card mt-4 border-danger">
-        <div class="card-body text-center">
-            <h5 class="text-danger">Zona de Peligro</h5>
-            <p>Esta accion eliminara el grupo permanentemente.</p>
-            <form method="post" action="{% url 'administracion:portal_grupo_eliminar' grupo.id %}" class="d-inline">
+    <div class="bg-white rounded-xl shadow-sm border-2 border-red-200 overflow-hidden">
+        <div class="p-6 text-center">
+            <h5 class="text-red-600 font-bold mb-2">Zona de Peligro</h5>
+            <p class="text-gray-500 mb-4">Esta accion eliminara el grupo permanentemente.</p>
+            <form method="post" action="{% url 'administracion:portal_grupo_eliminar' grupo.id %}" class="inline">
                 {% csrf_token %}
-                <button type="submit" class="btn btn-danger" onclick="return confirm('¿Esta seguro de eliminar este grupo? Esta accion no se puede deshacer.')">
-                    <i class="bi bi-trash"></i> Eliminar Grupo
+                <button type="submit" class="flex items-center gap-2 px-5 py-2.5 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors font-medium" onclick="return confirm('¿Esta seguro de eliminar este grupo? Esta accion no se puede deshacer.')">
+                    <span class="material-icons-round">delete</span>
+                    Eliminar Grupo
                 </button>
             </form>
         </div>

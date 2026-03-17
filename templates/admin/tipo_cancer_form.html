@@ -3,48 +3,49 @@
 {% block title %}{{ action }} Tipo de Cancer - Panel de Administración{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
+<div class="container-fluid py-4">
     <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>{{ action }} Tipo de Cancer</h2>
-        <a href="{% url 'administracion:portal_tipos_cancer' %}" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left"></i> Volver a la lista
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+        <h2 class="text-2xl font-bold text-gray-800">{{ action }} Tipo de Cancer</h2>
+        <a href="{% url 'administracion:portal_tipos_cancer' %}" class="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium text-sm">
+            <span class="material-icons-round text-sm">arrow_back</span>
+            Volver a la lista
         </a>
     </div>
 
     <!-- Formulario -->
-    <div class="card">
-        <div class="card-body">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="p-6">
             <form method="post">
                 {% csrf_token %}
                 
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label for="nombre" class="form-label">Nombre *</label>
-                        <input type="text" class="form-control" id="nombre" name="nombre" 
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+                    <div>
+                        <label for="nombre" class="block text-sm font-semibold text-gray-700 mb-2">Nombre *</label>
+                        <input type="text" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#1392ec] focus:ring-4 focus:ring-[#1392ec]/10 transition-all outline-none" id="nombre" name="nombre" 
                                value="{{ tipo_cancer.nombre|default:'' }}" required>
-                        <div class="form-text">Nombre completo del tipo de cancer</div>
+                        <p class="text-sm text-gray-500 mt-1">Nombre completo del tipo de cancer</p>
                     </div>
                     
-                    <div class="col-md-6 mb-3">
-                        <label for="codigo" class="form-label">Codigo *</label>
-                        <input type="text" class="form-control" id="codigo" name="codigo" 
+                    <div>
+                        <label for="codigo" class="block text-sm font-semibold text-gray-700 mb-2">Codigo *</label>
+                        <input type="text" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#1392ec] focus:ring-4 focus:ring-[#1392ec]/10 transition-all outline-none" id="codigo" name="codigo" 
                                value="{{ tipo_cancer.codigo|default:'' }}" required 
                                pattern="[A-Z0-9]+" maxlength="20"
                                style="text-transform: uppercase;">
-                        <div class="form-text">Codigo unico (ej: PULMON, MAMA). Solo mayusculas y numeros.</div>
+                        <p class="text-sm text-gray-500 mt-1">Codigo unico (ej: PULMON, MAMA). Solo mayusculas y numeros.</p>
                     </div>
                 </div>
 
-                <div class="mb-3">
-                    <label for="descripcion" class="form-label">Descripcion</label>
-                    <textarea class="form-control" id="descripcion" name="descripcion" rows="3">{{ tipo_cancer.descripcion|default:'' }}</textarea>
+                <div class="mb-5">
+                    <label for="descripcion" class="block text-sm font-semibold text-gray-700 mb-2">Descripcion</label>
+                    <textarea class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#1392ec] focus:ring-4 focus:ring-[#1392ec]/10 transition-all outline-none resize-none" id="descripcion" name="descripcion" rows="3">{{ tipo_cancer.descripcion|default:'' }}</textarea>
                 </div>
 
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label for="especialidad_principal" class="form-label">Especialidad Principal</label>
-                        <select class="form-select" id="especialidad_principal" name="especialidad_principal">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+                    <div>
+                        <label for="especialidad_principal" class="block text-sm font-semibold text-gray-700 mb-2">Especialidad Principal</label>
+                        <select class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#1392ec] focus:ring-4 focus:ring-[#1392ec]/10 transition-all outline-none bg-white" id="especialidad_principal" name="especialidad_principal">
                             <option value="">Seleccionar especialidad...</option>
                             {% for esp in especialidades %}
                             <option value="{{ esp.id }}" {% if tipo_cancer.especialidad_principal_id == esp.id %}selected{% endif %}>
@@ -54,9 +55,9 @@
                         </select>
                     </div>
                     
-                    <div class="col-md-6 mb-3">
-                        <label for="grupo_medico" class="form-label">Grupo Medico</label>
-                        <select class="form-select" id="grupo_medico" name="grupo_medico">
+                    <div>
+                        <label for="grupo_medico" class="block text-sm font-semibold text-gray-700 mb-2">Grupo Medico</label>
+                        <select class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#1392ec] focus:ring-4 focus:ring-[#1392ec]/10 transition-all outline-none bg-white" id="grupo_medico" name="grupo_medico">
                             <option value="">Seleccionar grupo...</option>
                             {% for grupo in grupos %}
                             <option value="{{ grupo.id }}" {% if tipo_cancer.grupo_medico_id == grupo.id %}selected{% endif %}>
@@ -64,22 +65,25 @@
                             </option>
                             {% endfor %}
                         </select>
-                        <div class="form-text">Un tipo de cancer solo puede belongecer a un grupo</div>
+                        <p class="text-sm text-gray-500 mt-1">Un tipo de cancer solo puede belongecer a un grupo</p>
                     </div>
                 </div>
 
-                <div class="mb-3 form-check">
-                    <input type="checkbox" class="form-check-input" id="activo" name="activo" 
+                <div class="mb-6 flex items-center gap-3">
+                    <input type="checkbox" class="w-5 h-5 text-[#1392ec] rounded focus:ring-[#1392ec]" id="activo" name="activo" 
                            {% if tipo_cancer.activo or tipo_cancer is None %}checked{% endif %}>
-                    <label class="form-check-label" for="activo">
+                    <label for="activo" class="text-gray-700 font-medium">
                         Tipo de cancer activo
                     </label>
                 </div>
 
-                <div class="d-flex justify-content-end gap-2">
-                    <a href="{% url 'administracion:portal_tipos_cancer' %}" class="btn btn-secondary">Cancelar</a>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-save"></i> Guardar
+                <div class="flex justify-end gap-3">
+                    <a href="{% url 'administracion:portal_tipos_cancer' %}" class="px-5 py-2.5 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors font-medium">
+                        Cancelar
+                    </a>
+                    <button type="submit" class="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-[#1392ec] to-[#0e7ccb] text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-[#1392ec]/30 transition-all">
+                        <span class="material-icons-round">save</span>
+                        Guardar
                     </button>
                 </div>
             </form>

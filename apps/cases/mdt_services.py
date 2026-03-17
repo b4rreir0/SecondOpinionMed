@@ -222,7 +222,9 @@ class AssignmentService:
         # Asignar al caso
         caso.doctor = medico.usuario
         caso.responsable = medico
-        caso.assigned_at = timezone.now()
+        # Solo actualizar assigned_at si no ha sido establecido antes
+        if not caso.assigned_at:
+            caso.assigned_at = timezone.now()
         
         try:
             caso.assign_to_group()

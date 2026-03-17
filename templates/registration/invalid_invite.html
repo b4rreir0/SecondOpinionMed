@@ -1,12 +1,40 @@
-{% extends 'base.html' %}
-{% block content %}
-  <div class="container">
-    <h2>Invitación inválida</h2>
-    {% if reason == 'expired' %}
-      <p>El enlace ha expirado.</p>
-    {% else %}
-      <p>El token no es válido o ya fue usado.</p>
-    {% endif %}
-    <p>Contacta con soporte para solicitar una nueva invitación.</p>
-  </div>
+{% extends 'base_modern.html' %}
+
+{% block title %}Invitación Inválida - OncoMDT{% endblock %}
+
+{% block body %}
+<main class="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-slate-50 dark:from-red-900/10 dark:to-slate-900 px-4">
+    <div class="w-full max-w-md text-center">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-lg p-8">
+            <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                <span class="material-icons-round text-4xl text-red-600 dark:text-red-400">error</span>
+            </div>
+            
+            <h1 class="text-2xl font-bold text-slate-900 dark:text-white mb-4">
+                Invitación Inválida
+            </h1>
+            
+            {% if reason == 'expired' %}
+            <p class="text-slate-600 dark:text-slate-400 mb-6">
+                El enlace ha expirado. Por favor, contacta al administrador para solicitar una nueva invitación.
+            </p>
+            {% else %}
+            <p class="text-slate-600 dark:text-slate-400 mb-6">
+                El token no es válido o ya fue usado. Por favor, contacta al administrador para solicitar una nueva invitación.
+            </p>
+            {% endif %}
+            
+            <div class="p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
+                <p class="text-sm text-slate-500 dark:text-slate-400">
+                    ¿Necesitas ayuda? <a href="mailto:InstitutoNacionalOncologia@gmail.com" class="text-primary hover:underline">Contacta a soporte</a>
+                </p>
+            </div>
+            
+            <a href="/" class="inline-flex items-center gap-2 mt-6 px-6 py-3 text-primary hover:bg-primary/10 rounded-xl font-semibold transition-colors">
+                <span class="material-icons-round">home</span>
+                Volver al Inicio
+            </a>
+        </div>
+    </div>
+</main>
 {% endblock %}

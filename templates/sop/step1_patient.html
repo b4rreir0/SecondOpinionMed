@@ -1,67 +1,161 @@
-{% extends 'sop/base_sop.html' %}
-
-{% block sop_body %}
-  <form method="post" novalidate>
-    {% csrf_token %}
-    <div class="card mb-3">
-      <div class="card-body">
-        <div class="row g-3">
-          <div class="col-md-8">
-            <label class="form-label">{{ form.full_name.label }}</label>
-            {{ form.full_name }}
-            {% if form.full_name.errors %}
-              <div class="text-danger small mt-1">{{ form.full_name.errors.as_text|striptags }}</div>
-            {% endif %}
-          </div>
-
-          <div class="col-md-4">
-            <label class="form-label">{{ form.age.label }}</label>
-            {{ form.age }}
-            {% if form.age.errors %}
-              <div class="text-danger small mt-1">{{ form.age.errors.as_text|striptags }}</div>
-            {% endif %}
-          </div>
-
-          <div class="col-md-6">
-            <label class="form-label">{{ form.email.label }}</label>
-            {{ form.email }}
-            {% if form.email.errors %}
-              <div class="text-danger small mt-1">{{ form.email.errors.as_text|striptags }}</div>
-            {% endif %}
-          </div>
-
-          <div class="col-md-6">
-            <label class="form-label">{{ form.phone.label }}</label>
-            {{ form.phone }}
-            {% if form.phone.errors %}
-              <div class="text-danger small mt-1">{{ form.phone.errors.as_text|striptags }}</div>
-            {% endif %}
-          </div>
-
-          <div class="col-12">
-            <label class="form-label">{{ form.medical_history.label }}</label>
-            {{ form.medical_history }}
-            {% if form.medical_history.errors %}
-              <div class="text-danger small mt-1">{{ form.medical_history.errors.as_text|striptags }}</div>
-            {% endif %}
-          </div>
-
-          <div class="col-md-6">
-            <label class="form-label">{{ form.current_medications.label }}</label>
-            {{ form.current_medications }}
-          </div>
-
-          <div class="col-md-6">
-            <label class="form-label">{{ form.known_allergies.label }}</label>
-            {{ form.known_allergies }}
-          </div>
+<!DOCTYPE html>
+<html class="h-full bg-gray-50" lang="es">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Solicitud de Segunda Opinión - Paso 1</title>
+    <!-- Tailwind CSS CDN with plugins -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+    <style data-purpose="base-typography">
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+    <style data-purpose="custom-layout">
+        /* Custom gradient for the sidebar */
+        .sidebar-gradient {
+            background: linear-gradient(180deg, #1e69de 0%, #1557c0 100%);
+        }
+        
+        /* Custom scrollbar for textareas if needed */
+        textarea::-webkit-scrollbar {
+            width: 6px;
+        }
+        textarea::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        textarea::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="h-full">
+<div class="flex flex-col md:flex-row min-h-screen">
+    <!-- BEGIN: Sidebar -->
+    <aside class="sidebar-gradient w-full md:w-1/4 lg:w-1/5 p-8 flex flex-col text-white" data-purpose="sidebar-container">
+        <div class="mb-8">
+            <!-- Document Icon -->
+            <img src="/static/images/logo.png" alt="OncoMDT" class="h-20 w-auto mb-6">
+            <h1 class="text-3xl font-bold leading-tight mb-4">OncoMDT</h1>
+            <p class="text-blue-100 text-lg opacity-90">Solicitud de Segunda Opinión</p>
         </div>
-      </div>
-    </div>
-
-    <div class="d-flex justify-content-between align-items-center">
-      <a href="{% url 'cases:patient_dashboard' %}" class="btn btn-outline-secondary">Cancelar</a>
-      <button type="submit" class="btn btn-new-case">Continuar al Paso 2</button>
-    </div>
-  </form>
-{% endblock %}
+        <!-- Footer or spacer in sidebar if needed -->
+        <div class="mt-auto pt-10 text-xs text-blue-200 opacity-60">
+            © 2024 Portal de Salud
+        </div>
+    </aside>
+    <!-- END: Sidebar -->
+    <!-- BEGIN: Main Content Area -->
+    <main class="flex-1 p-6 md:p-12 lg:p-16 flex flex-col" data-purpose="main-form-area">
+        <!-- BEGIN: Stepper -->
+        <nav aria-label="Progress" class="mb-12" data-purpose="horizontal-stepper">
+            <ol class="flex items-center justify-start space-x-8 md:space-x-12" role="list">
+                <!-- Step 1: Active -->
+                <li class="flex flex-col items-center">
+                    <span class="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-white font-semibold shadow-md">1</span>
+                    <span class="mt-2 text-xs font-medium text-blue-600">Paciente</span>
+                </li>
+                <!-- Step 2 -->
+                <li class="flex flex-col items-center">
+                    <span class="flex h-10 w-10 items-center justify-center rounded-full border-2 border-gray-300 bg-white text-gray-500 font-semibold">2</span>
+                    <span class="mt-2 text-xs font-medium text-gray-400">Caso</span>
+                </li>
+                <!-- Step 3 -->
+                <li class="flex flex-col items-center">
+                    <span class="flex h-10 w-10 items-center justify-center rounded-full border-2 border-gray-300 bg-white text-gray-500 font-semibold">3</span>
+                    <span class="mt-2 text-xs font-medium text-gray-400">Documentos</span>
+                </li>
+                <!-- Step 4 -->
+                <li class="flex flex-col items-center">
+                    <span class="flex h-10 w-10 items-center justify-center rounded-full border-2 border-gray-300 bg-white text-gray-500 font-semibold">4</span>
+                    <span class="mt-2 text-xs font-medium text-gray-400">Revisión</span>
+                </li>
+            </ol>
+        </nav>
+        <!-- END: Stepper -->
+        
+        <form method="post" novalidate class="space-y-8">
+            {% csrf_token %}
+            
+            <!-- BEGIN: Form Card -->
+            <div class="bg-white rounded-3xl shadow-xl border border-gray-100 p-8 md:p-12 max-w-5xl" data-purpose="form-container">
+                <!-- Row 1: Full Name -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                    <div class="md:col-span-3">
+                        <label class="block text-sm font-medium text-gray-500 mb-1" for="id_full_name">Nombre completo *</label>
+                        <div class="bg-gray-50 rounded-lg px-4 py-3 border border-gray-200">
+                            <input class="block w-full border-0 border-b-2 border-gray-200 focus:border-blue-500 text-lg text-gray-800 transition-colors py-1 bg-transparent focus:outline-none focus:ring-0" id="id_full_name" name="full_name" type="text" value="{{ form.full_name.value|default:'' }}" placeholder="Ingrese su nombre completo" required/>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500 mb-1" for="id_age">Edad *</label>
+                        <div class="bg-gray-50 rounded-lg px-4 py-3 border border-gray-200">
+                            <input class="block w-full border-0 border-b-2 border-gray-200 focus:border-blue-500 text-lg text-gray-800 transition-colors py-1 bg-transparent focus:outline-none focus:ring-0" id="id_age" name="age" type="number" value="{{ form.age.value|default:'' }}" placeholder="--" required/>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Row 2: Email and Phone -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500 mb-1" for="id_email">Email *</label>
+                        <div class="bg-gray-50 rounded-lg px-4 py-3 border border-gray-200">
+                            <input class="block w-full border-0 border-b-2 border-gray-200 focus:border-blue-500 text-lg text-gray-800 transition-colors py-1 bg-transparent focus:outline-none focus:ring-0" id="id_email" name="email" type="email" value="{{ form.email.value|default:'' }}" placeholder="correo@ejemplo.com" required/>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500 mb-1" for="id_phone">Teléfono *</label>
+                        <div class="bg-gray-50 rounded-lg px-4 py-3 border border-gray-200">
+                            <input class="block w-full border-0 border-b-2 border-gray-200 focus:border-blue-500 text-lg text-gray-800 transition-colors py-1 bg-transparent focus:outline-none focus:ring-0" id="id_phone" name="phone" type="tel" value="{{ form.phone.value|default:'' }}" placeholder="+34 912 34 56 78" required/>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Row 3: Medical History -->
+                <div class="mb-8">
+                    <label class="block text-sm font-medium text-gray-500 mb-1" for="id_medical_history">Enfermedades que padecen</label>
+                    <div class="bg-gray-50 rounded-lg px-4 py-3 border border-gray-200">
+                        <textarea class="block w-full border-0 border-b-2 border-gray-200 focus:border-blue-500 text-lg text-gray-800 transition-colors py-1 bg-transparent focus:outline-none focus:ring-0 resize-none" id="id_medical_history" name="medical_history" rows="2" placeholder="Ej: Diabetes, Hipertensión, Asma, etc. (Escriba las alergias en el campo siguiente)">{{ form.medical_history.value|default:'' }}</textarea>
+                    </div>
+                </div>
+                
+                <!-- Row 4: Current Medications -->
+                <div class="mb-8">
+                    <label class="block text-sm font-medium text-gray-500 mb-1" for="id_current_medications">Medicamentos actuales</label>
+                    <div class="bg-gray-50 rounded-lg px-4 py-3 border border-gray-200">
+                        <textarea class="block w-full border-0 border-b-2 border-gray-200 focus:border-blue-500 text-lg text-gray-800 transition-colors py-1 bg-transparent focus:outline-none focus:ring-0 resize-none" id="id_current_medications" name="current_medications" rows="2" placeholder="Liste los medicamentos que está tomando actualmente">{{ form.current_medications.value|default:'' }}</textarea>
+                    </div>
+                </div>
+                
+                <!-- Row 5: Known Allergies -->
+                <div class="mb-8">
+                    <label class="block text-sm font-medium text-gray-500 mb-1" for="id_known_allergies">Alergias conocidas</label>
+                    <div class="bg-gray-50 rounded-lg px-4 py-3 border border-gray-200">
+                        <input class="block w-full border-0 border-b-2 border-gray-200 focus:border-blue-500 text-lg text-gray-800 transition-colors py-1 bg-transparent focus:outline-none focus:ring-0" id="id_known_allergies" name="known_allergies" type="text" value="{{ form.known_allergies.value|default:'' }}" placeholder="Ej: Penicilina, Mariscos, Látex, Polen, etc."/>
+                    </div>
+                </div>
+            </div>
+            <!-- END: Form Card -->
+            
+            <!-- BEGIN: Form Actions -->
+            <div class="pt-6 flex flex-col sm:flex-row items-center justify-between gap-4" data-purpose="form-buttons">
+                <a href="{% url 'cases:patient_dashboard' %}" class="order-2 sm:order-1 px-8 py-3 rounded-xl border border-gray-300 text-gray-600 font-semibold hover:bg-gray-50 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400">
+                    Cancelar
+                </a>
+                <button type="submit" class="order-1 sm:order-2 px-10 py-4 bg-blue-600 text-white font-bold rounded-xl shadow-lg hover:bg-blue-700 transition-all flex items-center group focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    Continuar al Paso 2
+                    <svg class="h-5 w-5 ml-2 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M14 5l7 7m0 0l-7 7m7-7H3" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                    </svg>
+                </button>
+            </div>
+            <!-- END: Form Actions -->
+        </form>
+    </main>
+    <!-- END: Main Content Area -->
+</div>
+</body>
+</html>

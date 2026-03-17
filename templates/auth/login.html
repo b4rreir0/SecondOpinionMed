@@ -1,80 +1,191 @@
 <!DOCTYPE html>
+{% load static %}
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Iniciar Sesión - Segunda Opinión Médica</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <link href="{% static 'css/output.css' %}" rel="stylesheet">
+    
     <style>
-        :root {
-            --primary-color: #0066cc;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
         
         body {
-            background: linear-gradient(135deg, var(--primary-color) 0%, #00a3e0 100%);
+            font-family: 'Manrope', sans-serif;
+            background: linear-gradient(135deg, #1392ec 0%, #0e7ccb 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        body::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 600px;
+            height: 600px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 50%;
+        }
+        
+        body::after {
+            content: '';
+            position: absolute;
+            bottom: -30%;
+            left: -10%;
+            width: 500px;
+            height: 500px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 50%;
         }
         
         .login-container {
             background: white;
-            border-radius: 10px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-            padding: 40px;
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            padding: 48px 40px;
             width: 100%;
-            max-width: 400px;
+            max-width: 440px;
+            position: relative;
+            z-index: 1;
         }
         
-        .login-header {
+        .login-logo {
+            width: 72px;
+            height: 72px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, #1392ec 0%, #0e7ccb 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            box-shadow: 0 8px 20px rgba(19, 146, 236, 0.35);
+        }
+        
+        .login-logo .material-icons-round {
+            color: white;
+            font-size: 36px;
+        }
+        
+        .login-title {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 8px;
         }
         
-        .login-header h1 {
-            color: var(--primary-color);
-            font-weight: 700;
-            font-size: 1.8rem;
+        .login-title h1 {
+            color: #1e293b;
+            font-weight: 800;
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+        
+        .login-title p {
+            color: #64748b;
+            font-size: 15px;
+        }
+        
+        .info-box {
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            border: 1px solid #bfdbfe;
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 28px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        
+        .info-box .material-icons-round {
+            color: #3b82f6;
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+        
+        .info-box p {
+            color: #1e40af;
+            font-size: 14px;
+            font-weight: 500;
+            line-height: 1.5;
         }
         
         .form-group {
             margin-bottom: 20px;
         }
         
-        label {
+        .form-label {
+            display: block;
             font-weight: 600;
-            color: #333;
+            color: #374151;
             margin-bottom: 8px;
+            font-size: 14px;
         }
         
-        .form-control {
-            border-radius: 5px;
-            padding: 10px 15px;
-            border: 1px solid #ddd;
-            font-size: 1rem;
-        }
-        
-        .form-control:focus {
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 0.2rem rgba(0, 102, 204, 0.15);
-        }
-        
-        .btn-login {
-            background-color: var(--primary-color);
-            border: none;
-            padding: 12px;
-            font-weight: 600;
-            font-size: 1.1rem;
-            border-radius: 5px;
+        .form-input {
             width: 100%;
-            margin-top: 20px;
+            padding: 14px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 15px;
+            font-family: inherit;
+            transition: all 0.2s;
+            background: #f8fafc;
         }
         
-        .btn-login:hover {
-            background-color: #0052a3;
+        .form-input:focus {
+            outline: none;
+            border-color: #1392ec;
+            box-shadow: 0 0 0 4px rgba(19, 146, 236, 0.1);
+            background: white;
+        }
+        
+        .form-input.error {
+            border-color: #ef4444;
+        }
+        
+        .form-error {
+            color: #dc2626;
+            font-size: 13px;
+            margin-top: 6px;
+        }
+        
+        .btn-primary {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #1392ec 0%, #0e7ccb 100%);
             color: white;
+            border: none;
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.25s;
+            box-shadow: 0 4px 14px rgba(19, 146, 236, 0.35);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(19, 146, 236, 0.4);
+        }
+        
+        .btn-primary:active {
+            transform: translateY(0);
         }
         
         .forgot-password {
@@ -83,29 +194,32 @@
         }
         
         .forgot-password a {
-            color: var(--primary-color);
+            color: #64748b;
             text-decoration: none;
+            font-size: 14px;
             font-weight: 500;
+            transition: color 0.2s;
         }
         
         .forgot-password a:hover {
-            text-decoration: underline;
+            color: #1392ec;
         }
         
         .signup-link {
             text-align: center;
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid #eee;
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid #e2e8f0;
         }
         
         .signup-link p {
-            color: #666;
+            color: #64748b;
+            font-size: 14px;
             margin-bottom: 0;
         }
         
         .signup-link a {
-            color: var(--primary-color);
+            color: #1392ec;
             text-decoration: none;
             font-weight: 600;
         }
@@ -114,100 +228,97 @@
             text-decoration: underline;
         }
         
-        .errorlist {
-            list-style: none;
-            padding: 0;
+        .error-alert {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 12px;
+            padding: 14px 16px;
             margin-bottom: 20px;
         }
         
-        .errorlist li {
-            background-color: #f8d7da;
-            color: #721c24;
-            padding: 12px;
-            border-radius: 5px;
-            border: 1px solid #f5c6cb;
-        }
-
-        .info-box {
-            background: #e8f1ff;
-            border-left: 4px solid var(--primary-color);
-            padding: 15px;
-            margin-bottom: 25px;
-            border-radius: 5px;
-            font-size: 0.95rem;
-            color: #333;
+        .error-alert p {
+            color: #dc2626;
+            font-size: 14px;
+            font-weight: 500;
         }
     </style>
 </head>
 <body>
     <div class="login-container">
-        <div class="login-header">
-            <h1>🏥 Iniciar Sesión</h1>
-            <p style="color: #666;">Accede a tu cuenta</p>
+        <div class="login-logo">
+            <img src="/static/images/logo.png" alt="OncoMDT" style="height: 60px;">
+        </div>
+        
+        <div class="login-title">
+            <h1>Bienvenido</h1>
+            <p>Ingresa a tu cuenta</p>
         </div>
 
         <div class="info-box">
-            <strong>💡 Nota:</strong> Ingresa con tu email y contraseña. El sistema te dirigirá a tu dashboard automáticamente.
+            <span class="material-icons-round">lightbulb</span>
+            <p>Ingresa con tu email y contraseña. El sistema te dirigirá a tu panel automáticamente.</p>
         </div>
 
         {% if form.non_field_errors %}
-        <ul class="errorlist">
+        <div class="error-alert">
             {% for error in form.non_field_errors %}
-            <li>{{ error }}</li>
+            <p>{{ error }}</p>
             {% endfor %}
-        </ul>
+        </div>
         {% endif %}
 
         <form method="post" novalidate>
             {% csrf_token %}
 
             <div class="form-group">
-                <label for="id_email">Email</label>
+                <label class="form-label" for="id_email">Email</label>
                 <input 
                     type="email" 
-                    class="form-control {% if form.email.errors %}is-invalid{% endif %}" 
+                    class="form-input {% if form.email.errors %}error{% endif %}" 
                     id="id_email" 
                     name="email" 
                     value="{{ form.email.value|default:'' }}"
                     required
                     autocomplete="email"
+                    placeholder="tu@email.com"
                 >
                 {% if form.email.errors %}
-                <div class="invalid-feedback d-block">
+                <div class="form-error">
                     {% for error in form.email.errors %}{{ error }}{% endfor %}
                 </div>
                 {% endif %}
             </div>
 
             <div class="form-group">
-                <label for="id_password">Contraseña</label>
+                <label class="form-label" for="id_password">Contraseña</label>
                 <input 
                     type="password" 
-                    class="form-control {% if form.password.errors %}is-invalid{% endif %}" 
+                    class="form-input {% if form.password.errors %}error{% endif %}" 
                     id="id_password" 
                     name="password" 
                     required
                     autocomplete="current-password"
+                    placeholder="••••••••"
                 >
                 {% if form.password.errors %}
-                <div class="invalid-feedback d-block">
+                <div class="form-error">
                     {% for error in form.password.errors %}{{ error }}{% endfor %}
                 </div>
                 {% endif %}
             </div>
 
-            <button type="submit" class="btn btn-primary btn-login">Iniciar Sesión</button>
+            <button type="submit" class="btn-primary">
+                Iniciar Sesión
+            </button>
         </form>
 
         <div class="forgot-password">
-            <a href="#">¿Olvidó su contraseña?</a>
+            <a href="#">¿Olvidaste tu contraseña?</a>
         </div>
 
         <div class="signup-link">
             <p>¿No tienes cuenta? <a href="{% url 'auth:register_patient' %}">Regístrate aquí</a></p>
         </div>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

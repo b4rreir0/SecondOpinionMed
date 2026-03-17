@@ -1,13 +1,42 @@
-{% extends 'base.html' %}
-{% block content %}
-  <div class="container">
-    {% if success %}
-      <h2>Activación completada</h2>
-      <p>{{ message }}</p>
-      <p><a href="{% url 'auth:login' %}">Iniciar sesión</a></p>
-    {% else %}
-      <h2>Activación fallida</h2>
-      <p>{{ message }}</p>
-    {% endif %}
-  </div>
+{% extends 'base_modern.html' %}
+
+{% block title %}Activación de Cuenta - OncoMDT{% endblock %}
+
+{% block body %}
+<main class="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 to-blue-50 dark:from-primary/5 dark:to-slate-900 px-4">
+    <div class="w-full max-w-md">
+        {% if success %}
+        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-lg p-8 text-center">
+            <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+                <span class="material-icons-round text-4xl text-emerald-600 dark:text-emerald-400">check_circle</span>
+            </div>
+            <h1 class="text-2xl font-bold text-slate-900 dark:text-white mb-4">
+                Activación Completada
+            </h1>
+            <p class="text-slate-600 dark:text-slate-400 mb-6">
+                {{ message }}
+            </p>
+            <a href="{% url 'auth:login' %}" class="inline-flex items-center justify-center gap-2 w-full px-6 py-3 bg-primary hover:bg-primary-dark text-white rounded-xl font-semibold transition-all duration-200">
+                <span>Iniciar Sesión</span>
+                <span class="material-icons-round">arrow_forward</span>
+            </a>
+        </div>
+        {% else %}
+        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-lg p-8 text-center">
+            <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                <span class="material-icons-round text-4xl text-red-600 dark:text-red-400">error</span>
+            </div>
+            <h1 class="text-2xl font-bold text-slate-900 dark:text-white mb-4">
+                Activación Fallida
+            </h1>
+            <p class="text-slate-600 dark:text-slate-400 mb-6">
+                {{ message }}
+            </p>
+            <a href="{% url 'auth:login' %}" class="inline-flex items-center justify-center gap-2 px-6 py-3 text-primary hover:bg-primary/10 rounded-xl font-semibold transition-colors">
+                <span>Volver a Iniciar Sesión</span>
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</main>
 {% endblock %}

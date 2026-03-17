@@ -68,7 +68,9 @@ class PatientCaseDetailView(LoginRequiredMixin, View):
             if case.doctor == request.user and case.status != 'IN_REVIEW':
                 case.status = 'IN_REVIEW'
                 from django.utils import timezone
-                case.assigned_at = timezone.now()
+                # Solo actualizar assigned_at si no ha sido establecido antes
+                if not case.assigned_at:
+                    case.assigned_at = timezone.now()
                 case.save()
                 print(f"[DoctorCaseDetailView] Case {case.case_id} viewed by doctor {request.user.email}; status set to IN_REVIEW")
                 CaseService.log_case_access(case, request.user, 'update')
@@ -183,6 +185,16 @@ class DoctorCaseDetailView(LoginRequiredMixin, View):
         # Registrar acceso
         CaseService.log_case_access(case, request.user, 'read')
         
+        # Si el caso está en SUBMITTED, ASSIGNED o PROCESSING y el usuario pertenece al grupo,
+        # cambiar el estado a IN_REVIEW
+        if case.status in ['SUBMITTED', 'ASSIGNED', 'PROCESSING'] and puede_ver:
+            case.status = 'IN_REVIEW'
+            # Solo actualizar assigned_at si no ha sido establecido antes
+            if not case.assigned_at:
+                case.assigned_at = timezone.now()
+            case.save()
+            print(f"[DoctorCaseDetailView] Case {case.case_id} status changed to IN_REVIEW")
+        
         # Obtener antecedentes médicos del paciente
         try:
             from pacientes.models import AntecedenteMedico
@@ -263,9 +275,23 @@ class DoctorCaseDetailView(LoginRequiredMixin, View):
                         # Es miembro - ahora verificar si es coordinador
                         if comite.coordinador == medico_actual:
                             es_responsable = True
+            
+            # 4. Si es el coordinador del grupo médico (responsable_por_defecto)
+            if not es_responsable and case.medical_group:
+                if case.medical_group.responsable_por_defecto == medico_actual:
+                    es_responsable = True
         except Exception:
             opinion_medico_actual = None
             es_responsable = False
+        
+        # Determinar si el usuario puede cerrar el caso
+        # Solo puede cerrar si:
+        # 1. Es responsable/coordinador
+        # 2. El caso está en un estado que permite cierre (IN_REVIEW, PROCESSING, MDT_IN_PROGRESS)
+        puede_cerrar_caso = False
+        estados_permitidos = ['IN_REVIEW', 'PROCESSING', 'MDT_IN_PROGRESS']
+        if es_responsable and case.status in estados_permitidos:
+            puede_cerrar_caso = True
         
         context = {
             'caso': case,  # Usar 'caso' para compatibilidad con el template
@@ -975,6 +1001,11 @@ class MDTFinalResponseView(LoginRequiredMixin, View):
                 memberships = medico.doctorgroupmembership_set.filter(grupo=case.medical_group)
                 es_responsable = any(m.es_responsable for m in memberships)
         
+        # Verificar si es el responsable por defecto del grupo
+        if not es_responsable and case.medical_group:
+            if case.medical_group.responsable_por_defecto == medico:
+                es_responsable = True
+        
         # Si tampoco, verificar si es el coordinador del comité de la localidad
         if not es_responsable and case.localidad and case.localidad.comite:
             comite = case.localidad.comite
@@ -1004,7 +1035,7 @@ class MDTFinalResponseView(LoginRequiredMixin, View):
         
         if result['success']:
             # Actualizar estado del caso
-            case.status = 'COMPLETED'
+            case.status = 'OPINION_COMPLETE'
             case.completed_at = timezone.now()
             case.save()
             

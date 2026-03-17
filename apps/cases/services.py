@@ -469,7 +469,9 @@ class CaseService:
         """
         case.doctor = doctor
         case.status = 'IN_REVIEW'
-        case.assigned_at = timezone.now()
+        # Solo actualizar assigned_at si no ha sido establecido antes
+        if not case.assigned_at:
+            case.assigned_at = timezone.now()
         case.save()
         try:
             print(f"[CaseService] Case {case.case_id} assigned to doctor {getattr(doctor, 'email', doctor)} and set to IN_REVIEW")
@@ -634,7 +636,9 @@ def asignar_caso_automatico(case):
         case.medical_group = grupo
         case.responsable = responsable
         case.doctor = responsable.usuario
-        case.assigned_at = timezone.now()
+        # Solo actualizar assigned_at si no ha sido establecido antes
+        if not case.assigned_at:
+            case.assigned_at = timezone.now()
         case.save()
         
         _notificar_asignacion_caso(case, grupo)

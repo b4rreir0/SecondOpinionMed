@@ -1,107 +1,191 @@
-{% extends 'sop/base_sop.html' %}
-
-{% block sop_body %}
-  <form method="post" novalidate id="case-form">
-    {% csrf_token %}
-    <div class="card mb-3">
-      <div class="card-body">
-        <div class="row g-3">
-          <div class="col-12">
-            <label class="form-label">{{ form.primary_diagnosis.label }}</label>
-            {{ form.primary_diagnosis }}
-            {% if form.primary_diagnosis.errors %}
-              <div class="text-danger small mt-1">{{ form.primary_diagnosis.errors.as_text|striptags }}</div>
-            {% endif %}
-          </div>
-
-          <div class="col-md-6">
-            <label class="form-label">{{ form.tipo_cancer.label }}</label>
-            {{ form.tipo_cancer }}
-            {% if form.tipo_cancer.errors %}
-              <div class="text-danger small mt-1">{{ form.tipo_cancer.errors.as_text|striptags }}</div>
-            {% endif %}
-          </div>
-
-          <div class="col-md-6">
-            <label class="form-label">{{ form.estadio.label }}</label>
-            {{ form.estadio }}
-            {% if form.estadio.errors %}
-              <div class="text-danger small mt-1">{{ form.estadio.errors.as_text|striptags }}</div>
-            {% endif %}
-            <div class="form-text text-muted" style="font-size: 0.75rem;">
-              Esta información se obtendrá de los documentos que suba
-            </div>
-          </div>
-
-          <div class="col-md-6">
-            <label class="form-label">{{ form.diagnosis_date.label }}</label>
-            {{ form.diagnosis_date }}
-            {% if form.diagnosis_date.errors %}
-              <div class="text-danger small mt-1">{{ form.diagnosis_date.errors.as_text|striptags }}</div>
-            {% endif %}
-            <div class="form-text text-muted" style="font-size: 0.75rem;">
-              La fecha no puede ser futura (solo fechas pasadas o hoy)
-            </div>
-          </div>
-
-          <div class="col-12">
-            <label class="form-label">{{ form.referring_institution.label }}</label>
-            {{ form.referring_institution }}
-            {% if form.referring_institution.errors %}
-              <div class="text-danger small mt-1">{{ form.referring_institution.errors.as_text|striptags }}</div>
-            {% endif %}
-          </div>
-
-          <div class="col-12">
-            <label class="form-label">{{ form.main_symptoms.label }}</label>
-            {{ form.main_symptoms }}
-            {% if form.main_symptoms.errors %}
-              <div class="text-danger small mt-1">{{ form.main_symptoms.errors.as_text|striptags }}</div>
-            {% endif %}
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="d-flex justify-content-between">
-      <a href="{% url 'cases:sop_start' %}" class="btn btn-outline-secondary">Volver</a>
-      <button type="submit" class="btn btn-new-case">Continuar al Paso 3</button>
-    </div>
-  </form>
-
-  <script>
-    // Validación de fecha de diagnóstico - no puede ser futura
-    document.addEventListener('DOMContentLoaded', function() {
-      const dateInput = document.querySelector('input[name="diagnosis_date"]');
-      if (dateInput) {
-        // Obtener la fecha de hoy en formato YYYY-MM-DD
-        const today = new Date();
-        const year = today.getFullYear();
-        const month = String(today.getMonth() + 1).padStart(2, '0');
-        const day = String(today.getDate()).padStart(2, '0');
-        const maxDate = `${year}-${month}-${day}`;
-        
-        // Establecer el atributo max para evitar fechas futuras
-        dateInput.max = maxDate;
-        
-        // Validación al enviar el formulario
-        const form = document.getElementById('case-form');
-        if (form) {
-          form.addEventListener('submit', function(e) {
-            const selectedDate = new Date(dateInput.value);
-            const todayDate = new Date();
-            todayDate.setHours(0, 0, 0, 0);
-            selectedDate.setHours(0, 0, 0, 0);
-            
-            if (selectedDate > todayDate) {
-              e.preventDefault();
-              alert('La fecha de diagnóstico no puede ser futura. Por favor seleccione una fecha anterior o igual a hoy.');
-              dateInput.focus();
-              return false;
-            }
-          });
+<!DOCTYPE html>
+<html class="h-full bg-gray-50" lang="es">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Solicitud de Segunda Opinión - Paso 2</title>
+    <!-- Tailwind CSS CDN with plugins -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+    <style data-purpose="base-typography">
+        body {
+            font-family: 'Inter', sans-serif;
         }
-      }
+    </style>
+    <style data-purpose="custom-layout">
+        .sidebar-gradient {
+            background: linear-gradient(180deg, #1e69de 0%, #1557c0 100%);
+        }
+        textarea::-webkit-scrollbar {
+            width: 6px;
+        }
+        textarea::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        textarea::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="h-full">
+<div class="flex flex-col md:flex-row min-h-screen">
+    <!-- BEGIN: Sidebar -->
+    <aside class="sidebar-gradient w-full md:w-1/4 lg:w-1/5 p-8 flex flex-col text-white">
+        <div class="mb-8">
+            <img src="/static/images/logo.png" alt="OncoMDT" class="h-20 w-auto mb-6">
+            <h1 class="text-3xl font-bold leading-tight mb-4">OncoMDT</h1>
+            <p class="text-blue-100 text-lg opacity-90">Solicitud de Segunda Opinión</p>
+        </div>
+        <div class="mt-auto pt-10 text-xs text-blue-200 opacity-60">
+            © 2024 Portal de Salud
+        </div>
+    </aside>
+    <!-- END: Sidebar -->
+    <!-- BEGIN: Main Content Area -->
+    <main class="flex-1 p-6 md:p-12 lg:p-16 flex flex-col">
+        <!-- BEGIN: Stepper -->
+        <nav aria-label="Progress" class="mb-12">
+            <ol class="flex items-center justify-start space-x-8 md:space-x-12" role="list">
+                <!-- Step 1: Completed -->
+                <li class="flex flex-col items-center">
+                    <span class="flex h-10 w-10 items-center justify-center rounded-full bg-green-500 text-white font-semibold shadow-md">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    </span>
+                    <span class="mt-2 text-xs font-medium text-green-600">Paciente</span>
+                </li>
+                <!-- Step 2: Active -->
+                <li class="flex flex-col items-center">
+                    <span class="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-white font-semibold shadow-md">2</span>
+                    <span class="mt-2 text-xs font-medium text-blue-600">Caso</span>
+                </li>
+                <!-- Step 3 -->
+                <li class="flex flex-col items-center">
+                    <span class="flex h-10 w-10 items-center justify-center rounded-full border-2 border-gray-300 bg-white text-gray-500 font-semibold">3</span>
+                    <span class="mt-2 text-xs font-medium text-gray-400">Documentos</span>
+                </li>
+                <!-- Step 4 -->
+                <li class="flex flex-col items-center">
+                    <span class="flex h-10 w-10 items-center justify-center rounded-full border-2 border-gray-300 bg-white text-gray-500 font-semibold">4</span>
+                    <span class="mt-2 text-xs font-medium text-gray-400">Revisión</span>
+                </li>
+            </ol>
+        </nav>
+        <!-- END: Stepper -->
+        
+        <form method="post" novalidate id="case-form">
+            {% csrf_token %}
+            
+            <!-- BEGIN: Form Card -->
+            <div class="bg-white rounded-3xl shadow-xl border border-gray-100 p-8 md:p-12 max-w-5xl">
+                <!-- Row 1: Primary Diagnosis -->
+                <div class="mb-8">
+                    <label class="block text-sm font-medium text-gray-500 mb-1" for="id_primary_diagnosis">Diagnóstico principal *</label>
+                    <div class="bg-gray-50 rounded-lg px-4 py-3 border border-gray-200">
+                        <textarea class="block w-full border-0 border-b-2 border-gray-200 focus:border-blue-500 text-lg text-gray-800 transition-colors py-1 bg-transparent focus:outline-none focus:ring-0 resize-none" id="id_primary_diagnosis" name="primary_diagnosis" rows="2" placeholder="Describa su diagnóstico principal">{{ form.primary_diagnosis.value|default:'' }}</textarea>
+                    </div>
+                    {% if form.primary_diagnosis.errors %}
+                    <p class="text-red-500 text-sm mt-1">{{ form.primary_diagnosis.errors.as_text }}</p>
+                    {% endif %}
+                </div>
+                
+                <!-- Row 2: Localidad de su enfermedad (Tipo de cáncer) -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500 mb-1" for="id_tipo_cancer">Localidad de su enfermedad *</label>
+                        <div class="bg-gray-50 rounded-lg px-4 py-3 border border-gray-200">
+                            <select class="block w-full border-0 border-b-2 border-gray-200 focus:border-blue-500 text-lg text-gray-800 transition-colors py-1 bg-transparent focus:outline-none focus:ring-0" id="id_tipo_cancer" name="tipo_cancer">
+                                <option value="">Seleccione...</option>
+                                {% for value, label in form.fields.tipo_cancer.choices %}
+                                <option value="{{ value }}" {% if form.tipo_cancer.value == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        {% if form.tipo_cancer.errors %}
+                        <p class="text-red-500 text-sm mt-1">{{ form.tipo_cancer.errors.as_text }}</p>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500 mb-1" for="id_estadio">Estadio</label>
+                        <div class="bg-gray-50 rounded-lg px-4 py-3 border border-gray-200">
+                            <select class="block w-full border-0 border-b-2 border-gray-200 focus:border-blue-500 text-lg text-gray-800 transition-colors py-1 bg-transparent focus:outline-none focus:ring-0" id="id_estadio" name="estadio">
+                                <option value="">Seleccione...</option>
+                                {% for value, label in form.fields.estadio.choices %}
+                                <option value="{{ value }}" {% if form.estadio.value == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-1">Esta información se obtendrá de los documentos que suba</p>
+                    </div>
+                </div>
+                
+                <!-- Row 3: Diagnosis Date -->
+                <div class="mb-8">
+                    <label class="block text-sm font-medium text-gray-500 mb-1" for="id_diagnosis_date">Fecha de diagnóstico *</label>
+                    <div class="bg-gray-50 rounded-lg px-4 py-3 border border-gray-200">
+                        <input type="date" class="block w-full border-0 border-b-2 border-gray-200 focus:border-blue-500 text-lg text-gray-800 transition-colors py-1 bg-transparent focus:outline-none focus:ring-0" id="id_diagnosis_date" name="diagnosis_date" value="{{ form.diagnosis_date.value|default:'' }}" max=""/>
+                    </div>
+                    <p class="text-xs text-gray-400 mt-1">La fecha no puede ser futura</p>
+                    {% if form.diagnosis_date.errors %}
+                    <p class="text-red-500 text-sm mt-1">{{ form.diagnosis_date.errors.as_text }}</p>
+                    {% endif %}
+                </div>
+                
+                <!-- Row 4: Referring Institution -->
+                <div class="mb-8">
+                    <label class="block text-sm font-medium text-gray-500 mb-1" for="id_referring_institution">Hospital que emitió el diagnóstico *</label>
+                    <div class="bg-gray-50 rounded-lg px-4 py-3 border border-gray-200">
+                        <input class="block w-full border-0 border-b-2 border-gray-200 focus:border-blue-500 text-lg text-gray-800 transition-colors py-1 bg-transparent focus:outline-none focus:ring-0" id="id_referring_institution" name="referring_institution" type="text" value="{{ form.referring_institution.value|default:'' }}" placeholder="Nombre del hospital o institución"/>
+                    </div>
+                    {% if form.referring_institution.errors %}
+                    <p class="text-red-500 text-sm mt-1">{{ form.referring_institution.errors.as_text }}</p>
+                    {% endif %}
+                </div>
+                
+                <!-- Row 5: Main Symptoms -->
+                <div class="mb-8">
+                    <label class="block text-sm font-medium text-gray-500 mb-1" for="id_main_symptoms">Síntomas principales</label>
+                    <div class="bg-gray-50 rounded-lg px-4 py-3 border border-gray-200">
+                        <textarea class="block w-full border-0 border-b-2 border-gray-200 focus:border-blue-500 text-lg text-gray-800 transition-colors py-1 bg-transparent focus:outline-none focus:ring-0 resize-none" id="id_main_symptoms" name="main_symptoms" rows="2" placeholder="Describa los síntomas principales">{{ form.main_symptoms.value|default:'' }}</textarea>
+                    </div>
+                    {% if form.main_symptoms.errors %}
+                    <p class="text-red-500 text-sm mt-1">{{ form.main_symptoms.errors.as_text }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            <!-- END: Form Card -->
+            
+            <!-- BEGIN: Form Actions -->
+            <div class="pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <a href="{% url 'cases:sop_start' %}" class="order-2 sm:order-1 px-8 py-3 rounded-xl border border-gray-300 text-gray-600 font-semibold hover:bg-gray-50 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400">
+                    Volver
+                </a>
+                <button type="submit" class="order-1 sm:order-2 px-10 py-4 bg-blue-600 text-white font-bold rounded-xl shadow-lg hover:bg-blue-700 transition-all flex items-center group focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    Continuar al Paso 3
+                    <svg class="h-5 w-5 ml-2 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M14 5l7 7m0 0l-7 7m7-7H3" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                    </svg>
+                </button>
+            </div>
+            <!-- END: Form Actions -->
+        </form>
+    </main>
+    <!-- END: Main Content Area -->
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const dateInput = document.querySelector('input[name="diagnosis_date"]');
+        if (dateInput) {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            const maxDate = `${year}-${month}-${day}`;
+            dateInput.max = maxDate;
+        }
     });
-  </script>
-{% endblock %}
+</script>
+</body>
+</html>

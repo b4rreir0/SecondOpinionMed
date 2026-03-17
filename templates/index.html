@@ -1,72 +1,69 @@
 <!DOCTYPE html>
+{% load static %}
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Segunda Opinión Médica - Expertos en tu Salud</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <link href="{% static 'css/output.css' %}" rel="stylesheet">
+    
     <style>
-        :root {
-            --primary-color: #0066cc;
-            --secondary-color: #00a3e0;
-            --success-color: #28a745;
-            --warning-color: #ffc107;
-            --danger-color: #dc3545;
-        }
-        
         * {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
         
         body {
+            font-family: 'Manrope', sans-serif;
             line-height: 1.6;
+            color: #1e293b;
         }
         
         /* Navbar */
         .navbar {
-            background-color: white;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            position: sticky;
-            top: 0;
-            z-index: 100;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid #e2e8f0;
         }
         
-        .navbar-brand {
-            font-weight: 700;
-            color: var(--primary-color) !important;
-            font-size: 1.3rem;
+        .navbar a {
+            text-decoration: none;
+        }
+        
+        /* Logo Styles */
+        .logo-container {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #1392ec 0%, #0e7ccb 100%);
             display: flex;
             align-items: center;
-            gap: 10px;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(19, 146, 236, 0.35);
         }
         
-        .navbar-brand img {
-            height: 40px;
-            width: auto;
+        .logo-text {
+            font-size: 22px;
+            font-weight: 800;
+            color: #1e293b;
         }
         
-        .navbar .btn-outline-primary {
-            border-color: var(--primary-color);
-            color: var(--primary-color);
-        }
-        
-        .navbar .btn-outline-primary:hover {
-            background-color: var(--primary-color);
-            color: white;
-        }
-        
-        .navbar .btn-primary {
-            background-color: var(--primary-color);
-            border-color: var(--primary-color);
+        .logo-text span {
+            color: #1392ec;
         }
         
         /* Hero Section */
         .hero {
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-            color: white;
-            padding: 100px 20px;
-            text-align: center;
+            background: linear-gradient(135deg, #1392ec 0%, #0e7ccb 50%, #0960a5 100%);
             position: relative;
             overflow: hidden;
         }
@@ -74,649 +71,994 @@
         .hero::before {
             content: '';
             position: absolute;
-            top: -50%;
-            right: -10%;
-            width: 500px;
-            height: 500px;
-            background: rgba(255,255,255,0.05);
-            border-radius: 50%;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
         }
         
-        .hero h1 {
-            font-size: 3.5rem;
-            font-weight: 700;
-            margin-bottom: 20px;
-            z-index: 1;
-            position: relative;
+        .hero::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 100px;
+            background: linear-gradient(to top, #f8fafc, transparent);
         }
         
-        .hero p {
-            font-size: 1.3rem;
-            margin-bottom: 30px;
-            opacity: 0.95;
-            z-index: 1;
-            position: relative;
-        }
-        
-        .btn-primary-large {
-            padding: 14px 40px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin: 10px;
-            border-radius: 50px;
-            transition: transform 0.3s, box-shadow 0.3s;
-        }
-        
-        .btn-primary-large:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-        }
-        
-        /* Section Styling */
-        section {
-            padding: 80px 20px;
-        }
-        
-        section h2 {
-            font-weight: 700;
-            font-size: 2.5rem;
-            margin-bottom: 50px;
-            text-align: center;
-            color: var(--primary-color);
-        }
-        
-        section h3 {
-            font-weight: 700;
-            color: var(--primary-color);
-        }
-        
-        /* What We Do Section */
-        .what-we-do {
-            background-color: #f8f9fa;
-        }
-        
+        /* Feature Cards - Admin Style */
         .feature-card {
             background: white;
-            padding: 40px;
-            margin: 20px 0;
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            transition: transform 0.3s, box-shadow 0.3s;
+            border-radius: 16px;
+            padding: 28px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            transition: all 0.25s ease;
         }
         
         .feature-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            transform: translateY(-6px);
+            box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.12);
+            border-color: #1392ec;
         }
         
-        .feature-icon {
-            font-size: 3rem;
-            margin-bottom: 20px;
-            color: var(--secondary-color);
+        .feature-icon-container {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 18px;
         }
         
-        .feature-card h4 {
-            color: var(--primary-color);
-            font-weight: 700;
-            margin-bottom: 15px;
+        .feature-icon-container .material-icons-round {
+            font-size: 26px;
         }
         
-        /* Why Choose Us */
-        .why-us {
-            background: white;
-        }
-        
+        /* Reason Cards */
         .reason-card {
             text-align: center;
-            padding: 30px;
-            margin: 20px 0;
+            padding: 32px 24px;
+            background: white;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            transition: all 0.25s ease;
+        }
+        
+        .reason-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.1);
         }
         
         .reason-number {
-            font-size: 3rem;
-            font-weight: 700;
-            color: var(--secondary-color);
-            margin-bottom: 15px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1392ec 0%, #0e7ccb 100%);
+            color: white;
+            font-size: 24px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            box-shadow: 0 4px 12px rgba(19, 146, 236, 0.3);
         }
         
-        .reason-card h4 {
-            color: var(--primary-color);
-            font-weight: 700;
-            margin-bottom: 10px;
-        }
-        
-        /* Requirements Section */
-        .requirements {
-            background: linear-gradient(135deg, #f0f4ff 0%, #e8f1ff 100%);
-        }
-        
+        /* Requirement Items */
         .requirement-item {
             background: white;
-            padding: 25px;
-            margin: 15px 0;
-            border-left: 4px solid var(--secondary-color);
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            padding: 24px;
+            border-radius: 14px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+            transition: all 0.25s ease;
+        }
+        
+        .requirement-item:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            border-color: #1392ec;
         }
         
         .requirement-item h5 {
-            color: var(--primary-color);
+            color: #1392ec;
             font-weight: 700;
-            margin-bottom: 10px;
+            font-size: 17px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .requirement-item h5 .material-icons-round {
+            font-size: 22px;
         }
         
         .requirement-item ul {
+            list-style: none;
+            padding: 0;
             margin: 0;
-            padding-left: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
         }
         
         .requirement-item li {
-            margin: 8px 0;
-            color: #555;
+            color: #475569;
+            padding: 8px 0 8px 28px;
+            position: relative;
+            font-size: 14px;
         }
         
-        /* Tutorial Section */
-        .tutorial {
-            background: white;
+        .requirement-item li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #10b981;
+            font-weight: 700;
+            font-size: 14px;
+            top: 8px;
         }
         
-        .step-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 30px;
-            margin-top: 40px;
-        }
-        
+        /* Step Cards */
         .step-card {
-            background: #f8f9fa;
-            padding: 40px;
-            border-radius: 10px;
+            background: white;
+            padding: 28px;
+            border-radius: 16px;
             text-align: center;
-            border-top: 4px solid var(--secondary-color);
-            transition: all 0.3s;
+            border: 1px solid #e2e8f0;
+            transition: all 0.25s ease;
+            position: relative;
         }
         
         .step-card:hover {
-            background: white;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 20px -6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .step-card::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: -16px;
+            width: 32px;
+            height: 2px;
+            background: #e2e8f0;
+            transform: translateY(-50%);
+        }
+        
+        .step-card:last-child::after {
+            display: none;
         }
         
         .step-number {
-            display: inline-block;
-            width: 60px;
-            height: 60px;
-            background: var(--secondary-color);
-            color: white;
+            width: 52px;
+            height: 52px;
             border-radius: 50%;
-            line-height: 60px;
-            font-weight: 700;
-            font-size: 1.5rem;
-            margin-bottom: 20px;
-        }
-        
-        .step-card h5 {
-            color: var(--primary-color);
-            font-weight: 700;
-            margin-bottom: 15px;
+            background: linear-gradient(135deg, #1392ec, #0e7ccb);
+            color: white;
+            font-size: 22px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 18px;
+            box-shadow: 0 4px 12px rgba(19, 146, 236, 0.35);
         }
         
         .step-icon {
-            font-size: 2.5rem;
-            color: var(--secondary-color);
-            margin-bottom: 15px;
-        }
-        
-        /* Security Section */
-        .security-section {
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-            color: white;
-        }
-        
-        .security-section h2 {
-            color: white;
-        }
-        
-        .security-item {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
-            margin: 20px 0;
-            font-size: 1.1rem;
+            justify-content: center;
+            margin: 0 auto 16px;
         }
         
-        .security-item .check {
-            font-size: 1.8rem;
-            margin-right: 15px;
-            color: var(--success-color);
-            font-weight: bold;
-        }
-        
-        /* CTA Section */
-        .cta-section {
-            background: #f0f4ff;
-            text-align: center;
-            padding: 60px 20px;
-        }
-        
-        .cta-section h3 {
-            font-size: 2rem;
-            margin-bottom: 30px;
-            color: var(--primary-color);
+        .step-icon .material-icons-round {
+            font-size: 24px;
         }
         
         /* Footer */
         footer {
-            background-color: #1a1a1a;
-            color: #ccc;
-            padding: 40px 20px;
-            text-align: center;
-            margin-top: 0;
+            background: #0f172a;
+            color: #cbd5e1;
+            border-top: 1px solid #1e293b;
         }
         
-        footer a {
-            color: var(--secondary-color);
-            text-decoration: none;
+        .footer-main {
+            padding: 60px 0 40px;
         }
         
-        footer a:hover {
-            text-decoration: underline;
-        }
-
-        /* User Avatar */
-        .user-avatar-btn {
+        .footer-logo {
             display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 8px 12px;
-            border-radius: 50px;
-            background: white;
-            color: var(--primary-color);
-            border: 2px solid var(--primary-color);
-            cursor: pointer;
-            text-decoration: none;
-            font-weight: 600;
-            transition: all 0.3s;
+            gap: 14px;
+            margin-bottom: 20px;
         }
-
-        .user-avatar-btn:hover {
-            background: var(--primary-color);
-            color: white;
-        }
-
-        .avatar-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: var(--secondary-color);
+        
+        .footer-logo-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #1392ec 0%, #0e7ccb 100%);
             display: flex;
             align-items: center;
             justify-content: center;
+            box-shadow: 0 6px 16px rgba(19, 146, 236, 0.35);
+        }
+        
+        .footer-logo-icon .material-icons-round {
             color: white;
+            font-size: 26px;
+        }
+        
+        .footer-logo-text {
+            font-size: 24px;
+            font-weight: 800;
+            color: white;
+        }
+        
+        .footer-logo-text span {
+            color: #1392ec;
+        }
+        
+        .footer-description {
+            font-size: 15px;
+            line-height: 1.7;
+            color: #94a3b8;
+            max-width: 340px;
+        }
+        
+        .footer-title {
+            font-size: 16px;
             font-weight: 700;
-            font-size: 1.1rem;
-        }
-
-        .user-avatar-btn:hover .avatar-icon {
-            background: rgba(255,255,255,0.3);
+            color: white;
+            margin-bottom: 20px;
+            letter-spacing: 0.5px;
         }
         
-        /* Responsive */
+        .footer-links {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .footer-links li {
+            margin-bottom: 14px;
+        }
+        
+        .footer-links a {
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 15px;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .footer-links a::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #475569;
+            transition: all 0.2s;
+        }
+        
+        .footer-links a:hover {
+            color: #1392ec;
+            transform: translateX(6px);
+        }
+        
+        .footer-links a:hover::before {
+            background: #1392ec;
+        }
+        
+        .footer-contact-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .footer-contact-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: rgba(19, 146, 236, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        
+        .footer-contact-icon .material-icons-round {
+            color: #1392ec;
+            font-size: 20px;
+        }
+        
+        .footer-contact-text {
+            color: #94a3b8;
+            font-size: 14px;
+        }
+        
+        .footer-contact-text a {
+            color: #1392ec;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .footer-contact-text a:hover {
+            text-decoration: underline;
+        }
+        
+        .footer-bottom {
+            border-top: 1px solid #1e293b;
+            padding: 24px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .footer-copyright {
+            font-size: 14px;
+            color: #64748b;
+        }
+        
+        .footer-social {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .footer-social a {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: #1e293b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #94a3b8;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        
+        .footer-social a:hover {
+            background: #1392ec;
+            color: white;
+            transform: translateY(-3px);
+        }
+        
         @media (max-width: 768px) {
-            .hero h1 {
-                font-size: 2rem;
-            }
-            
-            .hero p {
-                font-size: 1rem;
-            }
-            
-            section h2 {
-                font-size: 1.8rem;
-            }
-            
-            .step-container {
-                grid-template-columns: 1fr;
+            .footer-bottom {
+                flex-direction: column;
+                gap: 16px;
+                text-align: center;
             }
         }
         
-        /* Animations */
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        /* Buttons */
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 32px;
+            background: #1392ec;
+            color: white;
+            border-radius: 12px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.25s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
         }
         
-        .feature-card, .step-card, .requirement-item {
-            animation: fadeInUp 0.6s ease-out forwards;
+        .btn-primary:hover {
+            background: #0e7ccb;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(19, 146, 236, 0.35);
         }
         
-        .feature-card:nth-child(2) { animation-delay: 0.1s; }
-        .feature-card:nth-child(3) { animation-delay: 0.2s; }
+        .btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 32px;
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            border-radius: 12px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.25s ease;
+            backdrop-filter: blur(4px);
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+        }
+        
+        .btn-outline {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            color: #1392ec;
+            font-weight: 600;
+            text-decoration: none;
+            border-radius: 10px;
+            transition: all 0.2s;
+        }
+        
+        .btn-outline:hover {
+            background: rgba(19, 146, 236, 0.1);
+        }
+        
+        /* Info Box */
+        .info-box {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 14px;
+            padding: 20px 24px;
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+        }
+        
+        .info-box .material-icons-round {
+            color: #3b82f6;
+            font-size: 24px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+        
+        .info-box p {
+            color: #1e40af;
+            font-weight: 500;
+            font-size: 15px;
+        }
+        
+        /* Section Titles */
+        .section-title {
+            font-size: 38px;
+            font-weight: 800;
+            color: #1e293b;
+            margin-bottom: 12px;
+            letter-spacing: -0.5px;
+        }
+        
+        .section-subtitle {
+            font-size: 17px;
+            color: #64748b;
+            max-width: 550px;
+        }
+        
+        /* Section Backgrounds */
+        .section-light {
+            background: #f8fafc;
+        }
+        
+        .section-white {
+            background: white;
+        }
+        
+        /* Badge */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .badge-success {
+            background: #d1fae5;
+            color: #059669;
+        }
+        
+        .badge-warning {
+            background: #fef3c7;
+            color: #d97706;
+        }
+        
+        .badge-info {
+            background: #dbeafe;
+            color: #2563eb;
+        }
     </style>
 </head>
 <body>
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-light">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="/">
-                <img src="/static/images/logo.png" alt="Logo">
-                <span>Segunda Opinión Médica</span>
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="#que-hacemos">Plataforma</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#requisitos">Requisitos</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#tutorial">Tutorial</a>
-                    </li>
-                </ul>
-                <div class="ms-3">
+    <!-- Navigation -->
+    <nav class="navbar fixed top-0 left-0 right-0 z-50 shadow-sm" style="height: 72px;">
+        <div class="max-w-7xl mx-auto px-6" style="height: 100%;">
+            <div style="display: flex; justify-content: space-between; align-items: center; height: 100%;">
+                <!-- Logo -->
+                <a href="/" style="display: flex; align-items: center; gap: 12px; text-decoration: none;">
+                    <div class="logo-container">
+                        <img src="/static/images/logo.png" alt="OncoMDT" style="height: 40px;">
+                    </div>
+                    <span class="logo-text">
+                        Onco<span>MDT</span>
+                    </span>
+                </a>
+
+                <!-- Desktop Menu -->
+                <div style="display: flex; gap: 32px; align-items: center;" class="menu-desktop">
+                    <a href="#que-hacemos" style="color: #475569; font-weight: 600; text-decoration: none; transition: color 0.2s; font-size: 15px;">Plataforma</a>
+                    <a href="#requisitos" style="color: #475569; font-weight: 600; text-decoration: none; transition: color 0.2s; font-size: 15px;">Requisitos</a>
+                    <a href="#tutorial" style="color: #475569; font-weight: 600; text-decoration: none; transition: color 0.2s; font-size: 15px;">Tutorial</a>
+                </div>
+
+                <!-- Auth Buttons -->
+                <div style="display: flex; align-items: center; gap: 12px;">
                     {% if user.is_authenticated %}
-                        <a href="{% if user.is_doctor %}/doctors/dashboard/{% else %}/patients/dashboard/{% endif %}" class="user-avatar-btn">
-                            <div class="avatar-icon">{{ user.email|first|upper }}</div>
-                            <span>{{ user.email }}</span>
+                        <a href="{% if user.is_doctor %}/doctors/dashboard/{% else %}/patients/dashboard/{% endif %}" 
+                           style="display: flex; align-items: center; gap: 10px; padding: 8px 16px; background: rgba(19, 146, 236, 0.1); color: #1392ec; border-radius: 12px; font-weight: 600; text-decoration: none; transition: all 0.2s;">
+                            <div style="width: 32px; height: 32px; border-radius: 50%; background: #1392ec; color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px;">
+                                {{ user.email|first|upper }}
+                            </div>
+                            <span style="font-size: 14px;">{{ user.email }}</span>
                         </a>
                     {% else %}
-                        <a href="{% url 'auth:login' %}" class="btn btn-outline-primary me-2">Iniciar Sesión</a>
-                        <a href="{% url 'auth:register_patient' %}" class="btn btn-primary">Registrarse</a>
+                        <a href="{% url 'auth:login' %}" class="btn-outline">Iniciar Sesión</a>
+                        <a href="{% url 'auth:register_patient' %}" class="btn-primary" style="padding: 10px 20px; font-size: 14px;">Registrarse</a>
                     {% endif %}
                 </div>
             </div>
         </div>
     </nav>
 
-    <!-- Hero Section removed as requested -->
-
-    <!-- ¿Qué Hacemos? Section -->
-    <section class="what-we-do" id="que-hacemos">
-        <div class="container">
-            <h2><i class="bi bi-question-circle"></i> ¿Qué Hacemos?</h2>
-            
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="feature-card">
-                        <div class="feature-icon"><i class="bi bi-search-heart"></i></div>
-                        <h4>Análisis Profesional Detallado</h4>
-                        <p>Nuestros médicos especialistas revisan exhaustivamente tu caso, incluyendo todos tus documentos médicos, imágenes diagnósticas y antecedentes clínicos para proporcionar un análisis completo y fundamentado.</p>
-                    </div>
+    <!-- Main Content -->
+    <main style="padding-top: 72px;">
+        <!-- Hero Section -->
+        <section class="hero" style="padding: 120px 20px 140px; text-align: center; color: white; position: relative;">
+            <div style="max-width: 800px; margin: 0 auto; position: relative; z-index: 1;">
+                <div style="display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.15); padding: 8px 16px; border-radius: 20px; margin-bottom: 24px; font-size: 14px; font-weight: 500;">
+                    <span class="material-icons-round" style="font-size: 18px;">verified</span>
+                    Especialistas Certificados
                 </div>
-                <div class="col-md-6">
-                    <div class="feature-card">
-                        <div class="feature-icon"><i class="bi bi-chat-left-quote"></i></div>
-                        <h4>Opinión Médica Experta</h4>
-                        <p>Recibe una opinión profesional detallada que incluye confirmación o alternativas al diagnóstico inicial, opciones de tratamiento innovadoras, y recomendaciones personalizadas basadas en tu situación específica.</p>
+                
+                <h1 style="font-size: 54px; font-weight: 800; line-height: 1.1; margin-bottom: 24px; letter-spacing: -1px;">
+                    Segunda Opinión Médica
+                </h1>
+                <p style="font-size: 20px; opacity: 0.95; margin-bottom: 40px; max-width: 650px; margin-left: auto; margin-right: auto; line-height: 1.6;">
+                    Recibe una opinión profesional de especialistas en oncología del Instituto Nacional de Oncología. Confirma tu diagnóstico y descubre alternativas de tratamiento.
+                </p>
+                <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; align-items: center;">
+                    <a href="{% url 'auth:register_patient' %}" class="btn-primary">
+                        Solicitar Segunda Opinión
+                        <span class="material-icons-round" style="font-size: 20px;">arrow_forward</span>
+                    </a>
+                    <a href="#que-hacemos" class="btn-secondary">
+                        Saber Más
+                    </a>
+                </div>
+                
+                <!-- Stats -->
+                <div style="display: flex; gap: 48px; justify-content: center; margin-top: 60px; flex-wrap: wrap;">
+                    <div>
+                        <div style="font-size: 36px; font-weight: 800;">15-21</div>
+                        <div style="font-size: 14px; opacity: 0.85;">Días de respuesta</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 36px; font-weight: 800;">100%</div>
+                        <div style="font-size: 14px; opacity: 0.85;">Digital y seguro</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 36px; font-weight: 800;">MDT</div>
+                        <div style="font-size: 14px; opacity: 0.85;">Equipo multidisciplinario</div>
                     </div>
                 </div>
             </div>
+        </section>
 
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="feature-card">
-                        <div class="feature-icon"><i class="bi bi-globe"></i></div>
-                        <h4>Red Oncológica Nacional</h4>
-                        <p>Conectamos pacientes con el equipo de especialistas del Instituto Nacional de Oncología de Cuba. Todos los casos son evaluados por un equipo multidisciplinario y la decisión se toma entre 15 y 21 días.</p>
-                    </div>
+        <!-- ¿Qué Hacemos? Section -->
+        <section id="que-hacemos" class="section-light" style="padding: 100px 20px;">
+            <div class="max-w-7xl mx-auto">
+                <div style="text-align: center; margin-bottom: 56px;">
+                    <h2 class="section-title">¿Qué Hacemos?</h2>
+                    <p class="section-subtitle" style="margin: 0 auto;">
+                        Brindamos evaluaciones médicas especializadas con el más alto estándar de calidad
+                    </p>
                 </div>
-                <div class="col-md-6">
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px;">
+                    <!-- Feature 1 -->
                     <div class="feature-card">
-                        <div class="feature-icon"><i class="bi bi-shield-lock"></i></div>
-                        <h4>Privacidad y Seguridad</h4>
-                        <p>Tu información médica está protegida con los más altos estándares de seguridad. Nos comprometemos a mantener la confidencialidad de tus datos en todo momento.</p>
+                        <div class="feature-icon-container" style="background: linear-gradient(135deg, #dbeafe, #bfdbfe);">
+                            <span class="material-icons-round" style="color: #2563eb;">search</span>
+                        </div>
+                        <h3 style="font-size: 18px; font-weight: 700; color: #1e293b; margin-bottom: 10px;">
+                            Análisis Profesional Detallado
+                        </h3>
+                        <p style="color: #64748b; font-size: 14px; line-height: 1.6;">
+                            Médicos especialistas revisan exhaustivamente tu caso, incluyendo documentos médicos, imágenes diagnósticas y antecedentes clínicos.
+                        </p>
+                    </div>
+
+                    <!-- Feature 2 -->
+                    <div class="feature-card">
+                        <div class="feature-icon-container" style="background: linear-gradient(135deg, #ede9fe, #ddd6fe);">
+                            <span class="material-icons-round" style="color: #7c3aed;">chat</span>
+                        </div>
+                        <h3 style="font-size: 18px; font-weight: 700; color: #1e293b; margin-bottom: 10px;">
+                            Opinión Médica Experta
+                        </h3>
+                        <p style="color: #64748b; font-size: 14px; line-height: 1.6;">
+                            Recibe una opinión detallada con confirmación o alternativas al diagnóstico inicial y recomendaciones personalizadas.
+                        </p>
+                    </div>
+
+                    <!-- Feature 3 -->
+                    <div class="feature-card">
+                        <div class="feature-icon-container" style="background: linear-gradient(135deg, #d1fae5, #a7f3d0);">
+                            <span class="material-icons-round" style="color: #059669;">groups</span>
+                        </div>
+                        <h3 style="font-size: 18px; font-weight: 700; color: #1e293b; margin-bottom: 10px;">
+                            Red Oncológica Nacional
+                        </h3>
+                        <p style="color: #64748b; font-size: 14px; line-height: 1.6;">
+                            Conectamos pacientes con especialistas del Instituto Nacional de Oncología. Evaluación por equipo multidisciplinario.
+                        </p>
+                    </div>
+
+                    <!-- Feature 4 -->
+                    <div class="feature-card">
+                        <div class="feature-icon-container" style="background: linear-gradient(135deg, #fef3c7, #fde68a);">
+                            <span class="material-icons-round" style="color: #d97706;">security</span>
+                        </div>
+                        <h3 style="font-size: 18px; font-weight: 700; color: #1e293b; margin-bottom: 10px;">
+                            Privacidad y Seguridad
+                        </h3>
+                        <p style="color: #64748b; font-size: 14px; line-height: 1.6;">
+                            Tu información médica está protegida con los más altos estándares de seguridad y confidencialidad.
+                        </p>
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- ¿Por Qué Nosotros? Section -->
-    <section class="why-us">
-        <div class="container">
-            <h2><i class="bi bi-star"></i> ¿Por Qué Elegir Segunda Opinión Médica?</h2>
-            
-            <div class="row">
-                <div class="col-md-4">
+        <!-- ¿Por Qué Nosotros? Section -->
+        <section class="section-white" style="padding: 100px 20px;">
+            <div class="max-w-7xl mx-auto">
+                <div style="text-align: center; margin-bottom: 56px;">
+                    <h2 class="section-title">¿Por Qué Elegirnos?</h2>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;" class="reasons-grid">
                     <div class="reason-card">
                         <div class="reason-number">1</div>
-                        <h4>Confirmación Diagnóstica</h4>
-                        <p>Verifica la precisión de tu diagnóstico con un grupo multidisciplinario de especialistas altamente calificados que evaluarán tu caso de manera integral.</p>
+                        <h4 style="font-size: 17px; font-weight: 700; color: #1e293b; margin-bottom: 10px;">Confirmación Diagnóstica</h4>
+                        <p style="color: #64748b; font-size: 14px;">Verifica la precisión de tu diagnóstico con especialistas altamente calificados.</p>
                     </div>
-                </div>
-                <div class="col-md-4">
                     <div class="reason-card">
                         <div class="reason-number">2</div>
-                        <h4>Exploración de Alternativas</h4>
-                        <p>Descubre opciones de tratamiento que podrían no haber sido presentadas, incluyendo terapias innovadoras y protocolos avanzados.</p>
+                        <h4 style="font-size: 17px; font-weight: 700; color: #1e293b; margin-bottom: 10px;">Exploración de Alternativas</h4>
+                        <p style="color: #64748b; font-size: 14px;">Descubre opciones de tratamiento innovadoras y protocolos avanzados.</p>
                     </div>
-                </div>
-                <div class="col-md-4">
                     <div class="reason-card">
                         <div class="reason-number">3</div>
-                        <h4>Tranquilidad y Confianza</h4>
-                        <p>Toma decisiones sobre tu tratamiento con total confianza, basadas en múltiples perspectivas médicas profesionales.</p>
+                        <h4 style="font-size: 17px; font-weight: 700; color: #1e293b; margin-bottom: 10px;">Tranquilidad y Confianza</h4>
+                        <p style="color: #64748b; font-size: 14px;">Toma decisiones sobre tu tratamiento con total confianza.</p>
                     </div>
                 </div>
-            </div>
-
-            <div class="row mt-4">
-                <div class="col-md-4">
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 24px;" class="reasons-grid">
                     <div class="reason-card">
                         <div class="reason-number">4</div>
-                        <h4>Equipo Multidisciplinario</h4>
-                        <p>Todos los diagnósticos son evaluados por un equipo de especialistas en oncología, asegurando una perspectiva integral y completa para tu caso.</p>
+                        <h4 style="font-size: 17px; font-weight: 700; color: #1e293b; margin-bottom: 10px;">Equipo Multidisciplinario</h4>
+                        <p style="color: #64748b; font-size: 14px;">Especialistas en oncología evalúan tu caso de manera integral.</p>
                     </div>
-                </div>
-                <div class="col-md-4">
                     <div class="reason-card">
                         <div class="reason-number">5</div>
-                        <h4>Decisión en 15-21 Días</h4>
-                        <p>Recibe la opinión médica fundamentada en un plazo de 15 a 21 días. Nuestro equipo trabaja eficientemente para brindarte respuestas rápidas.</p>
+                        <h4 style="font-size: 17px; font-weight: 700; color: #1e293b; margin-bottom: 10px;">Decisión en 15-21 Días</h4>
+                        <p style="color: #64748b; font-size: 14px;">Respuestas rápidas en un plazo de 15 a 21 días.</p>
                     </div>
-                </div>
-                <div class="col-md-4">
                     <div class="reason-card">
                         <div class="reason-number">6</div>
-                        <h4>Proceso 100% Digital</h4>
-                        <p>Todo se gestiona en línea de forma segura: desde la carga de documentos hasta la recepción de la opinión médica.</p>
+                        <h4 style="font-size: 17px; font-weight: 700; color: #1e293b; margin-bottom: 10px;">Proceso 100% Digital</h4>
+                        <p style="color: #64748b; font-size: 14px;">Todo se gestiona en línea de forma segura.</p>
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- Requisitos Section -->
-    <section class="requirements" id="requisitos">
-        <div class="container">
-            <h2><i class="bi bi-checklist"></i> ¿Qué Necesitamos Para Tu Segunda Opinión?</h2>
+        <!-- Requisitos Section -->
+        <section id="requisitos" style="padding: 100px 20px; background: linear-gradient(180deg, #f1f5f9 0%, #e2e8f0 100%);">
+            <div class="max-w-7xl mx-auto">
+                <div style="text-align: center; margin-bottom: 56px;">
+                    <h2 class="section-title">¿Qué Necesitamos?</h2>
+                    <p class="section-subtitle" style="margin: 0 auto;">
+                        Documentos e información necesaria para tu evaluación:
+                    </p>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 32px; max-width: 1000px; margin: 0 auto;">
+                    <div>
+                        <div class="requirement-item">
+                            <h5>
+                                <span class="material-icons-round">person</span>
+                                Información Personal
+                            </h5>
+                            <ul>
+                                <li>Nombre completo y edad</li>
+                                <li>Datos de contacto</li>
+                                <li>Antecedentes médicos</li>
+                                <li>Medicamentos actuales</li>
+                                <li>Alergias conocidas</li>
+                                <li>Historial familiar</li>
+                            </ul>
+                        </div>
+                        <div class="requirement-item">
+                            <h5>
+                                <span class="material-icons-round">local_hospital</span>
+                                Diagnóstico Actual
+                            </h5>
+                            <ul>
+                                <li>Diagnóstico primario</li>
+                                <li>Fecha de diagnóstico</li>
+                                <li>Médico tratante</li>
+                                <li>Síntomas actuales</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="requirement-item">
+                            <h5>
+                                <span class="material-icons-round">description</span>
+                                Documentos Médicos
+                            </h5>
+                            <ul>
+                                <li>Informe médico</li>
+                                <li>Informe de biopsia</li>
+                                <li>Resultados de laboratorio</li>
+                                <li>Resultados de patología</li>
+                            </ul>
+                        </div>
+                        <div class="requirement-item">
+                            <h5>
+                                <span class="material-icons-round">image</span>
+                                Imágenes Diagnósticas
+                            </h5>
+                            <ul>
+                                <li>Radiografías (PDF)</li>
+                                <li>TAC / Tomografías</li>
+                                <li>Resonancias (RMN)</li>
+                                <li>Ecografías</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="max-width: 800px; margin: 40px auto 0;">
+                    <div class="info-box">
+                        <span class="material-icons-round">info</span>
+                        <p>Nota Importante: Todos los documentos deben ser claros y legibles. Nuestro sistema garantiza seguridad con cifrado de nivel médico.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tutorial Section -->
+        <section id="tutorial" class="section-white" style="padding: 100px 20px;">
+            <div class="max-w-7xl mx-auto">
+                <div style="text-align: center; margin-bottom: 56px;">
+                    <h2 class="section-title">¿Cómo Funciona?</h2>
+                    <p class="section-subtitle" style="margin: 0 auto;">
+                        Sigue estos pasos para solicitar tu segunda opinión médica:
+                    </p>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 20px;" class="steps-grid">
+                    <div class="step-card">
+                        <div class="step-number">1</div>
+                        <div class="step-icon" style="background: linear-gradient(135deg, #dbeafe, #bfdbfe);">
+                            <span class="material-icons-round" style="color: #2563eb;">person_add</span>
+                        </div>
+                        <h4 style="font-size: 15px; font-weight: 700; color: #1e293b; margin-bottom: 6px;">Crear Cuenta</h4>
+                        <p style="color: #64748b; font-size: 13px;">Registro rápido</p>
+                    </div>
+
+                    <div class="step-card">
+                        <div class="step-number">2</div>
+                        <div class="step-icon" style="background: linear-gradient(135deg, #ede9fe, #ddd6fe);">
+                            <span class="material-icons-round" style="color: #7c3aed;">edit_note</span>
+                        </div>
+                        <h4 style="font-size: 15px; font-weight: 700; color: #1e293b; margin-bottom: 6px;">Completa Perfil</h4>
+                        <p style="color: #64748b; font-size: 13px;">Tu historial</p>
+                    </div>
+
+                    <div class="step-card">
+                        <div class="step-number">3</div>
+                        <div class="step-icon" style="background: linear-gradient(135deg, #d1fae5, #a7f3d0);">
+                            <span class="material-icons-round" style="color: #059669;">upload_file</span>
+                        </div>
+                        <h4 style="font-size: 15px; font-weight: 700; color: #1e293b; margin-bottom: 6px;">Sube Documentos</h4>
+                        <p style="color: #64748b; font-size: 13px;">Archivos médicos</p>
+                    </div>
+
+                    <div class="step-card">
+                        <div class="step-number">4</div>
+                        <div class="step-icon" style="background: linear-gradient(135deg, #fef3c7, #fde68a);">
+                            <span class="material-icons-round" style="color: #d97706;">biotech</span>
+                        </div>
+                        <h4 style="font-size: 15px; font-weight: 700; color: #1e293b; margin-bottom: 6px;">Evaluación</h4>
+                        <p style="color: #64748b; font-size: 13px;">Análisis MDT</p>
+                    </div>
+
+                    <div class="step-card">
+                        <div class="step-number">5</div>
+                        <div class="step-icon" style="background: linear-gradient(135deg, #fce7f3, #fbcfe8);">
+                            <span class="material-icons-round" style="color: #db2777;">groups</span>
+                        </div>
+                        <h4 style="font-size: 15px; font-weight: 700; color: #1e293b; margin-bottom: 6px;">Comité</h4>
+                        <p style="color: #64748b; font-size: 13px;">Decisión grupal</p>
+                    </div>
+
+                    <div class="step-card">
+                        <div class="step-number">6</div>
+                        <div class="step-icon" style="background: linear-gradient(135deg, #cffafe, #a5f3fc);">
+                            <span class="material-icons-round" style="color: #0891b2;">description</span>
+                        </div>
+                        <h4 style="font-size: 15px; font-weight: 700; color: #1e293b; margin-bottom: 6px;">Resultado</h4>
+                        <p style="color: #64748b; font-size: 13px;">Recibe opinión</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA Section -->
+        <section style="padding: 100px 20px; background: linear-gradient(135deg, #1392ec 0%, #0e7ccb 100%); text-align: center; color: white; position: relative; overflow: hidden;">
+            <div style="position: absolute; top: -50%; right: -20%; width: 600px; height: 600px; background: rgba(255,255,255,0.05); border-radius: 50%;"></div>
+            <div style="position: absolute; bottom: -30%; left: -10%; width: 400px; height: 400px; background: rgba(255,255,255,0.03); border-radius: 50%;"></div>
             
-            <p style="text-align: center; font-size: 1.1rem; margin-bottom: 40px; color: #555;">
-                Para proporcionar la opinión médica más precisa y completa, necesitamos que proporciones los siguientes documentos e información:
-            </p>
-
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="requirement-item">
-                        <h5><i class="bi bi-file-text"></i> Información Personal</h5>
-                        <ul>
-                            <li>Nombre completo y edad</li>
-                            <li>Datos de contacto válidos</li>
-                            <li>Antecedentes médicos personales</li>
-                            <li>Medicamentos actuales que estás tomando</li>
-                            <li>Alergias conocidas</li>
-                        </ul>
-                    </div>
-
-                    <div class="requirement-item">
-                        <h5><i class="bi bi-hospital"></i> Diagnóstico Actual</h5>
-                        <ul>
-                            <li>Diagnóstico primario o sospecha diagnóstica</li>
-                            <li>Fecha de diagnóstico</li>
-                            <li>Médico o institución que realizó el diagnóstico</li>
-                            <li>Síntomas principales que experimentas</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="col-md-6">
-                    <div class="requirement-item">
-                        <h5><i class="bi bi-images"></i> Documentos Médicos</h5>
-                        <ul>
-                            <li>Informe médico completo</li>
-                            <li>Informe de biopsia (si aplica)</li>
-                            <li>Resultados de laboratorio</li>
-                            <li>Resultados de patología</li>
-                        </ul>
-                    </div>
-
-                    <div class="requirement-item">
-                        <h5><i class="bi bi-image"></i> Imágenes Diagnósticas</h5>
-                        <ul>
-                            <li>Radiografías (formato DICOM o PDF)</li>
-                            <li>TAC / Tomografías</li>
-                            <li>Resonancias magnéticas (RMN)</li>
-                            <li>Ecografías</li>
-                            <li>Otras imágenes relevantes</li>
-                        </ul>
-                    </div>
-                </div>
+            <div style="max-width: 600px; margin: 0 auto; position: relative; z-index: 1;">
+                <h2 style="font-size: 40px; font-weight: 800; margin-bottom: 20px;">
+                    ¿Listo para tu Segunda Opinión?
+                </h2>
+                <p style="font-size: 18px; opacity: 0.95; margin-bottom: 36px;">
+                    Regístrate hoy y recibe una evaluación profesional de nuestro equipo de especialistas.
+                </p>
+                <a href="{% url 'auth:register_patient' %}" class="btn-primary" style="background: white; color: #1392ec;">
+                    Comenzar Ahora
+                    <span class="material-icons-round" style="font-size: 20px;">arrow_forward</span>
+                </a>
             </div>
-
-            <div class="alert alert-info mt-4" role="alert">
-                <i class="bi bi-info-circle"></i> <strong>Nota Importante:</strong> Todos los documentos deben ser claros y legibles. Si es posible, en formato digital. Nuestro sistema de almacenamiento seguro garantiza que todos tus archivos estén protegidos con cifrado de nivel médico.
-            </div>
-        </div>
-    </section>
-
-    <!-- Tutorial Section -->
-    <section class="tutorial" id="tutorial">
-        <div class="container">
-            <h2><i class="bi bi-book"></i> Tutorial: Cómo Usar la Plataforma</h2>
-            
-            <p style="text-align: center; font-size: 1.1rem; margin-bottom: 40px; color: #555;">
-                Sigue estos sencillos pasos para solicitar tu segunda opinión médica:
-            </p>
-
-            <div class="step-container">
-                <!-- Paso 1 -->
-                <div class="step-card">
-                    <div class="step-number">1</div>
-                    <div class="step-icon"><i class="bi bi-person-check"></i></div>
-                    <h5>Crear Cuenta</h5>
-                    <p>Completa el formulario de registro proporcionando tu información básica de contacto, nombre y documento de identidad. El proceso toma menos de 3 minutos.</p>
-                </div>
-
-                <!-- Paso 2 -->
-                <div class="step-card">
-                    <div class="step-number">2</div>
-                    <div class="step-icon"><i class="bi bi-file-earmark-medical"></i></div>
-                    <h5>Completa tu Perfil</h5>
-                    <p>Proporciona información sobre tu diagnóstico actual, síntomas principales, historial médico y medicamentos que estás tomando.</p>
-                </div>
-
-                <!-- Paso 3 -->
-                <div class="step-card">
-                    <div class="step-number">3</div>
-                    <div class="step-icon"><i class="bi bi-upload"></i></div>
-                    <h5>Sube tus Documentos</h5>
-                    <p>Carga todos los documentos médicos relevantes: informes, resultados de laboratorio, imágenes diagnósticas en formato PDF o DICOM. Nuestro sistema asegura el almacenamiento encriptado.</p>
-                </div>
-
-                <!-- Paso 4 -->
-                <div class="step-card">
-                    <div class="step-number">4</div>
-                    <div class="step-icon"><i class="bi bi-clipboard-check"></i></div>
-                    <h5>Evaluación Oncológica</h5>
-                    <p>Tu caso será evaluado por nuestro equipo de especialistas en oncología. Selecciona el tipo de cáncer o condición para una revisión precisa.</p>
-                </div>
-
-                <!-- Paso 5 -->
-                <div class="step-card">
-                    <div class="step-number">5</div>
-                    <div class="step-icon"><i class="bi bi-hourglass-split"></i></div>
-                    <h5>Evaluación del Comité</h5>
-                    <p>Nuestro equipo multidisciplinario evalúa tu caso de manera integral. La decisión médica se toma en un plazo de 15 a 21 días.</p>
-                </div>
-
-                <!-- Paso 6 -->
-                <div class="step-card">
-                    <div class="step-number">6</div>
-                    <div class="step-icon"><i class="bi bi-file-pdf"></i></div>
-                    <h5>Recibe tu Opinión</h5>
-                    <p>Accede a la opinión médica completa en tu panel. Incluye análisis detallado, confirmación o alternativas diagnósticas, y recomendaciones de tratamiento personalizadas.</p>
-                </div>
-            </div>
-
-
-        </div>
-    </section>
-
-
-
-
+        </section>
+    </main>
 
     <!-- Footer -->
     <footer>
-        <div class="container">
-            <div class="row mb-4">
-                <div class="col-md-4">
-                    <h5 style="color: var(--secondary-color); margin-bottom: 15px;">Segunda Opinión Médica</h5>
-                    <p>Plataforma segura de telemedicina para segundas opiniones médicas de especialistas certificados.</p>
-                </div>
-                <div class="col-md-4">
-                    <h5 style="color: var(--secondary-color); margin-bottom: 15px;">Enlaces Rápidos</h5>
-                    <ul style="list-style: none; padding: 0;">
-                        <li><a href="#que-hacemos">¿Qué hacemos?</a></li>
-                        <li><a href="#tutorial">Tutorial</a></li>
-                        <li><a href="{% url 'auth:login' %}">Iniciar Sesión</a></li>
-                    </ul>
-                </div>
-                <div class="col-md-4">
-                    <h5 style="color: var(--secondary-color); margin-bottom: 15px;">Contacto</h5>
-                    <p>
-                        Email: <a href="mailto:InstitutoNacionalOncologia@gmail.com">InstitutoNacionalOncologia@gmail.com</a>
-                    </p>
+        <div class="footer-main">
+            <div class="max-w-7xl mx-auto px-6">
+                <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 60px;">
+                    <!-- Brand -->
+                    <div>
+                        <div class="footer-logo">
+                            <div class="footer-logo-icon">
+                                <img src="/static/images/logo.png" alt="OncoMDT" style="height: 40px;">
+                            </div>
+                            <span class="footer-logo-text">Onco<span>MDT</span></span>
+                        </div>
+                        <p class="footer-description">
+                            Plataforma segura de telemedicina para segundas opiniones médicas de especialistas certificados del Instituto Nacional de Oncología.
+                        </p>
+                    </div>
+                    
+                    <!-- Quick Links -->
+                    <div>
+                        <h4 class="footer-title">Enlaces Rápidos</h4>
+                        <ul class="footer-links">
+                            <li><a href="#que-hacemos">¿Qué hacemos?</a></li>
+                            <li><a href="#requisitos">Requisitos</a></li>
+                            <li><a href="#tutorial">Tutorial</a></li>
+                            <li><a href="{% url 'auth:login' %}">Iniciar Sesión</a></li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Contact -->
+                    <div>
+                        <h4 class="footer-title">Contacto</h4>
+                        <div class="footer-contact-item">
+                            <div class="footer-contact-icon">
+                                <span class="material-icons-round">email</span>
+                            </div>
+                            <div class="footer-contact-text">
+                                <a href="mailto:InstitutoNacionalOncologia@gmail.com">InstitutoNacionalOncologia@gmail.com</a>
+                            </div>
+                        </div>
+                        <div class="footer-contact-item">
+                            <div class="footer-contact-icon">
+                                <span class="material-icons-round">location_on</span>
+                            </div>
+                            <div class="footer-contact-text">
+                                Instituto Nacional de Oncología<br>Cuba
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <hr style="border-color: #444;">
-            <p>&copy; 2026 Segunda Opinión Médica. Todos los derechos reservados.</p>
+        </div>
+        
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="footer-bottom">
+                <div class="footer-copyright">
+                    © 2026 Segunda Opinión Médica. Todos los derechos reservados.
+                </div>
+                <div class="footer-social">
+                    <a href="#" title="Facebook"><span class="material-icons-round" style="font-size: 20px;">facebook</span></a>
+                    <a href="#" title="Twitter"><span class="material-icons-round" style="font-size: 20px;">alternate_email</span></a>
+                    <a href="#" title="WhatsApp"><span class="material-icons-round" style="font-size: 20px;">chat</span></a>
+                </div>
+            </div>
         </div>
     </footer>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Smooth scrolling for anchor links
+        // Smooth scrolling
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
                 e.preventDefault();
                 const target = document.querySelector(this.getAttribute('href'));
                 if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }
             });
         });
-
-        // Navbar color change on scroll
-        window.addEventListener('scroll', function() {
-            const navbar = document.querySelector('.navbar');
-            if (window.scrollY > 50) {
-                navbar.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
-            } else {
-                navbar.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
-            }
-        });
     </script>
+    
+    <!-- Responsive Styles -->
+    <style>
+        @media (max-width: 1024px) {
+            .reasons-grid {
+                grid-template-columns: repeat(2, 1fr) !important;
+            }
+            .steps-grid {
+                grid-template-columns: repeat(3, 1fr) !important;
+            }
+            .step-card::after {
+                display: none !important;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .menu-desktop {
+                display: none !important;
+            }
+            
+            .reasons-grid, .steps-grid {
+                grid-template-columns: 1fr !important;
+            }
+            
+            section[style*="padding: 100px"] {
+                padding: 60px 20px !important;
+            }
+            
+            h1 {
+                font-size: 36px !important;
+            }
+            
+            .section-title {
+                font-size: 28px !important;
+            }
+            
+            footer > div > div:first-child {
+                grid-template-columns: 1fr !important;
+                gap: 32px !important;
+            }
+            
+            .requirement-item ul {
+                grid-template-columns: 1fr !important;
+            }
+        }
+    </style>
 </body>
 </html>

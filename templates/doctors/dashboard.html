@@ -4,197 +4,94 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - Médico - Segunda Opinión Médica</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <style>
         :root {
-            --primary-color: #0066cc;
-            --secondary-color: #00a3e0;
+            --primary: #1392ec;
+            --primary-dark: #0e7ccb;
         }
-        
         body {
-            background-color: #f8f9fa;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        .navbar {
-            background-color: white;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        
-        .navbar-brand {
-            font-weight: 700;
-            color: var(--primary-color) !important;
-        }
-        
-        .navbar .btn-logout {
-            background-color: var(--primary-color);
-            color: white;
-        }
-        
-        .navbar .btn-logout:hover {
-            background-color: #0052a3;
-            color: white;
-        }
-        
-        .dashboard-header {
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-            color: white;
-            padding: 40px 20px;
-            margin-bottom: 40px;
-            border-radius: 0;
-        }
-        
-        .dashboard-header h1 {
-            font-weight: 700;
-            font-size: 2rem;
-        }
-        
-        .dashboard-header p {
-            opacity: 0.95;
-            margin: 0;
-        }
-        
-        .card {
-            border: none;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-            border-radius: 8px;
-        }
-        
-        .card-header {
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            font-weight: 600;
-        }
-        
-        .stat-card {
-            border-left: 4px solid var(--secondary-color);
-            text-align: center;
-        }
-        
-        .stat-number {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: var(--secondary-color);
-        }
-        
-        .stat-label {
-            color: #666;
-            font-size: 0.95rem;
-        }
-        
-        .case-status {
-            display: inline-block;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-weight: 600;
-            font-size: 0.875rem;
-        }
-        
-        .status-paid {
-            background-color: #f3e5f5;
-            color: #6a1b9a;
-        }
-        
-        .status-in_review {
-            background-color: #fff3e0;
-            color: #e65100;
-        }
-        
-        .status-clarification_needed {
-            background-color: #ffe0e0;
-            color: #c62828;
-        }
-        
-        .status-opinion_complete {
-            background-color: #e8f5e9;
-            color: #2e7d32;
-        }
-        
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: #999;
-        }
-        
-        .empty-state-icon {
-            font-size: 4rem;
-            margin-bottom: 20px;
-        }
-        
-        .table {
-            background-color: white;
-        }
-        
-        .table thead th {
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            font-weight: 600;
-        }
-        
-        .table tbody tr {
-            border-color: #f0f0f0;
-        }
-        
-        .table tbody tr:hover {
-            background-color: #f9f9f9;
-        }
-        
-        .container-xl {
-            max-width: 1200px;
+            font-family: 'Manrope', sans-serif;
+            background-color: #f1f5f9;
         }
     </style>
 </head>
-<body>
+<body class="min-h-screen">
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-light sticky-top">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="/">🏥 Segunda Opinión Médica</a>
-            <div class="ms-auto">
-                <span class="me-3">Bienvenido, Dr(a). {{ user.medico.nombre_completo }}</span>
-                <form method="post" action="{% url 'auth:logout' %}" style="display: inline;">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-logout btn-sm">Cerrar Sesión</button>
-                </form>
+    <nav class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="/" class="flex items-center gap-2 text-[#1392ec] font-bold text-xl">
+                        <img src="/static/images/logo.png" alt="OncoMDT" style="height: 28px;">
+                        Segunda Opinión Médica
+                    </a>
+                </div>
+                <div class="flex items-center gap-4">
+                    <span class="text-gray-600 font-medium">Bienvenido, Dr(a). {{ user.medico.nombre_completo }}</span>
+                    <form method="post" action="{% url 'auth:logout' %}" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="flex items-center gap-1 px-4 py-2 bg-[#1392ec] text-white rounded-lg hover:bg-[#0e7ccb] transition-colors font-medium text-sm">
+                            <span class="material-icons-round text-sm">logout</span>
+                            Cerrar Sesión
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     </nav>
 
     <!-- Dashboard Header -->
-    <div class="dashboard-header">
-        <div class="container-xl">
-            <h1>👨‍⚕️ Mi Panel de Médico</h1>
-            <p>Especialidad: {{ user.medico.especialidades_principales }}</p>
+    <div class="bg-gradient-to-r from-[#1392ec] to-[#0e7ccb] text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center gap-3 mb-2">
+                <span class="material-icons-round text-4xl">person</span>
+                <h1 class="text-2xl md:text-3xl font-bold">Mi Panel de Médico</h1>
+            </div>
+            <p class="text-white/90 text-lg">Especialidad: {{ user.medico.especialidades_principales }}</p>
         </div>
     </div>
 
     <!-- Main Content -->
-    <div class="container-xl">
-        <!-- Stats -->
-        <div class="row mb-4">
-            <div class="col-md-4">
-                <div class="card stat-card">
-                    <div class="card-body">
-                        <div class="stat-number">{{ cases|length }}</div>
-                        <div class="stat-label">Casos Asignados</div>
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6 pb-12">
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-500 font-medium">Casos Asignados</p>
+                        <p class="text-3xl font-bold text-[#1392ec] mt-1">{{ cases|length }}</p>
+                    </div>
+                    <div class="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center">
+                        <span class="material-icons-round text-[#1392ec] text-2xl">assignment</span>
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="card stat-card">
-                    <div class="card-body">
-                        <div class="stat-number">{{ user.medico.max_casos_mes }}</div>
-                        <div class="stat-label">Capacidad Máxima</div>
+
+            <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-500 font-medium">Capacidad Máxima</p>
+                        <p class="text-3xl font-bold text-purple-600 mt-1">{{ user.medico.max_casos_mes }}</p>
+                    </div>
+                    <div class="w-14 h-14 bg-purple-100 rounded-xl flex items-center justify-center">
+                        <span class="material-icons-round text-purple-600 text-2xl">groups</span>
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="card stat-card">
-                    <div class="card-body">
-                        <div class="stat-number">{% if user.medico.disponible_segundas_opiniones %}✓{% else %}✗{% endif %}</div>
-                        <div class="stat-label">Disponibilidad</div>
+
+            <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-500 font-medium">Disponibilidad</p>
+                        <p class="text-3xl font-bold mt-1 {% if user.medico.disponible_segundas_opiniones %}text-green-600{% else %}text-red-500{% endif %}">
+                            {% if user.medico.disponible_segundas_opiniones %}✓{% else %}✗{% endif %}
+                        </p>
+                    </div>
+                    <div class="w-14 h-14 {% if user.medico.disponible_segundas_opiniones %}bg-green-100{% else %}bg-red-100{% endif %} rounded-xl flex items-center justify-center">
+                        <span class="material-icons-round {% if user.medico.disponible_segundas_opiniones %}text-green-600{% else %}text-red-500{% endif %} text-2xl">schedule</span>
                     </div>
                 </div>
             </div>
@@ -202,60 +99,73 @@
 
         <!-- Cases List -->
         {% if cases %}
-        <div class="row">
-            <div class="col-md-12">
-                <div class="card">
-                    <div class="card-header">Casos Asignados</div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-hover mb-0">
-                                <thead>
-                                    <tr>
-                                        <th>ID Caso</th>
-                                        <th>Diagnóstico</th>
-                                        <th>Paciente</th>
-                                        <th>Estado</th>
-                                        <th>Fecha Asignación</th>
-                                        <th>Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for case in cases %}
-                                    <tr>
-                                        <td><strong>{{ case.case_id }}</strong></td>
-                                        <td>{{ case.primary_diagnosis }}</td>
-                                        <td>{{ case.patient.patient_profile.full_name }}</td>
-                                        <td>
-                                            <span class="case-status status-{{ case.status|lower }}">
-                                                {{ case.get_status_display }}
-                                            </span>
-                                        </td>
-                                        <td>{{ case.assigned_at|date:"d/m/Y H:i" }}</td>
-                                        <td>
-                                            <a href="{% url 'cases:doctor_case_detail' case.case_id %}" class="btn btn-sm btn-outline-primary">Revisar Caso</a>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="bg-[#1392ec] px-6 py-4">
+                <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                    <span class="material-icons-round">folder_open</span>
+                    Casos Asignados
+                </h2>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">ID Caso</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Diagnóstico</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Paciente</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Estado</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Fecha Asignación</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        {% for case in cases %}
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="font-bold text-[#1392ec]">{{ case.case_id }}</span>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="text-gray-700">{{ case.primary_diagnosis }}</span>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="text-gray-700">{{ case.patient.patient_profile.full_name }}</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold
+                                    {% if case.status == 'paid' %}bg-purple-100 text-purple-700
+                                    {% elif case.status == 'in_review' %}bg-orange-100 text-orange-700
+                                    {% elif case.status == 'clarification_needed' %}bg-red-100 text-red-700
+                                    {% elif case.status == 'opinion_complete' %}bg-green-100 text-green-700
+                                    {% else %}bg-gray-100 text-gray-700{% endif %}">
+                                    {{ case.get_status_display }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-gray-500">
+                                {{ case.assigned_at|date:"d/m/Y H:i" }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <a href="{% url 'cases:doctor_case_detail' case.case_id %}" class="inline-flex items-center gap-1 px-4 py-2 bg-[#1392ec] text-white rounded-lg hover:bg-[#0e7ccb] transition-colors font-medium text-sm">
+                                    <span class="material-icons-round text-sm">visibility</span>
+                                    Revisar Caso
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
         {% else %}
-        <div class="card">
-            <div class="card-body">
-                <div class="empty-state">
-                    <div class="empty-state-icon">📭</div>
-                    <h4>No hay casos asignados</h4>
-                    <p>Actualmente no tienes casos para revisar. Volveremos a contactarte cuando se asigne un nuevo caso.</p>
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-12">
+            <div class="text-center">
+                <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span class="material-icons-round text-4xl text-gray-400">inbox</span>
                 </div>
+                <h3 class="text-xl font-bold text-gray-800 mb-2">No hay casos asignados</h3>
+                <p class="text-gray-500 max-w-md mx-auto">Actualmente no tienes casos para revisar. Volveremos a contactarte cuando se asigne un nuevo caso.</p>
             </div>
         </div>
         {% endif %}
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    </main>
 </body>
 </html>
