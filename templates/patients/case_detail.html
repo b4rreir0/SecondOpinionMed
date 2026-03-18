@@ -1,13 +1,32 @@
-{% extends 'base_modern.html' %}
+{% extends 'patients/layout_patient.html' %}
+
+{% block extra_css %}
+<style>
+    /* Ocultar sidebar en la página de detalles */
+    aside { display: none !important; }
+    main { margin-left: 0 !important; }
+</style>
+{% endblock %}
 
 {% block title %}Detalle del Caso - Portal Paciente{% endblock %}
 
 {% block main_content %}
+<script>
+    console.log('[case_detail.html] Plantilla iniciada');
+    console.log('[case_detail.html] Case ID:', '{{ case.case_id|default:"NO DEFINIDO" }}');
+    console.log('[case_detail.html] Case status:', '{{ case.status|default:"NO DEFINIDO" }}');
+    console.log('[case_detail.html] Patient:', '{{ case.patient.email|default:"NO DEFINIDO" }}');
+    console.log('[case_detail.html] Documents count:', '{{ documents|length }}');
+    console.log('[case_detail.html] Opinion:', '{{ opinion|default:"None" }}');
+</script>
+
+
+
 <div class="max-w-4xl mx-auto">
     <!-- Header -->
     <div class="mb-8">
         <div class="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-2">
-            <a href="{% url 'patients:dashboard' %}" class="hover:text-primary transition-colors">Mis Casos</a>
+            <a href="{% url 'cases:patient_dashboard' %}" class="hover:text-primary transition-colors">Mis Casos</a>
             <span class="material-icons-round text-sm">chevron_right</span>
             <span>Detalle del Caso</span>
         </div>
@@ -52,7 +71,7 @@
             </div>
             <div>
                 <p class="text-sm text-slate-500 dark:text-slate-400">Teléfono</p>
-                <p class="font-medium text-slate-900 dark:text-white">{{ case.patient.phone|default:'No proporcionado' }}</p>
+                <p class="font-medium text-slate-900 dark:text-white">{{ case.patient.phone_number|default:'No proporcionado' }}</p>
             </div>
         </div>
     </div>
@@ -137,6 +156,10 @@
                 <a href="{{ d.s3_file_path }}" target="_blank" class="px-3 py-1.5 text-sm font-medium text-primary hover:bg-primary/10 rounded-lg transition-colors">
                     Ver/Descargar
                 </a>
+                {% elif d.file %}
+                <a href="{{ d.file.url }}" target="_blank" class="px-3 py-1.5 text-sm font-medium text-primary hover:bg-primary/10 rounded-lg transition-colors">
+                    Ver/Descargar
+                </a>
                 {% endif %}
             </li>
             {% empty %}
@@ -158,7 +181,7 @@
 
     <!-- Back Button -->
     <div class="flex justify-start">
-        <a href="{% url 'patients:dashboard' %}" class="inline-flex items-center gap-2 px-4 py-2 text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">
+        <a href="{% url 'cases:patient_dashboard' %}" class="inline-flex items-center gap-2 px-4 py-2 text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">
             <span class="material-icons-round">arrow_back</span>
             Volver al Panel
         </a>

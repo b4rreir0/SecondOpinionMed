@@ -50,37 +50,78 @@ class PatientCaseDetailView(LoginRequiredMixin, View):
     
     def get(self, request, case_id):
         """Muestra detalle del caso"""
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        logger.info(f"[PatientCaseDetailView] Iniciando carga para case_id={case_id}")
+        logger.info(f"[PatientCaseDetailView] Usuario autenticado: {request.user.is_authenticated}")
+        logger.info(f"[PatientCaseDetailView] Usuario: {request.user.email if request.user.is_authenticated else 'No autenticado'}")
+        
+        # Verificar que el usuario está autenticado
+        if not request.user.is_authenticated:
+            logger.warning("[PatientCaseDetailView] Usuario no autenticado, redireccionando")
+            return redirect(self.login_url)
+        
+        # Verificar que es un paciente
         if not request.user.is_patient():
+            logger.warning(f"[PatientCaseDetailView] Usuario {request.user.email} no es paciente, raising 404")
             raise Http404()
         
-        case = get_object_or_404(Case, case_id=case_id)
+        logger.info(f"[PatientCaseDetailView] Usuario es paciente: {request.user.is_patient()}")
+        
+        # Obtener el caso
+        try:
+            case = get_object_or_404(Case, case_id=case_id)
+            logger.info(f"[PatientCaseDetailView] Caso encontrado: {case.case_id}, patient={case.patient.email}")
+        except Http404:
+            raise
+        except Exception as e:
+            logger.error(f"[PatientCaseDetailView] Error al obtener caso {case_id}: {e}")
+            raise Http404("Caso no encontrado")
         
         # OLP: Verificar que el usuario es el paciente del caso
+        logger.info(f"[PatientCaseDetailView] Verificando permisos: request.user={request.user.email} vs case.patient={case.patient.email}")
         if case.patient != request.user:
+            logger.warning(f"[PatientCaseDetailView] Usuario {request.user.email} no es el paciente del caso {case.case_id}")
             raise Http404("No tienes permiso para ver este caso.")
         
+        logger.info(f"[PatientCaseDetailView] Permisos verificados correctamente")
+        
         # Registrar acceso
-        CaseService.log_case_access(case, request.user, 'read')
-
-        # Si el caso está asignado a este médico pero aún no está en IN_REVIEW,
-        # marcarlo como en revisión cuando el médico abra el detalle.
         try:
-            if case.doctor == request.user and case.status != 'IN_REVIEW':
-                case.status = 'IN_REVIEW'
-                from django.utils import timezone
-                # Solo actualizar assigned_at si no ha sido establecido antes
-                if not case.assigned_at:
-                    case.assigned_at = timezone.now()
-                case.save()
-                print(f"[DoctorCaseDetailView] Case {case.case_id} viewed by doctor {request.user.email}; status set to IN_REVIEW")
-                CaseService.log_case_access(case, request.user, 'update')
-        except Exception:
-            pass
+            CaseService.log_case_access(case, request.user, 'read')
+            logger.info(f"[PatientCaseDetailView] Acceso registrado")
+        except Exception as e:
+            logger.warning(f"[PatientCaseDetailView] Error al registrar acceso: {e}")
+
+        # Obtener la segunda opinión de forma segura
+        try:
+            opinion = getattr(case, 'second_opinion', None)
+            logger.info(f"[PatientCaseDetailView] Opinion: {opinion}")
+        except Exception as e:
+            logger.warning(f"[PatientCaseDetailView] Error al obtener second_opinion: {e}")
+            opinion = None
+        
+        # Obtener documentos de forma segura
+        try:
+            documents = case.documents.all()
+            logger.info(f"[PatientCaseDetailView] Documentos encontrados: {documents.count()}")
+        except Exception as e:
+            logger.warning(f"[PatientCaseDetailView] Error al obtener documentos: {e}")
+            documents = []
+        
+        logger.info(f"[PatientCaseDetailView] Renderizando plantilla con context: case={case.case_id}, documents_count={len(documents)}, opinion={opinion is not None}")
+        
+        # Mostrar todos los campos del caso para debug
+        logger.info(f"[PatientCaseDetailView] case.primary_diagnosis = {case.primary_diagnosis}")
+        logger.info(f"[PatientCaseDetailView] case.status = {case.status}")
+        logger.info(f"[PatientCaseDetailView] case.description = {case.description}")
+        logger.info(f"[PatientCaseDetailView] case.patient = {case.patient.email}")
         
         context = {
             'case': case,
-            'documents': case.documents.all(),
-            'opinion': getattr(case, 'second_opinion', None)
+            'documents': documents,
+            'opinion': opinion
         }
         return render(request, self.template_name, context)
 
