@@ -657,16 +657,19 @@ def _seleccionar_responsable(grupo):
             return grupo.responsable_por_defecto
     
     miembros = grupo.miembros.filter(
-        estado='activo',
-        disponible_segundas_opiniones=True
+        activo=True,
+        disponible_asignacion_auto=True
     ).annotate(
         casos_activos=Count(
-            'usuario__doctor_cases',
-            filter=Q(usuario__doctor_cases__status__in=['PROCESSING', 'IN_REVIEW'])
+            'medico__cases_responsable',
+            filter=Q(medico__cases_responsable__status__in=['PROCESSING', 'IN_REVIEW'])
         )
-    ).order_by('casos_activos', 'fecha_ingreso')
+    ).order_by('casos_activos', 'fecha_union')
     
-    return miembros.first()
+    miembro = miembros.first()
+    if miembro:
+        return miembro.medico
+    return None
 
 
 def _notificar_asignacion_caso(case, grupo):

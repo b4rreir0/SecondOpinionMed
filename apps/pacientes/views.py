@@ -451,6 +451,7 @@ def detalle_caso_paciente(request, case_id):
         'caso': caso,
         'opiniones': opiniones,
         'timeline': timeline,
+        'descripcion': caso.description if hasattr(caso, 'description') else '',
     }
     
     return render(request, 'patients/case_detail_patient.html', context)
