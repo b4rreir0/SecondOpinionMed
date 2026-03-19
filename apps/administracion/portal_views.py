@@ -89,10 +89,15 @@ class CasoDetalleView(View):
         opiniones = MedicalOpinion.objects.filter(case=caso).select_related('doctor', 'doctor__usuario')
         documentos = CaseDocument.objects.filter(case=caso).order_by('-uploaded_at')
         
+        # Obtener el informe final si existe
+        from cases.models import FinalReport
+        informe_final = FinalReport.objects.filter(case=caso).first()
+        
         context = {
             'caso': caso,
             'opiniones': opiniones,
             'documentos': documentos,
+            'informe_final': informe_final,
         }
         return render(request, self.template_name, context)
 

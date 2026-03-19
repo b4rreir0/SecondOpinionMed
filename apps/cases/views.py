@@ -118,10 +118,59 @@ class PatientCaseDetailView(LoginRequiredMixin, View):
         logger.info(f"[PatientCaseDetailView] case.description = {case.description}")
         logger.info(f"[PatientCaseDetailView] case.patient = {case.patient.email}")
         
+        # Obtener el informe final
+        from .models import FinalReport
+        import os
+        from django.conf import settings
+        
+        informe_final = None
+        
+        # Buscar en la base de datos
+        logger.info(f"[PatientCaseDetailView] Buscando FinalReport...")
+        informe_final = FinalReport.objects.filter(case=case).first()
+        if not informe_final:
+            informe_final = FinalReport.objects.filter(case_id=case.case_id).first()
+        
+        logger.info(f"[PatientCaseDetailView] FinalReport encontrado: {informe_final}")
+        
+        # Si no existe, buscar el archivo PDF directamente
+        if not informe_final:
+            reports_dir = os.path.join(settings.MEDIA_ROOT, 'cases', 'reports')
+            pdf_filename = f'respuesta_{case.case_id}.pdf'
+            pdf_final_url = None
+            
+            logger.info(f"[PatientCaseDetailView] Buscando PDF en: {reports_dir}")
+            
+            if os.path.exists(reports_dir):
+                for root, dirs, files in os.walk(reports_dir):
+                    if pdf_filename in files:
+                        rel_path = os.path.relpath(os.path.join(root, pdf_filename), settings.MEDIA_ROOT)
+                        pdf_final_url = f'/media/{rel_path.replace(os.sep, "/")}'
+                        logger.info(f"[PatientCaseDetailView] PDF encontrado: {pdf_final_url}")
+                        break
+            
+            if pdf_final_url:
+                class TempInformeFinal:
+                    def __init__(self, url, fecha):
+                        self.pdf_file_url = url
+                        self.fecha_emision = fecha
+                    @property
+                    def pdf_file(self):
+                        class TempFile:
+                            def __init__(self, url):
+                                self.url = url
+                        return TempFile(self.pdf_file_url)
+                
+                logger.info(f"[PatientCaseDetailView] Creando TempInformeFinal...")
+                informe_final = TempInformeFinal(pdf_final_url, case.updated_at)
+        
+        logger.info(f"[PatientCaseDetailView] informe_final final: {informe_final}")
+        
         context = {
             'case': case,
             'documents': documents,
-            'opinion': opinion
+            'opinion': opinion,
+            'informe_final': informe_final
         }
         return render(request, self.template_name, context)
 
@@ -334,6 +383,10 @@ class DoctorCaseDetailView(LoginRequiredMixin, View):
         if es_responsable and case.status in estados_permitidos:
             puede_cerrar_caso = True
         
+        # Obtener el informe final si existe
+        from .models import FinalReport
+        informe_final = FinalReport.objects.filter(case=case).first()
+        
         context = {
             'caso': case,  # Usar 'caso' para compatibilidad con el template
             'case': case,  # También mantener 'case'
@@ -346,6 +399,7 @@ class DoctorCaseDetailView(LoginRequiredMixin, View):
             'opinion_medico_actual': opinion_medico_actual,
             'es_responsable': es_responsable,
             'opinion': getattr(case, 'second_opinion', None),
+            'informe_final': informe_final,
             # Antecedentes médicos
             'antecedentes_personales': antecedentes_personales,
             'antecedentes_familiares': antecedentes_familiares,

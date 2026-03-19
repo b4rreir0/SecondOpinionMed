@@ -749,6 +749,9 @@ class MDTResponseService:
             informe_final.pdf_file.save(pdf_filename, ContentFile(pdf_buffer.getvalue()))
             informe_final.save()
             
+            # Limpiar archivos del caso después de generar el PDF final
+            MDTResponseService._limpiar_archivos_caso(caso)
+            
             # Enviar correo
             email_enviado = MDTResponseService._enviar_correo(
                 caso=caso,
@@ -914,3 +917,51 @@ Equipo Multidisciplinario del Instituto Nacional de Oncología
         except Exception as e:
             print(f"Error sending email: {e}")
             return False
+    
+    @staticmethod
+    def _limpiar_archivos_caso(caso):
+        """
+        Limpia los archivos del caso después de generar el PDF final.
+        Elimina todos los documentos del caso excepto el informe final.
+        
+        Args:
+            caso: Instancia del modelo Case
+        """
+        try:
+            from cases.models import CaseDocument
+            from django.conf import settings
+            import os
+            
+            # Obtener todos los documentos del caso
+            documentos = CaseDocument.objects.filter(case=caso)
+            
+            # Eliminar archivos físicos y registros
+            for doc in documentos:
+                try:
+                    # Eliminar archivo físico si existe
+                    if doc.file and doc.file.path:
+                        if os.path.exists(doc.file.path):
+                            os.remove(doc.file.path)
+                except Exception as e:
+                    print(f"Error deleting file {doc.file}: {e}")
+                
+                # Eliminar el registro de la base de datos
+                try:
+                    doc.delete()
+                except Exception as e:
+                    print(f"Error deleting document record: {e}")
+            
+            # También limpiar la carpeta media del caso si existe
+            case_folder = os.path.join(settings.MEDIA_ROOT, 'cases', caso.case_id)
+            if os.path.exists(case_folder):
+                try:
+                    import shutil
+                    shutil.rmtree(case_folder)
+                except Exception as e:
+                    print(f"Error deleting case folder: {e}")
+            
+            print(f"Archivos del caso {caso.case_id} eliminados correctamente")
+            
+        except Exception as e:
+            print(f"Error cleaning case files: {e}")
+            # No lanzamos excepción para no interrumpir el flujo principal

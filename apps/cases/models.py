@@ -250,6 +250,94 @@ class Case(models.Model):
     @transition(field=status, source='IN_REVIEW', target='OPINION_COMPLETE')
     def finalize_opinion(self):
         self.completed_at = timezone.now()
+        # Intentar generar el PDF final si hay un médico responsable
+        if self.responsable:
+            try:
+                from .mdt_services import MDTResponseService
+                # Obtener las opiniones médicas del caso
+                opiniones = self.opiniones.all()
+                if opiniones.exists():
+                    # Generar el PDF
+                    from django.core.files.base import ContentFile
+                    import io
+                    from reportlab.lib.pagesizes import letter
+                    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+                    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+                    from reportlab.lib.units import inch
+                    
+                    # Determinar conformidad basada en los votos
+                    votos_acuerdo = opiniones.filter(voto='acuerdo').count()
+                    votos_desacuerdo = opiniones.filter(voto='desacuerdo').count()
+                    if votos_acuerdo > votos_desacuerdo:
+                        conformidad = 'acuerdo'
+                        explicacion = 'La mayoría de los especialistas están de acuerdo con el tratamiento propuesto.'
+                    elif votos_desacuerdo > votos_acuerdo:
+                        conformidad = 'desacuerdo'
+                        explicacion = 'La mayoría de los especialistas no están de acuerdo con el tratamiento propuesto.'
+                    else:
+                        conformidad = 'consenso_parcial'
+                        explicacion = 'No hay consenso clear entre los especialistas.'
+                    
+                    # Generar el PDF
+                    paciente = self.patient
+                    pdf_filename = f'respuesta_{self.case_id}.pdf'
+                    
+                    # Crear o obtener el informe final
+                    from .models import FinalReport
+                    informe_final, created = FinalReport.objects.get_or_create(
+                        case=self,
+                        defaults={
+                            'conclusion': conformidad,
+                            'justificacion': explicacion,
+                            'recomendaciones': 'Generado automáticamente',
+                            'redactado_por': self.responsable
+                        }
+                    )
+                    informe_final.conclusion = conformidad
+                    informe_final.justificacion = explicacion
+                    informe_final.recomendaciones = 'Generado automáticamente'
+                    informe_final.redactado_por = self.responsable
+                    informe_final.save()
+                    
+                    # Generar contenido básico del PDF
+                    buffer = io.BytesIO()
+                    doc = SimpleDocTemplate(buffer, pagesize=letter, topMargin=0.5*inch, bottomMargin=0.5*inch)
+                    styles = getSampleStyleSheet()
+                    story = []
+                    
+                    story.append(Paragraph("SEGUNDA OPINIÓN MÉDICA - ONCOMDT", styles['Title']))
+                    story.append(Spacer(1, 0.2*inch))
+                    story.append(Paragraph("INFORMACIÓN DEL CASO", styles['Heading2']))
+                    story.append(Paragraph(f"ID del Caso: {self.case_id}", styles['Normal']))
+                    story.append(Paragraph(f"Fecha de Solicitud: {self.created_at.strftime('%d/%m/%Y')}", styles['Normal']))
+                    story.append(Paragraph(f"Tipo de Cáncer: {str(self.tipo_cancer) if self.tipo_cancer else 'No especificado'}", styles['Normal']))
+                    story.append(Paragraph(f"Diagnóstico: {self.primary_diagnosis or 'No especificado'}", styles['Normal']))
+                    story.append(Spacer(1, 0.3*inch))
+                    
+                    story.append(Paragraph("OPINIONES DE LOS ESPECIALISTAS", styles['Heading2']))
+                    for opinion in opiniones:
+                        story.append(Paragraph(f"- Dr. {opinion.doctor.nombre_completo}: {opinion.get_voto_display()}", styles['Normal']))
+                        if opinion.comentario_privado:
+                            story.append(Paragraph(f"  Comentario: {opinion.comentario_privado}", styles['Normal']))
+                    story.append(Spacer(1, 0.3*inch))
+                    
+                    story.append(Paragraph("CONCLUSIÓN", styles['Heading2']))
+                    story.append(Paragraph(explicacion, styles['Normal']))
+                    
+                    doc.build(story)
+                    buffer.seek(0)
+                    informe_final.pdf_file.save(pdf_filename, ContentFile(buffer.getvalue()))
+                    informe_final.save()
+                    
+                    # Limpiar archivos del caso después de generar el PDF
+                    try:
+                        from .mdt_services import MDTResponseService
+                        MDTResponseService._limpiar_archivos_caso(self)
+                    except:
+                        pass
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).exception(f'Error generating PDF for case {self.case_id}: {e}')
 
     @transition(field=status, source='OPINION_COMPLETE', target='CLOSED')
     def deliver_report(self):

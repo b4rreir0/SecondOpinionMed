@@ -47,7 +47,7 @@
                         <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Paciente</th>
                         <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Hospital</th>
                         <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Estado</th>
-                        <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Médico Asignado</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Consulta Multidisciplinaria</th>
                         <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Fecha</th>
                         <th class="px-6 py-3 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">Acciones</th>
                     </tr>
@@ -81,8 +81,8 @@
                             {% endif %}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">
-                            {% if caso.medico_asignado %}
-                                Dr. {{ caso.medico_asignado.user.get_full_name|default:caso.medico_asignado.user.email }}
+                            {% if caso.medical_group %}
+                                {{ caso.medical_group.nombre }}
                             {% else %}
                                 <span class="text-slate-400">Sin asignar</span>
                             {% endif %}

@@ -18,6 +18,8 @@
     console.log('[case_detail.html] Patient:', '{{ case.patient.email|default:"NO DEFINIDO" }}');
     console.log('[case_detail.html] Documents count:', '{{ documents|length }}');
     console.log('[case_detail.html] Opinion:', '{{ opinion|default:"None" }}');
+    console.log('[case_detail.html] Informe final:', '{{ informe_final|default:"None" }}');
+    console.log('[case_detail.html] PDF file:', '{{ informe_final.pdf_file.url|default:"NO TIENE PDF" }}');
 </script>
 
 
@@ -176,6 +178,31 @@
             Opinión Médica
         </h2>
         <p class="text-slate-600 dark:text-slate-300">{{ opinion.opinion_text }}</p>
+    </div>
+    {% endif %}
+
+    <!-- Informe Final - Segunda Opinion -->
+    {% if informe_final and informe_final.pdf_file %}
+    <div class="bg-white dark:bg-slate-800 rounded-2xl border border-green-200 dark:border-green-700 shadow-sm p-6 mb-6">
+        <h2 class="text-lg font-bold text-green-800 dark:text-green-200 mb-4 flex items-center gap-2">
+            <span class="material-icons-round">description</span>
+            Informe Final - Segunda Opinión
+        </h2>
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-green-700 dark:text-green-300">Tu informe médico está listo para descargar</p>
+                <p class="text-sm text-green-600 dark:text-green-400">
+                    {% if informe_final.fecha_emision %}
+                        Generado el {{ informe_final.fecha_emision|date:"d/m/Y" }}
+                    {% endif %}
+                </p>
+            </div>
+            <a href="{{ informe_final.pdf_file.url }}" download 
+               class="inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors">
+                <span class="material-icons-round">download</span>
+                Descargar PDF
+            </a>
+        </div>
     </div>
     {% endif %}
 

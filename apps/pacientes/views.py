@@ -352,19 +352,27 @@ def detalle_caso_paciente(request, case_id):
     
     paciente = request.user
     
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.info(f'[PACIENTE] case_id solicitado: {case_id}')
+    
     # Buscar primero en Case (nuevo sistema)
     caso = Case.objects.filter(patient=paciente, case_id=case_id).first()
     
     if not caso:
+        logger.info(f'[PACIENTE] No encontrado en Case, buscando en CasoMDT...')
         # Buscar en CasoMDT (sistema antiguo)
         try:
             from cases.mdt_models import CasoMDT
             caso = CasoMDT.objects.filter(paciente=paciente, case_id=case_id).first()
             es_caso_mdt = True
-        except:
+            logger.info(f'[PACIENTE] Encontrado en CasoMDT: {caso}')
+        except Exception as e:
+            logger.info(f'[PACIENTE] Error buscando en CasoMDT: {e}')
             es_caso_mdt = False
     else:
         es_caso_mdt = False
+        logger.info(f'[PACIENTE] Encontrado en Case: {caso}, es_caso_mdt=False')
     
     if not caso:
         raise Http404("Caso no encontrado")
@@ -447,11 +455,75 @@ def detalle_caso_paciente(request, case_id):
             },
         ]
     
+    # Obtener el informe final y la URL del PDF
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.info(f'[PACIENTE] Buscando informe final para caso: {caso.case_id}')
+    
+    informe_final = None
+    
+    if not es_caso_mdt:
+        # Buscar el informe final directamente por case
+        logger.info(f'[PACIENTE] Buscando FinalReport con case=caso')
+        informe_final = FinalReport.objects.filter(case=caso).first()
+        
+        # Si no existe, buscar por case_id
+        if not informe_final:
+            logger.info(f'[PACIENTE] Buscando FinalReport con case_id={caso.case_id}')
+            informe_final = FinalReport.objects.filter(case_id=caso.case_id).first()
+        
+        logger.info(f'[PACIENTE] FinalReport encontrado: {informe_final}')
+        
+        # Si aún no existe, buscar el archivo PDF directamente en el sistema de archivos
+        if not informe_final:
+            import os
+            from django.conf import settings
+            # Buscar recursivamente en la carpeta reports
+            reports_dir = os.path.join(settings.MEDIA_ROOT, 'cases', 'reports')
+            pdf_filename = f'respuesta_{caso.case_id}.pdf'
+            pdf_final_url = None
+            
+            logger.info(f'[PACIENTE] Buscando PDF en: {reports_dir}')
+            logger.info(f'[PACIENTE] PDF filename: {pdf_filename}')
+            
+            if os.path.exists(reports_dir):
+                logger.info(f'[PACIENTE] Reports dir existe, buscando archivos...')
+                for root, dirs, files in os.walk(reports_dir):
+                    logger.info(f'[PACIENTE] Archivos encontrados: {files}')
+                    if pdf_filename in files:
+                        # Construir la URL relativa
+                        rel_path = os.path.relpath(os.path.join(root, pdf_filename), settings.MEDIA_ROOT)
+                        pdf_final_url = f'/media/{rel_path.replace(os.sep, "/")}'
+                        logger.info(f'[PACIENTE] PDF encontrado en: {pdf_final_url}')
+                        break
+            else:
+                logger.info(f'[PACIENTE] Reports dir NO existe')
+            
+            if pdf_final_url:
+                # Crear un objeto temporal con la información del PDF
+                class TempInformeFinal:
+                    def __init__(self, url, fecha):
+                        self.pdf_file_url = url
+                        self.fecha_emision = fecha
+                        
+                    @property
+                    def pdf_file(self):
+                        class TempFile:
+                            def __init__(self, url):
+                                self.url = url
+                        return TempFile(self.pdf_file_url)
+                
+                logger.info(f'[PACIENTE] Creando TempInformeFinal con URL: {pdf_final_url}')
+                informe_final = TempInformeFinal(pdf_final_url, caso.updated_at)
+        else:
+            logger.info(f'[PACIENTE] El informe_final tiene pdf_file: {informe_final.pdf_file if informe_final else None}')
+    
     context = {
         'caso': caso,
         'opiniones': opiniones,
         'timeline': timeline,
         'descripcion': caso.description if hasattr(caso, 'description') else '',
+        'informe_final': informe_final,
     }
     
     return render(request, 'patients/case_detail_patient.html', context)
