@@ -129,7 +129,8 @@ class PatientCaseDetailView(LoginRequiredMixin, View):
         logger.info(f"[PatientCaseDetailView] Buscando FinalReport...")
         informe_final = FinalReport.objects.filter(case=case).first()
         if not informe_final:
-            informe_final = FinalReport.objects.filter(case_id=case.case_id).first()
+            # Usar case__case_id para buscar por el campo case_id del modelo Case
+            informe_final = FinalReport.objects.filter(case__case_id=case.case_id).first()
         
         logger.info(f"[PatientCaseDetailView] FinalReport encontrado: {informe_final}")
         
