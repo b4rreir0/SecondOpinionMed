@@ -305,7 +305,7 @@ class Case(models.Model):
                     styles = getSampleStyleSheet()
                     story = []
                     
-                    story.append(Paragraph("SEGUNDA OPINIÓN MÉDICA - ONCOMDT", styles['Title']))
+                    story.append(Paragraph("SEGUNDA OPINIÓN MÉDICA", styles['Title']))
                     story.append(Spacer(1, 0.2*inch))
                     story.append(Paragraph("INFORMACIÓN DEL CASO", styles['Heading2']))
                     story.append(Paragraph(f"ID del Caso: {self.case_id}", styles['Normal']))

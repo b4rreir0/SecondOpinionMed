@@ -102,7 +102,7 @@ class Command(BaseCommand):
             story = []
             
             # Título
-            story.append(Paragraph("SEGUNDA OPINIÓN MÉDICA - ONCOMDT", styles['Title']))
+            story.append(Paragraph("SEGUNDA OPINIÓN MÉDICA", styles['Title']))
             story.append(Spacer(1, 0.2*inch))
             
             # Información del caso

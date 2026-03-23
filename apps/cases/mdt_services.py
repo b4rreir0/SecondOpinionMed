@@ -20,7 +20,8 @@ from django.template.loader import render_to_string
 from .models import Case, MedicalOpinion
 from .mdt_models import (
     MDTMessage, UserPresence, AlgoritmoConfig, AsignacionAuditLog,
-    ConsensusWorkflow, ConsensusVersion, ConsensusVote, OpinionDisidente
+    ConsensusWorkflow, ConsensusVersion, ConsensusVote, OpinionDisidente,
+    ClinicalTemplate
 )
 from medicos.models import Medico, MedicalGroup, DoctorGroupMembership
 
@@ -788,7 +789,7 @@ class MDTResponseService:
         story = []
         
         # Título
-        story.append(Paragraph("SEGUNDA OPINIÓN MÉDICA - ONCOMDT", title_style))
+        story.append(Paragraph("SEGUNDA OPINIÓN MÉDICA", title_style))
         story.append(Spacer(1, 0.2*inch))
         
         # Información del caso
@@ -816,16 +817,16 @@ class MDTResponseService:
         story.append(Spacer(1, 0.2*inch))
         
         # Resultado del Comité
-        story.append(Paragraph("RESULTADO DEL COMITÉ MÉDICO", heading_style))
+        story.append(Paragraph("RESULTADO DEL EQUIPO MULTIDISCIPLINARIO", heading_style))
         
         if conformidad == 'conformidad':
             story.append(Paragraph(
-                "<b>CONCLUSIÓN: El Comité está de acuerdo con el diagnóstico y tratamiento propuesto.</b>",
+                "<b>CONCLUSIÓN: El Equipo está de acuerdo con el diagnóstico y tratamiento propuesto.</b>",
                 normal_style
             ))
         else:
             story.append(Paragraph(
-                "<b>CONCLUSIÓN: El Comité NO está de acuerdo con el diagnóstico y/o tratamiento propuesto.</b>",
+                "<b>CONCLUSIÓN: El Equipo NO está de acuerdo con el diagnóstico y/o tratamiento propuesto.</b>",
                 normal_style
             ))
             story.append(Spacer(1, 0.1*inch))
@@ -837,7 +838,7 @@ class MDTResponseService:
         
         # Votos de los miembros
         if votos:
-            story.append(Paragraph("OPINIONES DE LOS MIEMBROS DEL COMITÉ", heading_style))
+            story.append(Paragraph("OPINIONES DE LOS MIEMBROS DEL EQUIPO", heading_style))
             for v in votos:
                 story.append(Paragraph(f"<b>Dr. {v['medico']}</b>: {v['voto']}", normal_style))
                 if v['justificacion']:
@@ -847,13 +848,13 @@ class MDTResponseService:
         story.append(Spacer(1, 0.3*inch))
         
         # Responsable
-        story.append(Paragraph("COORDINADOR DEL COMITÉ", heading_style))
+        story.append(Paragraph("COORDINADOR DEL EQUIPO", heading_style))
         story.append(Paragraph(
             f"Dr. {responsable.nombre_completo} - {responsable.registro_medico}",
             normal_style
         ))
         story.append(Paragraph(
-            f"Institución: Instituto Nacional de Oncología y Radioterapia",
+            f"Institución: Instituto de Oncología y Radiobiología",
             normal_style
         ))
         
@@ -879,27 +880,27 @@ class MDTResponseService:
                 message = f"""
 Estimado/a {paciente.get_full_name()},
 
-Le informamos que el Comité Médico ha completado la revisión de su caso (ID: {caso.case_id}).
+Le informamos que el Equipo Multidisciplinario ha completado la revisión de su caso (ID: {caso.case_id}).
 
-El Comité está DE ACUERDO con el diagnóstico y tratamiento propuesto.
+El Equipo está DE ACUERDO con el diagnóstico y tratamiento propuesto.
 
 Puede acceder al informe completo descargando el archivo adjunto.
 
 Atentamente,
-Equipo Multidisciplinario del Instituto Nacional de Oncología
+Equipo Multidisciplinario del Instituto de Oncología y Radiobiología
 """
             else:
                 message = f"""
 Estimado/a {paciente.get_full_name()},
 
-Le informamos que el Comité Médico ha completado la revisión de su caso (ID: {caso.case_id}).
+Le informamos que el Equipo Multidisciplinario ha completado la revisión de su caso (ID: {caso.case_id}).
 
-El Comité ha expresado DISCREPANCIAS respecto al diagnóstico y/o tratamiento propuesto. Por favor, revise el informe adjunto para más detalles.
+El Equipo ha expresado DISCREPANCIAS respecto al diagnóstico y/o tratamiento propuesto. Por favor, revise el informe adjunto para más detalles.
 
 Puede acceder al informe completo descargando el archivo adjunto.
 
 Atentamente,
-Equipo Multidisciplinario del Instituto Nacional de Oncología
+Equipo Multidisciplinario del Instituto de Oncología y Radiobiología
 """
             
             from django.core.mail import EmailMessage

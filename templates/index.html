@@ -584,11 +584,8 @@
                 <!-- Logo -->
                 <a href="/" style="display: flex; align-items: center; gap: 12px; text-decoration: none;">
                     <div class="logo-container">
-                        <img src="/static/images/logo.png" alt="OncoMDT" style="height: 40px;">
+                        <img src="/static/images/logo.png" alt="Segunda Opinión Médica" style="height: 40px;">
                     </div>
-                    <span class="logo-text">
-                        Onco<span>MDT</span>
-                    </span>
                 </a>
 
                 <!-- Desktop Menu -->
@@ -631,8 +628,7 @@
                     Segunda Opinión Médica
                 </h1>
                 <p style="font-size: 20px; opacity: 0.95; margin-bottom: 40px; max-width: 650px; margin-left: auto; margin-right: auto; line-height: 1.6;">
-                    Recibe una opinión profesional de especialistas en oncología del Instituto Nacional de Oncología. Confirma tu diagnóstico y descubre alternativas de tratamiento.
-                </p>
+                    Recibe una opinión profesional de especialistas del Instituto de Oncología y Radiobiología. Confirma tu diagnóstico y descubre alternativas de tratamiento.                </p>
                 <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; align-items: center;">
                     <a href="{% url 'auth:register_patient' %}" class="btn-primary">
                         Solicitar Segunda Opinión
@@ -654,12 +650,27 @@
                         <div style="font-size: 14px; opacity: 0.85;">Digital y seguro</div>
                     </div>
                     <div>
-                        <div style="font-size: 36px; font-weight: 800;">MDT</div>
+                        <div style="font-size: 36px; font-weight: 800;">Equipo</div>
                         <div style="font-size: 14px; opacity: 0.85;">Equipo multidisciplinario</div>
                     </div>
                 </div>
             </div>
         </section>
+
+        <!-- Aviso Importante - Segunda Opinión Única -->
+        <div style="background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); padding: 20px; text-align: center; color: white;">
+            <div style="max-width: 900px; margin: 0 auto; display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap;">
+                <span class="material-icons-round" style="font-size: 32px;">warning</span>
+                <div style="text-align: left;">
+                    <strong style="font-size: 16px; display: block; margin-bottom: 4px;">IMPORTANTE: Una sola solicitud por padecimiento</strong>
+                    <span style="font-size: 14px; opacity: 0.95;">
+                        Cada paciente puede solicitar <strong>UNA SOLA segunda opinión por cada padecimiento</strong>. 
+                        <strong>Queda terminantemente prohibido</strong> volver a solicitar o crear un nuevo caso sobre el mismo padecimiento. 
+                        <strong>El sistema detectará cualquier incumplimiento</strong> y el usuario será <strong>bloqueado y baneado permanentemente</strong> del servicio.
+                    </span>
+                </div>
+            </div>
+        </div>
 
         <!-- ¿Qué Hacemos? Section -->
         <section id="que-hacemos" class="section-light" style="padding: 100px 20px;">
@@ -707,7 +718,7 @@
                             Red Oncológica Nacional
                         </h3>
                         <p style="color: #64748b; font-size: 14px; line-height: 1.6;">
-                            Conectamos pacientes con especialistas del Instituto Nacional de Oncología. Evaluación por equipo multidisciplinario.
+                            Conectamos pacientes con especialistas del Instituto de Oncología y Radiobiología. Evaluación por equipo multidisciplinario.
                         </p>
                     </div>
 
@@ -805,8 +816,7 @@
                             <ul>
                                 <li>Diagnóstico primario</li>
                                 <li>Fecha de diagnóstico</li>
-                                <li>Médico tratante</li>
-                                <li>Síntomas actuales</li>
+                                <li>Propuesta de tratamiento</li>
                             </ul>
                         </div>
                     </div>
@@ -817,10 +827,10 @@
                                 Documentos Médicos
                             </h5>
                             <ul>
-                                <li>Informe médico</li>
+                                <li>Resumen de Historia Clínica</li>
                                 <li>Informe de biopsia</li>
                                 <li>Resultados de laboratorio</li>
-                                <li>Resultados de patología</li>
+                                <li>Resultados de Anatomía Patológica</li>
                             </ul>
                         </div>
                         <div class="requirement-item">
@@ -863,7 +873,7 @@
                         <div class="step-icon" style="background: linear-gradient(135deg, #dbeafe, #bfdbfe);">
                             <span class="material-icons-round" style="color: #2563eb;">person_add</span>
                         </div>
-                        <h4 style="font-size: 15px; font-weight: 700; color: #1e293b; margin-bottom: 6px;">Crear Cuenta</h4>
+                        <h4 style="font-size: 15px; font-weight: 700; color: #1e293b; margin-bottom: 6px;">Crea tu Cuenta</h4>
                         <p style="color: #64748b; font-size: 13px;">Registro rápido</p>
                     </div>
 
@@ -872,7 +882,7 @@
                         <div class="step-icon" style="background: linear-gradient(135deg, #ede9fe, #ddd6fe);">
                             <span class="material-icons-round" style="color: #7c3aed;">edit_note</span>
                         </div>
-                        <h4 style="font-size: 15px; font-weight: 700; color: #1e293b; margin-bottom: 6px;">Completa Perfil</h4>
+                        <h4 style="font-size: 15px; font-weight: 700; color: #1e293b; margin-bottom: 6px;">Completa tu Perfil</h4>
                         <p style="color: #64748b; font-size: 13px;">Tu historial</p>
                     </div>
 
@@ -881,7 +891,7 @@
                         <div class="step-icon" style="background: linear-gradient(135deg, #d1fae5, #a7f3d0);">
                             <span class="material-icons-round" style="color: #059669;">upload_file</span>
                         </div>
-                        <h4 style="font-size: 15px; font-weight: 700; color: #1e293b; margin-bottom: 6px;">Sube Documentos</h4>
+                        <h4 style="font-size: 15px; font-weight: 700; color: #1e293b; margin-bottom: 6px;">Sube los Documentos</h4>
                         <p style="color: #64748b; font-size: 13px;">Archivos médicos</p>
                     </div>
 
@@ -890,26 +900,17 @@
                         <div class="step-icon" style="background: linear-gradient(135deg, #fef3c7, #fde68a);">
                             <span class="material-icons-round" style="color: #d97706;">biotech</span>
                         </div>
-                        <h4 style="font-size: 15px; font-weight: 700; color: #1e293b; margin-bottom: 6px;">Evaluación</h4>
-                        <p style="color: #64748b; font-size: 13px;">Análisis MDT</p>
+                        <h4 style="font-size: 15px; font-weight: 700; color: #1e293b; margin-bottom: 6px;"> Se evalua su caso</h4>
+                        <p style="color: #64748b; font-size: 13px;">Discucion en equipo multidisciplinario</p>
                     </div>
 
                     <div class="step-card">
                         <div class="step-number">5</div>
-                        <div class="step-icon" style="background: linear-gradient(135deg, #fce7f3, #fbcfe8);">
-                            <span class="material-icons-round" style="color: #db2777;">groups</span>
-                        </div>
-                        <h4 style="font-size: 15px; font-weight: 700; color: #1e293b; margin-bottom: 6px;">Comité</h4>
-                        <p style="color: #64748b; font-size: 13px;">Decisión grupal</p>
-                    </div>
-
-                    <div class="step-card">
-                        <div class="step-number">6</div>
                         <div class="step-icon" style="background: linear-gradient(135deg, #cffafe, #a5f3fc);">
                             <span class="material-icons-round" style="color: #0891b2;">description</span>
                         </div>
                         <h4 style="font-size: 15px; font-weight: 700; color: #1e293b; margin-bottom: 6px;">Resultado</h4>
-                        <p style="color: #64748b; font-size: 13px;">Recibe opinión</p>
+                        <p style="color: #64748b; font-size: 13px;">Recibe tu segunda opinión médica</p>
                     </div>
                 </div>
             </div>
@@ -949,7 +950,7 @@
                             <span class="footer-logo-text">Onco<span>MDT</span></span>
                         </div>
                         <p class="footer-description">
-                            Plataforma segura de telemedicina para segundas opiniones médicas de especialistas certificados del Instituto Nacional de Oncología.
+                            Plataforma segura de telemedicina para segundas opiniones médicas de especialistas certificados del Instituto de Oncología y Radiobiología.
                         </p>
                     </div>
                     
@@ -980,7 +981,7 @@
                                 <span class="material-icons-round">location_on</span>
                             </div>
                             <div class="footer-contact-text">
-                                Instituto Nacional de Oncología<br>Cuba
+                                Instituto de Oncología y Radiobiología<br>Cuba
                             </div>
                         </div>
                     </div>
