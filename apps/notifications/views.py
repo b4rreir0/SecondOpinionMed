@@ -7,7 +7,7 @@ from authentication.models import CustomUser
 from authentication.services import DoctorService
 from django.core.exceptions import ValidationError
 from medicos.models import TipoCancer
-from .models import DoctorInvitation, PatientVerification
+from .models import DoctorInvitation
 
 
 class DoctorRegisterView(View):
@@ -128,26 +128,3 @@ class DoctorRegisterView(View):
                 'invite': invite,
                 'tipos_cancer': tipos_cancer
             })
-
-
-class VerifyPatientView(View):
-    template_name = 'auth/patient_activation.html'
-
-    def get(self, request, token):
-        try:
-            pv = PatientVerification.objects.get(token=token)
-        except PatientVerification.DoesNotExist:
-            return render(request, self.template_name, {'success': False, 'message': 'Token inválido'})
-
-        if not pv.is_valid():
-            return render(request, self.template_name, {'success': False, 'message': 'Token inválido o expirado'})
-
-        # Activate user
-        user = pv.user
-        user.is_active = True
-        user.email_verified = True
-        user.save(update_fields=['is_active', 'email_verified'])
-
-        pv.mark_verified()
-
-        return render(request, self.template_name, {'success': True, 'message': 'Cuenta activada correctamente'})

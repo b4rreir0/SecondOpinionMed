@@ -7,7 +7,7 @@ from django.utils import timezone
 
 from .models import Case
 from .mdt_models import MDTMessage
-from .services import CaseService
+from .services import CaseService, PENDING_CASE_STATUSES, COMPLETED_CASE_STATUSES
 
 
 class PatientDashboardView(LoginRequiredMixin, View):
@@ -205,7 +205,7 @@ class DoctorDashboardView(LoginRequiredMixin, View):
         
         # Casos pendientes (con filtros de estado)
         pending_cases = assigned_cases.filter(
-            status__in=['PAID', 'IN_REVIEW', 'CLARIFICATION_NEEDED', 'ASSIGNED', 'PROCESSING']
+            status__in=PENDING_CASE_STATUSES
         )
         
         context = {
@@ -514,28 +514,12 @@ class CasosPendientesView(LoginRequiredMixin, View):
         if not request.user.is_doctor():
             raise Http404()
         
-        # DEBUG: Log para verificar
-        print(f"[CasosPendientes] Usuario: {request.user.email}")
-        print(f"[CasosPendientes] Es doctor: {request.user.is_doctor()}")
-        
-        # DEBUG: Ver todos los casos en la base de datos
-        from .models import Case
-        todos_casos = Case.objects.all()
-        print(f"[CasosPendientes] TOTAL casos en BD: {todos_casos.count()}")
-        for c in todos_casos:
-            print(f"  - {c.case_id}: status={c.status}, doctor={c.doctor}, localidad={c.localidad}")
-        
-        # Usar el servicio para obtener los casos asignados al médico (incluye casos del comité)
         from .services import CaseService
         casos_asignados = CaseService.get_doctor_assigned_cases(request.user)
-        print(f"[CasosPendientes] Casos asignados (sin filtro): {casos_asignados.count()}")
         
         pending_cases = casos_asignados.filter(
-            status__in=['SUBMITTED', 'PAID', 'IN_REVIEW', 'CLARIFICATION_NEEDED', 'ASSIGNED', 'PROCESSING']
+            status__in=PENDING_CASE_STATUSES
         ).order_by('-created_at')
-        
-        print(f"[CasosPendientes] Casos pendientes (filtrados): {pending_cases.count()}")
-        print(f"[CasosPendientes] Estados posibles: {list(pending_cases.values_list('status', flat=True))}")
         
         context = {
             'casos_pendientes': pending_cases,
@@ -610,29 +594,39 @@ class ReportesView(LoginRequiredMixin, View):
     def get(self, request):
         if not request.user.is_doctor():
             raise Http404()
-        
-        from .models import Case
-        from django.db.models import Count, Q
-        from datetime import datetime, timedelta
-        
-        # Estadísticas básicas
-        total_cases = Case.objects.filter(doctor=request.user).count()
-        completed_cases = Case.objects.filter(doctor=request.user, status='completed').count()
-        pending_cases = Case.objects.filter(doctor=request.user, status__in=['pending', 'in_progress']).count()
-        
-        # Casos del último mes
-        last_month = datetime.now() - timedelta(days=30)
-        cases_this_month = Case.objects.filter(
-            doctor=request.user,
-            created_at__gte=last_month
-        ).count()
-        
+
+        from django.utils import timezone
+        from .services import CaseService, PENDING_CASE_STATUSES, COMPLETED_CASE_STATUSES
+
+        casos = CaseService.get_doctor_assigned_cases(request.user, include_completed=True)
+
+        fecha_desde = request.GET.get('fecha_desde')
+        fecha_hasta = request.GET.get('fecha_hasta')
+        if fecha_desde:
+            casos = casos.filter(created_at__date__gte=fecha_desde)
+        if fecha_hasta:
+            casos = casos.filter(created_at__date__lte=fecha_hasta)
+
+        casos_pendientes = casos.filter(status__in=PENDING_CASE_STATUSES).count()
+        casos_completados = casos.filter(status__in=COMPLETED_CASE_STATUSES).count()
+
+        dias_promedio = 0
+        completados = casos.filter(status__in=COMPLETED_CASE_STATUSES, completed_at__isnull=False)
+        if completados.exists():
+            total_dias = sum(
+                (c.completed_at - c.created_at).days for c in completados if c.completed_at and c.created_at
+            )
+            dias_promedio = round(total_dias / completados.count(), 1)
+
         context = {
-            'total_cases': total_cases,
-            'completed_cases': completed_cases,
-            'pending_cases': pending_cases,
-            'cases_this_month': cases_this_month,
-            'user_role': 'doctor'
+            'total_casos': casos.count(),
+            'casos_pendientes_count': casos_pendientes,
+            'casos_completados': casos_completados,
+            'casos_periodo': casos.order_by('-created_at')[:50],
+            'dias_promedio': dias_promedio,
+            'fecha_desde': fecha_desde or '',
+            'fecha_hasta': fecha_hasta or '',
+            'user_role': 'doctor',
         }
         return render(request, self.template_name, context)
 
@@ -828,23 +822,13 @@ class GuiaSistemaView(LoginRequiredMixin, View):
 # =============================================================================
 
 class MedicalOpinionCreateView(LoginRequiredMixin, View):
-    """
-    Vista para crear una opinión médica en un caso MDT.
-    """
-    template_name = 'doctors/opinion_form.html'
+    """Recibe la opinión/voto del médico (formulario inline en case_detail_modern)."""
     login_url = 'auth:login'
-    
+
     def get(self, request, case_id):
         if not request.user.is_doctor():
             raise Http404()
-        
-        case = get_object_or_404(Case, case_id=case_id)
-        
-        context = {
-            'case': case,
-            'user_role': 'doctor'
-        }
-        return render(request, self.template_name, context)
+        return redirect('cases:doctor_case_detail', case_id=case_id)
     
     def post(self, request, case_id):
         if not request.user.is_doctor():
@@ -888,63 +872,24 @@ class MedicalOpinionCreateView(LoginRequiredMixin, View):
         return redirect('cases:doctor_case_detail', case_id=case_id)
 
 
-class OpinionSummaryView(LoginRequiredMixin, View):
-    """
-    Vista para mostrar el resumen de opiniones de un caso MDT.
-    """
-    template_name = 'doctors/opinion_summary.html'
-    login_url = 'auth:login'
-    
-    def get(self, request, case_id):
-        if not request.user.is_doctor():
-            raise Http404()
-        
-        case = get_object_or_404(Case, case_id=case_id)
-        
-        context = {
-            'case': case,
-            'user_role': 'doctor'
-        }
-        return render(request, self.template_name, context)
-
-
 class CerrarVotacionView(LoginRequiredMixin, View):
-    """
-    Vista para cerrar la votación de un caso MDT.
-    """
+    """Legacy: redirige al detalle del caso."""
     login_url = 'auth:login'
-    
+
     def post(self, request, case_id):
         if not request.user.is_doctor():
             raise Http404()
-        
-        case = get_object_or_404(Case, case_id=case_id)
-        
-        # Cerrar votación (simplificado)
-        # En un caso real, esto cerraría la votación en el modelo correspondiente
-        
-        from django.shortcuts import redirect
-        return redirect('cases:doctor_dashboard')
+        return redirect('cases:doctor_case_detail', case_id=case_id)
 
 
 class FinalReportCreateView(LoginRequiredMixin, View):
-    """
-    Vista para crear el informe final de un caso.
-    """
-    template_name = 'doctors/report_form.html'
+    """Legacy: redirige al detalle del caso (respuesta final vía mdt_response)."""
     login_url = 'auth:login'
-    
+
     def get(self, request, case_id):
         if not request.user.is_doctor():
             raise Http404()
-        
-        case = get_object_or_404(Case, case_id=case_id)
-        
-        context = {
-            'case': case,
-            'user_role': 'doctor'
-        }
-        return render(request, self.template_name, context)
+        return redirect('cases:doctor_case_detail', case_id=case_id)
     
     def post(self, request, case_id):
         if not request.user.is_doctor():
@@ -964,38 +909,13 @@ class FinalReportCreateView(LoginRequiredMixin, View):
 # =============================================================================
 
 class MDTOpinionView(LoginRequiredMixin, View):
-    """
-    Vista para que los miembros del comité emitan su opinión sobre un caso.
-    """
-    template_name = 'doctors/mdt_opinion.html'
+    """Legacy: el voto activo se envía desde case_detail_modern → opinion_form."""
     login_url = 'auth:login'
-    
+
     def get(self, request, case_id):
         if not request.user.is_doctor():
             raise Http404()
-        
-        case = get_object_or_404(Case, case_id=case_id)
-        medico = request.user.medico
-        
-        # Obtener o crear workflow de consenso
-        from .mdt_models import ConsensusWorkflow, ConsensusVote
-        workflow, created = ConsensusWorkflow.objects.get_or_create(caso=case)
-        
-        # Obtener el voto actual del médico si existe
-        voto_existente = ConsensusVote.objects.filter(workflow=workflow, medico=medico).first()
-        
-        # Obtener todos los votos
-        todos_votos = ConsensusVote.objects.filter(workflow=workflow)
-        
-        context = {
-            'case': case,
-            'workflow': workflow,
-            'voto_existente': voto_existente,
-            'todos_votos': todos_votos,
-            'user_role': 'doctor',
-            'medico': medico
-        }
-        return render(request, self.template_name, context)
+        return redirect('cases:doctor_case_detail', case_id=case_id)
     
     def post(self, request, case_id):
         if not request.user.is_doctor():
@@ -1030,62 +950,13 @@ class MDTOpinionView(LoginRequiredMixin, View):
 
 
 class MDTFinalResponseView(LoginRequiredMixin, View):
-    """
-    Vista para que el responsable/coordinador envíe la respuesta final al paciente.
-    """
-    template_name = 'doctors/mdt_final_response.html'
+    """Genera PDF y envía respuesta final (POST desde case_detail_modern)."""
     login_url = 'auth:login'
-    
+
     def get(self, request, case_id):
         if not request.user.is_doctor():
             raise Http404()
-        
-        case = get_object_or_404(Case, case_id=case_id)
-        medico = request.user.medico
-        
-        # Obtener workflow
-        from .mdt_models import ConsensusWorkflow, ConsensusVote
-        try:
-            workflow = case.workflow_consenso
-        except ConsensusWorkflow.DoesNotExist:
-            workflow = ConsensusWorkflow.objects.create(caso=case)
-        
-        # Obtener todos los votos
-        todos_votos = ConsensusVote.objects.filter(workflow=workflow)
-        
-        # Verificar si es responsable
-        es_responsable = False
-        
-        # Primero verificar si es el médico asignado al caso
-        if case.doctor == request.user:
-            es_responsable = True
-        
-        # Si no, verificar si es responsable del grupo médico del caso
-        if not es_responsable and case.medical_group:
-            if hasattr(medico, 'doctorgroupmembership_set'):
-                memberships = medico.doctorgroupmembership_set.filter(grupo=case.medical_group)
-                es_responsable = any(m.es_responsable for m in memberships)
-        
-        # Si tampoco, verificar si es el coordinador del comité de la localidad
-        if not es_responsable and case.localidad and case.localidad.comite:
-            comite = case.localidad.comite
-            # Verificar si es miembro del comité Y coordinador
-            if hasattr(medico, 'comites'):
-                comites_medico = medico.comites.all()
-                if comite in comites_medico:
-                    # Es miembro - ahora verificar si es coordinador
-                    if comite.coordinador == medico:
-                        es_responsable = True
-        
-        context = {
-            'case': case,
-            'workflow': workflow,
-            'todos_votos': todos_votos,
-            'user_role': 'doctor',
-            'medico': medico,
-            'es_responsable': es_responsable
-        }
-        return render(request, self.template_name, context)
+        return redirect('cases:doctor_case_detail', case_id=case_id)
     
     def post(self, request, case_id):
         if not request.user.is_doctor():

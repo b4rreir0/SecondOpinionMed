@@ -9,11 +9,11 @@ from django.utils import timezone
 from django.utils.decorators import method_decorator
 import os
 
-from authentication.models import CustomUser
+from authentication.models import CustomUser, PatientProfile
 from authentication.services import DoctorService
 from cases.models import Case as CasoMDT, MedicalOpinion, CaseDocument
+from cases.services import PENDING_CASE_STATUSES, COMPLETED_CASE_STATUSES
 from medicos.models import Medico, Especialidad, Localidad, MedicalGroup, TipoCancer, DoctorGroupMembership
-from pacientes.models import Paciente
 from core.decorators import admin_required
 
 
@@ -32,11 +32,13 @@ class AdminDashboardView(View):
         
         stats = {
             'total_casos': casos_mdt.count(),
-            'casos_pendientes': casos_mdt.filter(status='PENDIENTE').count(),
-            'casos_proceso': casos_mdt.filter(status='EN_PROCESO').count(),
-            'casos_completados': casos_mdt.filter(status='COMPLETADO').count(),
+            'casos_pendientes': casos_mdt.filter(status__in=PENDING_CASE_STATUSES).count(),
+            'casos_proceso': casos_mdt.filter(
+                status__in=['PROCESSING', 'MDT_IN_PROGRESS', 'REPORT_DRAFT']
+            ).count(),
+            'casos_completados': casos_mdt.filter(status__in=COMPLETED_CASE_STATUSES).count(),
             'medicos_activos': Medico.objects.filter(estado='activo').count(),
-            'pacientes': Paciente.objects.filter(activo=True).count(),
+            'pacientes': CustomUser.objects.filter(role='patient', is_active=True).count(),
             'comites': MedicalGroup.objects.filter(activo=True).count(),
         }
         
@@ -124,8 +126,13 @@ class AsignarCasoView(View):
         
         if medico_id:
             medico = get_object_or_404(Medico, id=medico_id)
-            caso.asignar_medico(medico)
-            messages.success(request, f'Caso asignado a {medico.user.get_full_name()}')
+            caso.responsable = medico
+            caso.doctor = medico.usuario
+            caso.status = 'ASSIGNED'
+            if not caso.assigned_at:
+                caso.assigned_at = timezone.now()
+            caso.save()
+            messages.success(request, f'Caso asignado a {medico.nombre_completo}')
         
         return redirect(reverse('administracion:portal_caso_detalle', args=[case_id]))
 
@@ -178,38 +185,40 @@ class MedicoDetalleView(View):
 
 
 class GestionPacientesView(View):
-    """Lista de todos los pacientes"""
+    """Lista de pacientes registrados (PatientProfile)."""
     template_name = 'admin/pacientes_list.html'
     
     @method_decorator(admin_required)
     def get(self, request):
         search = request.GET.get('search')
         
-        pacientes = Paciente.objects.select_related('usuario')
+        pacientes = PatientProfile.objects.select_related('user').filter(user__role='patient')
         
         if search:
             pacientes = pacientes.filter(
-                Q(usuario__email__icontains=search) |
-                Q(numero_documento__icontains=search)
+                Q(user__email__icontains=search) |
+                Q(identity_document__icontains=search) |
+                Q(full_name__icontains=search)
             )
         
         context = {
             'pacientes': pacientes,
+            'search': search,
         }
         return render(request, self.template_name, context)
 
 
 class PacienteDetalleView(View):
-    """Detalle de un paciente específico"""
+    """Detalle de un paciente (PatientProfile)."""
     template_name = 'admin/paciente_detalle.html'
     
     @method_decorator(admin_required)
     def get(self, request, paciente_id):
-        paciente = get_object_or_404(Paciente, id=paciente_id)
-        casos = CasoMDT.objects.filter(patient=paciente.usuario).order_by('-created_at')
+        perfil = get_object_or_404(PatientProfile, id=paciente_id)
+        casos = CasoMDT.objects.filter(patient=perfil.user).order_by('-created_at')
         
         context = {
-            'paciente': paciente,
+            'paciente': perfil,
             'casos': casos,
         }
         return render(request, self.template_name, context)

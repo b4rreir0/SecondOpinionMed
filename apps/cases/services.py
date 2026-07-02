@@ -3,144 +3,16 @@ from django.db.models import Count, Q
 from django.utils import timezone
 import uuid
 
-from .models import Case
-
-
-def create_case(patient, case_id, primary_diagnosis, specialty_required, description):
-    """Crea un `Case` dentro de una transacción y devuelve la instancia."""
-    with transaction.atomic():
-        case = Case.objects.create(
-            patient=patient,
-            case_id=case_id,
-            primary_diagnosis=primary_diagnosis,
-            specialty_required=specialty_required,
-            description=description,
-        )
-        return case
-    
-    @staticmethod
-    @transaction.atomic
-    def finalize_submission(user, session_data, explicit_consent: bool = False):
-        """
-        Crea/actualiza PatientProfile y crea un Case a partir de los datos recogidos en la sesión.
-
-        Args:
-            user: CustomUser paciente
-            session_data: dict con keys 'patient_profile', 'case_draft', 'documents'
-            explicit_consent: bool, debe ser True para proceder
-
-        Returns:
-            Case: instancia creada
-        """
-        if not explicit_consent:
-            raise ValueError('Consentimiento explícito requerido para enviar la solicitud')
-
-        patient_profile_data = session_data.get('patient_profile', {})
-        case_draft = session_data.get('case_draft', {})
-        documents = session_data.get('documents', [])
-
-        # Import models lazily to avoid app registry issues
-        from django.apps import apps as django_apps
-        PatientProfile = django_apps.get_model('authentication', 'PatientProfile')
-        CaseDocument = django_apps.get_model('cases', 'CaseDocument')
-
-        # Create or update patient profile
-        profile, created = PatientProfile.objects.get_or_create(user=user)
-        if patient_profile_data:
-            if patient_profile_data.get('full_name'):
-                profile.full_name = patient_profile_data.get('full_name')
-            if patient_profile_data.get('phone'):
-                profile.phone_number = patient_profile_data.get('phone')
-            if patient_profile_data.get('medical_history'):
-                profile.medical_history = patient_profile_data.get('medical_history')
-            if patient_profile_data.get('current_medications'):
-                profile.current_treatment = patient_profile_data.get('current_medications')
-            if patient_profile_data.get('known_allergies'):
-                profile.medical_history = (profile.medical_history or '') + '\n\nAlergias:\n' + patient_profile_data.get('known_allergies')
-            profile.save()
-
-        # Create Case (start as DRAFT then submit via FSM)
-        case_id = f"CASO-{uuid.uuid4().hex[:12].upper()}"
-        
-        # Obtener el tipo de cancer
-        tipo_cancer_pk = case_draft.get('tipo_cancer') if case_draft else None
-        tipo_cancer_obj = None
-        if tipo_cancer_pk:
-            try:
-                TipoCancer = django_apps.get_model('medicos', 'TipoCancer')
-                tipo_cancer_obj = TipoCancer.objects.get(pk=tipo_cancer_pk)
-            except Exception:
-                pass
-        
-        case = Case.objects.create(
-            patient=user,
-            case_id=case_id,
-            primary_diagnosis=case_draft.get('primary_diagnosis', '') if case_draft else None,
-            # Usar el nombre de la especialidad en lugar de la institucion
-            specialty_required=case_draft.get('especialidad_nombre', case_draft.get('referring_institution', '')) if case_draft else '',
-
-            tipo_cancer=tipo_cancer_obj,
-        )
-
-        # Link documents: create CaseDocument rows if session contains metadata
-        # Solo crear documentos que ya tengan archivo (los creados en sop_step3)
-        for d in documents:
-            # Solo crear si tiene ID (significa que ya se persistió con archivo en sop_step3)
-            doc_id = d.get('id')
-            if doc_id:
-                # Ya existe un CaseDocument con archivo, no hacer nada
-                continue
-            # Solo crear si tiene archivo real o es un documento con metadata válida
-            if d.get('name') and (d.get('s3_key') or d.get('s3_file_path')):
-                try:
-                    CaseDocument.objects.create(
-                        case=case,
-                        document_type=d.get('type', 'otros_documentos'),
-                        file_name=d.get('name', ''),
-                        uploaded_by=user,
-                        s3_file_path=d.get('s3_key', d.get('s3_file_path', ''))
-                    )
-                except Exception:
-                    continue
-
-        # Transition FSM to SUBMITTED (or fallback)
-        try:
-            case.submit_case()
-            case.save()
-        except Exception:
-            case.status = 'SUBMITTED'
-            case.save()
-
-        # Audit
-        CaseAuditLog.objects.create(
-            case=case,
-            user=user,
-            action='create',
-            description='Caso enviado desde flujo SOP'
-        )
-
-        # Assign object permissions to patient
-        try:
-            from guardian.shortcuts import assign_perm
-            assign_perm('view_case', user, case)
-            assign_perm('change_case', user, case)
-        except Exception:
-            pass
-
-        return case
-
-
-def submit_case_service(case: Case):
-    """Validaciones finales y transición a SUBMITTED."""
-    # Aquí se pueden agregar validaciones adicionales de negocio
-    case.submit_case()
-    case.save()
-    return case
-from django.db import transaction
-from django.utils import timezone
-import uuid
-
 from .models import Case, CaseAuditLog, SecondOpinion
+
+# Estados usados en filtros del flujo activo
+PENDING_CASE_STATUSES = [
+    'SUBMITTED', 'ASSIGNED', 'PROCESSING', 'MDT_IN_PROGRESS', 'IN_REVIEW',
+]
+ACTIVE_CASE_STATUSES = PENDING_CASE_STATUSES + [
+    'MDT_COMPLETED', 'REPORT_DRAFT', 'REPORT_COMPLETED',
+]
+COMPLETED_CASE_STATUSES = ['OPINION_COMPLETE', 'CLOSED', 'REPORT_COMPLETED']
 
 
 class CaseService:
@@ -152,7 +24,7 @@ class CaseService:
     
     @staticmethod
     @transaction.atomic
-    def create_case(patient, primary_diagnosis, specialty_required, description):
+    def create_case(patient, primary_diagnosis, specialty_required, description=''):
         """
         Crea un nuevo caso de segunda opinión.
         
@@ -160,7 +32,7 @@ class CaseService:
             patient (CustomUser): Usuario paciente
             primary_diagnosis (str): Diagnóstico primario
             specialty_required (str): Especialidad requerida
-            description (str): Descripción del caso
+            description (str): Reservado (compatibilidad con tests)
             
         Returns:
             Case: Instancia del caso creado
@@ -172,7 +44,6 @@ class CaseService:
             case_id=case_id,
             primary_diagnosis=primary_diagnosis,
             specialty_required=specialty_required,
-            description=description,
             status='SUBMITTED'
         )
         
@@ -225,34 +96,10 @@ class CaseService:
         print(f"[get_doctor_assigned_cases] Doctor: {getattr(doctor, 'email', doctor)}")
         print(f"[get_doctor_assigned_cases] Tiene atributo medico: {hasattr(doctor, 'medico')}")
         
-        # Los estados correctos del modelo Case (cases/models.py)
-        # STATUS_CHOICES = (
-        #     ('DRAFT', 'Borrador'),
-        #     ('SUBMITTED', 'Enviado'),
-        #     ('ASSIGNED', 'Asignado'),
-        #     ('PROCESSING', 'Procesando'),
-        #     ('MDT_IN_PROGRESS', 'En Análisis por MDT'),
-        #     ('MDT_COMPLETED', 'Discusión MDT Cerrada'),
-        #     ('REPORT_DRAFT', 'Informe en Redacción'),
-        #     ('REPORT_COMPLETED', 'Informe Completado'),
-        #     ('OPINION_COMPLETE', 'Opinión Completa'),
-        #     ('CLOSED', 'Cerrado'),
-        #     ('CANCELLED', 'Cancelado'),
-        # )
-        
-        # Determinar estados a incluir
         if include_completed:
-            # Incluir todos los estados excepto cancelados
-            statuses = [
-                'SUBMITTED', 'ASSIGNED', 'PROCESSING', 
-                'MDT_IN_PROGRESS', 'MDT_COMPLETED',
-                'REPORT_DRAFT', 'REPORT_COMPLETED', 
-                'OPINION_COMPLETE', 'CLOSED',
-                'COMPLETED', 'IN_REVIEW'  # Por compatibilidad con datos existentes
-            ]
+            statuses = ACTIVE_CASE_STATUSES + COMPLETED_CASE_STATUSES + ['IN_REVIEW', 'COMPLETED']
         else:
-            # Casos que necesitan atención activa
-            statuses = ['SUBMITTED', 'ASSIGNED', 'PROCESSING', 'MDT_IN_PROGRESS', 'IN_REVIEW']
+            statuses = list(PENDING_CASE_STATUSES)
         
         # Casos donde es el doctor asignado
         qs = Case.objects.filter(
@@ -692,7 +539,7 @@ def _notificar_asignacion_caso(case, grupo):
             tipo='asignacion_caso',
             titulo=titulo,
             mensaje=mensaje,
-            enlace=f'/medicos/casos/{case.id}/',
+            enlace=f'/doctors/case/{case.case_id}/',
             caso_id=case.case_id
         )
 

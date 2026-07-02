@@ -48,30 +48,31 @@
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 font-bold">
-                                    {{ paciente.usuario.email|first|upper }}
+                                    {{ paciente.user.email|first|upper }}
                                 </div>
                                 <div>
                                     <p class="text-sm font-bold text-slate-900 dark:text-white">
-                                        {{ paciente.usuario.email }}
+                                        {{ paciente.full_name|default:paciente.user.email }}
                                     </p>
+                                    <p class="text-xs text-slate-500">{{ paciente.user.email }}</p>
                                 </div>
                             </div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">
-                            {{ paciente.numero_documento|default:'-' }}
+                            {{ paciente.identity_document|default:'-' }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">
-                            {{ paciente.telefono|default:'-' }}
+                            {{ paciente.phone_number|default:'-' }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            {% if paciente.activo %}
+                            {% if paciente.user.is_active %}
                             <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400">Activo</span>
                             {% else %}
                             <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300">Inactivo</span>
                             {% endif %}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
-                            {{ paciente.usuario.date_joined|date:"d M Y" }}
+                            {{ paciente.user.date_joined|date:"d M Y" }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-right">
                             <a href="{% url 'administracion:portal_paciente_detalle' paciente.id %}" 

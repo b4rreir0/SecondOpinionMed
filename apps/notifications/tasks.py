@@ -85,7 +85,7 @@ def notificar_asignacion_caso(medico_id, caso_id):
             tipo='asignacion_caso',
             titulo=f"Nuevo caso asignado: {caso.case_id}",
             mensaje=f"Se le ha asignado el caso {caso.case_id} ({caso.specialty_required}).",
-            enlace=f'/medicos/casos/{caso.id}/',
+            enlace=f'/doctors/case/{caso.case_id}/',
             caso_id=caso.case_id
         )
     except Exception as e:
@@ -118,7 +118,7 @@ def notificar_recordatorio_voto(caso_id):
                 tipo='recordatorio_voto',
                 titulo=f"Recordatorio: Caso {caso.case_id}",
                 mensaje=f"Aún no ha emitido su opinión sobre el caso {caso.case_id}.",
-                enlace=f'/medicos/casos/{caso.id}/opinion/',
+                enlace=f'/doctors/case/{caso.case_id}/',
                 caso_id=caso.case_id
             )
     except Exception as e:
@@ -141,7 +141,7 @@ def notificar_informe_paciente(caso_id):
             tipo='informe_disponible',
             titulo=f"Informe médico disponible - Caso {caso.case_id}",
             mensaje="Su informe médico final ya está disponible para descargar.",
-            enlace=f'/pacientes/casos/{caso.id}/',
+            enlace=f'/patients/case/{caso.case_id}/',
             caso_id=caso.case_id
         )
     except Exception as e:

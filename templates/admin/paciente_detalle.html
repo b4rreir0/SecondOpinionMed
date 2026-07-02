@@ -1,0 +1,64 @@
+{% extends "admin/layout_admin.html" %}
+
+{% block title %}Paciente - Panel Admin{% endblock %}
+
+{% block main_content %}
+<div class="max-w-7xl mx-auto space-y-6">
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-900 dark:text-white">{{ paciente.full_name|default:paciente.user.email }}</h1>
+            <p class="text-slate-500">{{ paciente.user.email }}</p>
+        </div>
+        <a href="{% url 'administracion:portal_pacientes' %}" class="text-primary hover:underline">← Volver</a>
+    </div>
+
+    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+            <p class="text-xs text-slate-500 uppercase">Documento</p>
+            <p class="font-medium">{{ paciente.identity_document|default:'-' }}</p>
+        </div>
+        <div>
+            <p class="text-xs text-slate-500 uppercase">Teléfono</p>
+            <p class="font-medium">{{ paciente.phone_number|default:'-' }}</p>
+        </div>
+        <div>
+            <p class="text-xs text-slate-500 uppercase">Estado cuenta</p>
+            <p class="font-medium">{% if paciente.user.is_active %}Activa{% else %}Inactiva{% endif %}</p>
+        </div>
+    </div>
+
+    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+            <h2 class="font-semibold">Casos ({{ casos|length }})</h2>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-slate-50 dark:bg-slate-700/50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase">ID</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase">Estado</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase">Fecha</th>
+                        <th class="px-6 py-3 text-right text-xs font-bold text-slate-500 uppercase">Acción</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                    {% for caso in casos %}
+                    <tr>
+                        <td class="px-6 py-4 font-mono text-sm">{{ caso.case_id }}</td>
+                        <td class="px-6 py-4 text-sm">{{ caso.get_status_display }}</td>
+                        <td class="px-6 py-4 text-sm">{{ caso.created_at|date:"d M Y" }}</td>
+                        <td class="px-6 py-4 text-right">
+                            <a href="{% url 'administracion:portal_caso_detalle' caso.case_id %}" class="text-primary text-sm">Ver</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="px-6 py-8 text-center text-slate-500">Sin casos registrados</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
