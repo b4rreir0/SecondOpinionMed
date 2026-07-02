@@ -87,14 +87,18 @@ class Case(models.Model):
     )
     primary_diagnosis = EncryptedCharField(
         max_length=255,
+        blank=True,
+        null=True,
         help_text="Diagnóstico primario"
     )
     specialty_required = models.CharField(
         max_length=100,
+        blank=True,
+        default='',
         help_text="Especialidad requerida"
     )
     
-    # Nuevos: Tipo de cáncer y estadio
+    # Tipo de cáncer
     tipo_cancer = models.ForeignKey(
         'medicos.TipoCancer',
         on_delete=models.SET_NULL,
@@ -104,34 +108,7 @@ class Case(models.Model):
         help_text="Tipo de cáncer"
     )
     
-    ESTADIO_CHOICES = [
-        ('I', 'Estadio I'),
-        ('II', 'Estadio II'),
-        ('III', 'Estadio III'),
-        ('IV', 'Estadio IV'),
-        ('N/A', 'No aplica'),
-    ]
-    
-    estadio = models.CharField(
-        max_length=10,
-        choices=ESTADIO_CHOICES,
-        blank=True,
-        help_text="Estadio del cáncer"
-    )
-    
-    tratamiento_propuesto_original = models.TextField(
-        blank=True,
-        help_text="Tratamiento propuesto originalmente"
-    )
-    
-    objetivo_consulta = models.TextField(
-        blank=True,
-        help_text="Objetivo de la consulta"
-    )
-    
-    description = EncryptedTextField(
-        help_text="Descripción detallada del caso"
-    )
+
     
     # Fecha del diagnóstico
     diagnosis_date = models.DateField(null=True, blank=True)

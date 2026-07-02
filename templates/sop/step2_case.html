@@ -34,7 +34,7 @@
     <!-- BEGIN: Sidebar -->
     <aside class="sidebar-gradient w-full md:w-1/4 lg:w-1/5 p-8 flex flex-col text-white">
         <div class="mb-8">
-            <img src="/static/images/logo.png" alt="OncoMDT" class="h-20 w-auto mb-6">
+            <img src="/static/images/logo.png" alt="Segunda Opinión Médica" class="h-20 w-auto mb-6">
             <h1 class="text-3xl font-bold leading-tight mb-4">Segunda Opinión Médica</h1>
             <p class="text-blue-100 text-lg opacity-90">Solicitud de Segunda Opinión</p>
         </div>
@@ -79,48 +79,23 @@
             
             <!-- BEGIN: Form Card -->
             <div class="bg-white rounded-3xl shadow-xl border border-gray-100 p-8 md:p-12 max-w-5xl">
-                <!-- Row 1: Primary Diagnosis -->
+                <!-- Row 1: Localización de su enfermedad (Tipo de cáncer) -->
                 <div class="mb-8">
-                    <label class="block text-sm font-medium text-gray-500 mb-1" for="id_primary_diagnosis">Diagnóstico principal *</label>
+                    <label class="block text-sm font-medium text-gray-500 mb-1" for="id_tipo_cancer">Localización de la enfermedad *</label>
                     <div class="bg-gray-50 rounded-lg px-4 py-3 border border-gray-200">
-                        <textarea class="block w-full border-0 border-b-2 border-gray-200 focus:border-blue-500 text-lg text-gray-800 transition-colors py-1 bg-transparent focus:outline-none focus:ring-0 resize-none" id="id_primary_diagnosis" name="primary_diagnosis" rows="2" placeholder="Describa su diagnóstico principal">{{ form.primary_diagnosis.value|default:'' }}</textarea>
+                        <select class="block w-full border-0 border-b-2 border-gray-200 focus:border-blue-500 text-lg text-gray-800 transition-colors py-1 bg-transparent focus:outline-none focus:ring-0" id="id_tipo_cancer" name="tipo_cancer">
+                            <option value="">Seleccione...</option>
+                            {% for value, label in form.fields.tipo_cancer.choices %}
+                            <option value="{{ value }}" {% if form.tipo_cancer.value == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
-                    {% if form.primary_diagnosis.errors %}
-                    <p class="text-red-500 text-sm mt-1">{{ form.primary_diagnosis.errors.as_text }}</p>
+                    {% if form.tipo_cancer.errors %}
+                    <p class="text-red-500 text-sm mt-1">{{ form.tipo_cancer.errors.as_text }}</p>
                     {% endif %}
                 </div>
                 
-                <!-- Row 2: Localidad de su enfermedad (Tipo de cáncer) -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-500 mb-1" for="id_tipo_cancer">Localidad de su enfermedad *</label>
-                        <div class="bg-gray-50 rounded-lg px-4 py-3 border border-gray-200">
-                            <select class="block w-full border-0 border-b-2 border-gray-200 focus:border-blue-500 text-lg text-gray-800 transition-colors py-1 bg-transparent focus:outline-none focus:ring-0" id="id_tipo_cancer" name="tipo_cancer">
-                                <option value="">Seleccione...</option>
-                                {% for value, label in form.fields.tipo_cancer.choices %}
-                                <option value="{{ value }}" {% if form.tipo_cancer.value == value %}selected{% endif %}>{{ label }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        {% if form.tipo_cancer.errors %}
-                        <p class="text-red-500 text-sm mt-1">{{ form.tipo_cancer.errors.as_text }}</p>
-                        {% endif %}
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-500 mb-1" for="id_estadio">Estadio</label>
-                        <div class="bg-gray-50 rounded-lg px-4 py-3 border border-gray-200">
-                            <select class="block w-full border-0 border-b-2 border-gray-200 focus:border-blue-500 text-lg text-gray-800 transition-colors py-1 bg-transparent focus:outline-none focus:ring-0" id="id_estadio" name="estadio">
-                                <option value="">Seleccione...</option>
-                                {% for value, label in form.fields.estadio.choices %}
-                                <option value="{{ value }}" {% if form.estadio.value == value %}selected{% endif %}>{{ label }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <p class="text-xs text-gray-400 mt-1">Esta información se obtendrá de los documentos que suba</p>
-                    </div>
-                </div>
-                
-                <!-- Row 3: Diagnosis Date -->
+                <!-- Row 2: Diagnosis Date -->
                 <div class="mb-8">
                     <label class="block text-sm font-medium text-gray-500 mb-1" for="id_diagnosis_date">Fecha de diagnóstico *</label>
                     <div class="bg-gray-50 rounded-lg px-4 py-3 border border-gray-200">
@@ -132,7 +107,7 @@
                     {% endif %}
                 </div>
                 
-                <!-- Row 4: Referring Institution -->
+                <!-- Row 3: Referring Institution -->
                 <div class="mb-8">
                     <label class="block text-sm font-medium text-gray-500 mb-1" for="id_referring_institution">Hospital que emitió el diagnóstico *</label>
                     <div class="bg-gray-50 rounded-lg px-4 py-3 border border-gray-200">
@@ -140,17 +115,6 @@
                     </div>
                     {% if form.referring_institution.errors %}
                     <p class="text-red-500 text-sm mt-1">{{ form.referring_institution.errors.as_text }}</p>
-                    {% endif %}
-                </div>
-                
-                <!-- Row 5: Main Symptoms -->
-                <div class="mb-8">
-                    <label class="block text-sm font-medium text-gray-500 mb-1" for="id_main_symptoms">Síntomas principales</label>
-                    <div class="bg-gray-50 rounded-lg px-4 py-3 border border-gray-200">
-                        <textarea class="block w-full border-0 border-b-2 border-gray-200 focus:border-blue-500 text-lg text-gray-800 transition-colors py-1 bg-transparent focus:outline-none focus:ring-0 resize-none" id="id_main_symptoms" name="main_symptoms" rows="2" placeholder="Describa los síntomas principales">{{ form.main_symptoms.value|default:'' }}</textarea>
-                    </div>
-                    {% if form.main_symptoms.errors %}
-                    <p class="text-red-500 text-sm mt-1">{{ form.main_symptoms.errors.as_text }}</p>
                     {% endif %}
                 </div>
             </div>

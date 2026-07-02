@@ -115,7 +115,6 @@ class PatientCaseDetailView(LoginRequiredMixin, View):
         # Mostrar todos los campos del caso para debug
         logger.info(f"[PatientCaseDetailView] case.primary_diagnosis = {case.primary_diagnosis}")
         logger.info(f"[PatientCaseDetailView] case.status = {case.status}")
-        logger.info(f"[PatientCaseDetailView] case.description = {case.description}")
         logger.info(f"[PatientCaseDetailView] case.patient = {case.patient.email}")
         
         # Obtener el informe final
@@ -375,6 +374,11 @@ class DoctorCaseDetailView(LoginRequiredMixin, View):
             opinion_medico_actual = None
             es_responsable = False
         
+        # Determinar si el caso está completado
+        # Estados considerados como completados: MDT_COMPLETED, REPORT_DRAFT, REPORT_COMPLETED, OPINION_COMPLETE, CLOSED
+        estados_completados = ['MDT_COMPLETED', 'REPORT_DRAFT', 'REPORT_COMPLETED', 'OPINION_COMPLETE', 'CLOSED']
+        caso_completado = case.status in estados_completados
+        
         # Determinar si el usuario puede cerrar el caso
         # Solo puede cerrar si:
         # 1. Es responsable/coordinador
@@ -395,12 +399,15 @@ class DoctorCaseDetailView(LoginRequiredMixin, View):
             'patient_nombre': patient_nombre,
             'patient_edad': patient_edad,
             'patient_genero': patient_genero,
-            'documents': case.documents.all(),
+            'documents': list(case.documents.all()),  # Convertir QuerySet a lista
             'opiniones': opiniones,
             'opinion_medico_actual': opinion_medico_actual,
             'es_responsable': es_responsable,
             'opinion': getattr(case, 'second_opinion', None),
             'informe_final': informe_final,
+            'caso_completado': caso_completado,  # Indica si el caso está completado
+            # Debug info
+            'debug_docs': [{'id': d.id, 'file_name': d.file_name, 'has_file': bool(d.file), 'file': str(d.file) if d.file else 'None'} for d in case.documents.all()],
             # Antecedentes médicos
             'antecedentes_personales': antecedentes_personales,
             'antecedentes_familiares': antecedentes_familiares,
@@ -408,6 +415,9 @@ class DoctorCaseDetailView(LoginRequiredMixin, View):
             'alergias': alergias,
             'medicamentos': medicamentos,
         }
+        print(f"[DoctorCaseDetailView] Documents for case {case.case_id}:")
+        for d in case.documents.all():
+            print(f"  - Doc {d.id}: {d.file_name}, has_file={bool(d.file)}, file={d.file}")
         return render(request, self.template_name, context)
 
     def post(self, request, case_id):

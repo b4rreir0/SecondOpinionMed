@@ -177,10 +177,47 @@
         Documentación ({{ documents|length|default:0 }})
     </h3>
     
+    {# Debug: mostrar info de cada documento #}
+    {% if debug_docs %}
+    <div class="bg-yellow-50 p-2 mb-2 text-xs">
+        <strong>Debug:</strong>
+        {% for d in debug_docs %}
+        <br>Doc {{ d.id }}: name={{ d.file_name }}, has_file={{ d.has_file }}, file={{ d.file }}
+        {% endfor %}
+    </div>
+    {% endif %}
+    
     {% if documents %}
     
     {# Definir las categorías #}
     {% with documents_dict=''|add:'resumen_historia_clinica,resultado_laboratorios,resultado_imagenologia,imagenes,resultado_biopsia,otros_documentos,' %}
+    
+    {# Mostrar todos los documentos en una lista simple primero #}
+    <div class="mb-4">
+        <h4 class="text-md font-semibold text-gray-700 mb-2 border-b pb-1 bg-gray-50 px-3 py-1 rounded-t-lg">
+            Todos los Documentos
+        </h4>
+        <div class="space-y-2 pl-2">
+            {% for doc in documents %}
+            <div class="flex items-center p-3 rounded-lg hover:bg-gray-50 border border-gray-100">
+                <span class="material-icons-outlined text-gray-400 mr-3">description</span>
+                <div class="flex-1">
+                    <p class="font-medium text-gray-700">{{ doc.file_name }}</p>
+                    <p class="text-xs text-gray-400">Tipo: {{ doc.document_type }} | Subido: {{ doc.uploaded_at|date:"d M Y" }}</p>
+                </div>
+                {% if doc.file %}
+                <a href="{{ doc.file.url }}" download target="_blank" class="text-blue-600 hover:text-blue-800">
+                    <span class="material-icons-outlined">download</span>
+                </a>
+                {% else %}
+                <span class="text-red-500 text-xs">Sin archivo</span>
+                {% endif %}
+            </div>
+            {% empty %}
+            <p class="text-gray-400">No hay documentos</p>
+            {% endfor %}
+        </div>
+    </div>
     
     {# Resumen de Historia Clínica #}
     {% with type_docs=documents|filter_by_document_type:'resumen_historia_clinica' %}
@@ -202,6 +239,8 @@
                 <a href="{{ doc.file.url }}" download target="_blank" class="text-blue-600 hover:text-blue-800">
                     <span class="material-icons-outlined">download</span>
                 </a>
+                {% else %}
+                <span class="text-red-500 text-xs">Sin archivo</span>
                 {% endif %}
             </div>
             {% endfor %}
@@ -230,6 +269,8 @@
                 <a href="{{ doc.file.url }}" download target="_blank" class="text-blue-600 hover:text-blue-800">
                     <span class="material-icons-outlined">download</span>
                 </a>
+                {% else %}
+                <span class="text-red-500 text-xs">Sin archivo</span>
                 {% endif %}
             </div>
             {% endfor %}
@@ -286,6 +327,8 @@
                 <a href="{{ doc.file.url }}" download target="_blank" class="text-blue-600 hover:text-blue-800">
                     <span class="material-icons-outlined">download</span>
                 </a>
+                {% else %}
+                <span class="text-red-500 text-xs">Sin archivo</span>
                 {% endif %}
             </div>
             {% endfor %}
@@ -342,6 +385,8 @@
                 <a href="{{ doc.file.url }}" download target="_blank" class="text-blue-600 hover:text-blue-800">
                     <span class="material-icons-outlined">download</span>
                 </a>
+                {% else %}
+                <span class="text-red-500 text-xs">Sin archivo</span>
                 {% endif %}
             </div>
             {% endfor %}
@@ -405,6 +450,7 @@
 </div>
 
 <!-- Mi Criterio y Votación -->
+{% if not caso_completado %}
 <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
     <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
         <span class="material-icons-outlined text-blue-600">how_to_vote</span>
@@ -449,9 +495,32 @@
         </div>
     </form>
 </div>
+{% else %}
+<!-- Caso completado - Solo mostrar criterio guardado (sin opción de editar) -->
+{% if opinion_medico_actual %}
+<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+        <span class="material-icons-outlined text-blue-600">how_to_vote</span>
+        Mi Criterio y Votación
+    </h3>
+    <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+        <p class="text-gray-600 text-sm mb-3">{{ opinion_medico_actual.comentario_privado }}</p>
+        {% if opinion_medico_actual.voto %}
+        <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold
+            {% if opinion_medico_actual.voto == 'acuerdo' %}bg-green-100 text-green-700
+            {% else %}bg-red-100 text-red-700{% endif %}">
+            {% if opinion_medico_actual.voto == 'acuerdo' %}✓ De acuerdo
+            {% else %}✗ En desacuerdo{% endif %}
+        </span>
+        {% endif %}
+    </div>
+    <p class="text-sm text-gray-500 mt-3">Este caso está completado. Ya no puedes modificar tu criterio.</p>
+</div>
+{% endif %}
+{% endif %}
 
 <!-- Respuesta del Responsable -->
-{% if es_responsable %}
+{% if es_responsable and not caso_completado %}
 <div class="bg-white rounded-xl shadow-sm border-2 border-blue-500 p-6 mb-6">
     <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
         <span class="material-icons-outlined text-blue-600">fact_check</span>
@@ -488,6 +557,15 @@
             <span class="material-icons-outlined">picture_as_pdf</span> Generar PDF y Enviar
         </button>
     </form>
+</div>
+{% elif es_responsable and caso_completado %}
+<!-- Caso completado - Mostrar mensaje informativo -->
+<div class="bg-white rounded-xl shadow-sm border-2 border-gray-300 p-6 mb-6">
+    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+        <span class="material-icons-outlined text-gray-600">fact_check</span>
+        Respuesta Final al Paciente
+    </h3>
+    <p class="text-sm text-gray-500">Este caso ya ha sido completado y la respuesta ha sido enviada al paciente.</p>
 </div>
 {% endif %}
 

@@ -38,7 +38,7 @@
     <aside class="sidebar-gradient w-full md:w-1/4 lg:w-1/5 p-8 flex flex-col text-white" data-purpose="sidebar-container">
         <div class="mb-8">
             <!-- Document Icon -->
-            <img src="/static/images/logo.png" alt="OncoMDT" class="h-20 w-auto mb-6">
+            <img src="/static/images/logo.png" alt="Segunda Opinión Médica" class="h-20 w-auto mb-6">
             <h1 class="text-3xl font-bold leading-tight mb-4">Segunda Opinión Médica</h1>
             <p class="text-blue-100 text-lg opacity-90">Solicitud de Segunda Opinión</p>
         </div>
@@ -80,63 +80,186 @@
         <form method="post" novalidate class="space-y-8">
             {% csrf_token %}
             
+            {% if form.non_field_errors %}
+            <div class="bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-xl mb-6">
+                <div class="flex items-center gap-3">
+                    <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <div>
+                        {% for error in form.non_field_errors %}
+                        <p class="font-medium">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
             <!-- BEGIN: Form Card -->
             <div class="bg-white rounded-3xl shadow-xl border border-gray-100 p-8 md:p-12 max-w-5xl" data-purpose="form-container">
-                <!-- Row 1: Full Name -->
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                    <div class="md:col-span-3">
-                        <label class="block text-sm font-medium text-gray-500 mb-1" for="id_full_name">Nombre completo *</label>
-                        <div class="bg-gray-50 rounded-lg px-4 py-3 border border-gray-200">
-                            <input class="block w-full border-0 border-b-2 border-gray-200 focus:border-blue-500 text-lg text-gray-800 transition-colors py-1 bg-transparent focus:outline-none focus:ring-0" id="id_full_name" name="full_name" type="text" value="{{ form.full_name.value|default:'' }}" placeholder="Ingrese su nombre completo" required/>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-500 mb-1" for="id_age">Edad *</label>
-                        <div class="bg-gray-50 rounded-lg px-4 py-3 border border-gray-200">
-                            <input class="block w-full border-0 border-b-2 border-gray-200 focus:border-blue-500 text-lg text-gray-800 transition-colors py-1 bg-transparent focus:outline-none focus:ring-0" id="id_age" name="age" type="number" value="{{ form.age.value|default:'' }}" placeholder="--" required/>
-                        </div>
-                    </div>
-                </div>
                 
-                <!-- Row 2: Email and Phone -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-500 mb-1" for="id_email">Email *</label>
-                        <div class="bg-gray-50 rounded-lg px-4 py-3 border border-gray-200">
-                            <input class="block w-full border-0 border-b-2 border-gray-200 focus:border-blue-500 text-lg text-gray-800 transition-colors py-1 bg-transparent focus:outline-none focus:ring-0" id="id_email" name="email" type="email" value="{{ form.email.value|default:'' }}" placeholder="correo@ejemplo.com" required/>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-500 mb-1" for="id_phone">Teléfono *</label>
-                        <div class="bg-gray-50 rounded-lg px-4 py-3 border border-gray-200">
-                            <input class="block w-full border-0 border-b-2 border-gray-200 focus:border-blue-500 text-lg text-gray-800 transition-colors py-1 bg-transparent focus:outline-none focus:ring-0" id="id_phone" name="phone" type="tel" value="{{ form.phone.value|default:'' }}" placeholder="+34 912 34 56 78" required/>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Row 3: Medical History -->
+                <!-- Section 1: Role Selection -->
                 <div class="mb-8">
-                    <label class="block text-sm font-medium text-gray-500 mb-1" for="id_medical_history">Enfermedades que padecen</label>
-                    <div class="bg-gray-50 rounded-lg px-4 py-3 border border-gray-200">
-                        <textarea class="block w-full border-0 border-b-2 border-gray-200 focus:border-blue-500 text-lg text-gray-800 transition-colors py-1 bg-transparent focus:outline-none focus:ring-0 resize-none" id="id_medical_history" name="medical_history" rows="2" placeholder="Ej: Diabetes, Hipertensión, Asma, etc. (Escriba las alergias en el campo siguiente)">{{ form.medical_history.value|default:'' }}</textarea>
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">Enviando un caso como:</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <label class="cursor-pointer">
+                            <input type="radio" name="role_selection" value="patient" class="peer sr-only" {% if form.is_patient_holder.value %}checked{% endif %} onchange="toggleRoleFields('patient')">
+                            <div class="p-4 rounded-xl border-2 border-gray-200 peer-checked:border-blue-500 peer-checked:bg-blue-50 hover:border-gray-300 transition-all">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                                    </div>
+                                    <div>
+                                        <p class="font-semibold text-gray-800">Paciente</p>
+                                        <p class="text-sm text-gray-500">Soy el titular de la cuenta</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="role_selection" value="representative" class="peer sr-only" {% if not form.is_patient_holder.value %}checked{% endif %} onchange="toggleRoleFields('representative')">
+                            <div class="p-4 rounded-xl border-2 border-gray-200 peer-checked:border-blue-500 peer-checked:bg-blue-50 hover:border-gray-300 transition-all">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
+                                        <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                                    </div>
+                                    <div>
+                                        <p class="font-semibold text-gray-800">Representante del paciente</p>
+                                        <p class="text-sm text-gray-500">Envío el caso en nombre de otra persona</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </label>
                     </div>
                 </div>
                 
-                <!-- Row 4: Current Medications -->
+                <!-- Section 2: Patient Data (shown for both roles) -->
                 <div class="mb-8">
-                    <label class="block text-sm font-medium text-gray-500 mb-1" for="id_current_medications">Medicamentos actuales</label>
-                    <div class="bg-gray-50 rounded-lg px-4 py-3 border border-gray-200">
-                        <textarea class="block w-full border-0 border-b-2 border-gray-200 focus:border-blue-500 text-lg text-gray-800 transition-colors py-1 bg-transparent focus:outline-none focus:ring-0 resize-none" id="id_current_medications" name="current_medications" rows="2" placeholder="Liste los medicamentos que está tomando actualmente">{{ form.current_medications.value|default:'' }}</textarea>
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">Datos del paciente</h3>
+                    
+                    <!-- Row 1: Full Name and Identity Card -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-500 mb-1" for="id_full_name">Nombre completo *</label>
+                            <div class="bg-gray-50 rounded-lg px-4 py-3 border border-gray-200{% if form.full_name.errors %} border-red-500{% endif %}">
+                                <input class="block w-full border-0 border-b-2 border-gray-200 focus:border-blue-500 text-lg text-gray-800 transition-colors py-1 bg-transparent focus:outline-none focus:ring-0" id="id_full_name" name="full_name" type="text" value="{{ form.full_name.value|default:'' }}" placeholder="Ingrese el nombre completo del paciente" required/>
+                            </div>
+                            {% if form.full_name.errors %}
+                            <p class="text-red-500 text-sm mt-1">{{ form.full_name.errors.as_text }}</p>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-500 mb-1" for="id_identity_card">Carnet de identidad *</label>
+                            <div class="bg-gray-50 rounded-lg px-4 py-3 border border-gray-200{% if form.identity_card.errors %} border-red-500{% endif %}">
+                                <input class="block w-full border-0 border-b-2 border-gray-200 focus:border-blue-500 text-lg text-gray-800 transition-colors py-1 bg-transparent focus:outline-none focus:ring-0" id="id_identity_card" name="identity_card" type="text" value="{{ form.identity_card.value|default:'' }}" placeholder="Número de carnet de identidad" required/>
+                            </div>
+                            {% if form.identity_card.errors %}
+                            <p class="text-red-500 text-sm mt-1">{{ form.identity_card.errors.as_text }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Row 2: Date of Birth and Age -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-500 mb-1" for="id_date_of_birth">Fecha de nacimiento</label>
+                            <div class="bg-gray-50 rounded-lg px-4 py-3 border border-gray-200{% if form.date_of_birth.errors %} border-red-500{% endif %}">
+                                <input class="block w-full border-0 border-b-2 border-gray-200 focus:border-blue-500 text-lg text-gray-800 transition-colors py-1 bg-transparent focus:outline-none focus:ring-0" id="id_date_of_birth" name="date_of_birth" type="date" value="{{ form.date_of_birth.value|default:'' }}"/>
+                            </div>
+                            {% if form.date_of_birth.errors %}
+                            <p class="text-red-500 text-sm mt-1">{{ form.date_of_birth.errors.as_text }}</p>
+                            {% endif %}
+                            <p class="text-xs text-gray-400 mt-1">Si ingresa la fecha de nacimiento, la edad se calculará automáticamente</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-500 mb-1" for="id_age">Edad *</label>
+                            <div class="bg-gray-50 rounded-lg px-4 py-3 border border-gray-200{% if form.age.errors %} border-red-500{% endif %}">
+                                <input class="block w-full border-0 border-b-2 border-gray-200 focus:border-blue-500 text-lg text-gray-800 transition-colors py-1 bg-transparent focus:outline-none focus:ring-0" id="id_age" name="age" type="number" value="{{ form.age.value|default:'' }}" placeholder="--" required/>
+                            </div>
+                            {% if form.age.errors %}
+                            <p class="text-red-500 text-sm mt-1">{{ form.age.errors.as_text }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Row 3: Email and Phone -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-500 mb-1" for="id_email">Email *</label>
+                            <div class="bg-gray-50 rounded-lg px-4 py-3 border border-gray-200{% if form.email.errors %} border-red-500{% endif %}">
+                                <input class="block w-full border-0 border-b-2 border-gray-200 focus:border-blue-500 text-lg text-gray-800 transition-colors py-1 bg-transparent focus:outline-none focus:ring-0" id="id_email" name="email" type="email" value="{{ form.email.value|default:'' }}" placeholder="correo@ejemplo.com" required/>
+                            </div>
+                            {% if form.email.errors %}
+                            <p class="text-red-500 text-sm mt-1">{{ form.email.errors.as_text }}</p>
+                            {% endif %}
+                            <p class="text-xs text-amber-600 font-medium mt-1">⚠️ La respuesta a esta solicitud la recibirás en el correo que pongas aquí</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-500 mb-1" for="id_phone">Teléfono *</label>
+                            <div class="bg-gray-50 rounded-lg px-4 py-3 border border-gray-200{% if form.phone.errors %} border-red-500{% endif %}">
+                                <input class="block w-full border-0 border-b-2 border-gray-200 focus:border-blue-500 text-lg text-gray-800 transition-colors py-1 bg-transparent focus:outline-none focus:ring-0" id="id_phone" name="phone" type="tel" value="{{ form.phone.value|default:'' }}" placeholder="+34 912 34 56 78" required/>
+                            </div>
+                            {% if form.phone.errors %}
+                            <p class="text-red-500 text-sm mt-1">{{ form.phone.errors.as_text }}</p>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
                 
-                <!-- Row 5: Known Allergies -->
-                <div class="mb-8">
-                    <label class="block text-sm font-medium text-gray-500 mb-1" for="id_known_allergies">Alergias conocidas</label>
-                    <div class="bg-gray-50 rounded-lg px-4 py-3 border border-gray-200">
-                        <input class="block w-full border-0 border-b-2 border-gray-200 focus:border-blue-500 text-lg text-gray-800 transition-colors py-1 bg-transparent focus:outline-none focus:ring-0" id="id_known_allergies" name="known_allergies" type="text" value="{{ form.known_allergies.value|default:'' }}" placeholder="Ej: Penicilina, Mariscos, Látex, Polen, etc."/>
+                <!-- Section 2b: Representative Data (only shown for representative) -->
+                <div id="representative-data-section" class="mb-8 {% if form.is_patient_holder.value %}hidden{% endif %}">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">Datos del representante</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-500 mb-1" for="id_representative_name">Nombre del representante *</label>
+                            <div class="bg-gray-50 rounded-lg px-4 py-3 border border-gray-200{% if form.representative_name.errors %} border-red-500{% endif %}">
+                                <input class="block w-full border-0 border-b-2 border-gray-200 focus:border-blue-500 text-lg text-gray-800 transition-colors py-1 bg-transparent focus:outline-none focus:ring-0" id="id_representative_name" name="representative_name" type="text" value="{{ form.representative_name.value|default:'' }}" placeholder="Nombre y apellido del representante"/>
+                            </div>
+                            {% if form.representative_name.errors %}
+                            <p class="text-red-500 text-sm mt-1">{{ form.representative_name.errors.as_text }}</p>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-500 mb-1" for="id_representative_identity_card">Carnet de identidad del representante *</label>
+                            <div class="bg-gray-50 rounded-lg px-4 py-3 border border-gray-200{% if form.representative_identity_card.errors %} border-red-500{% endif %}">
+                                <input class="block w-full border-0 border-b-2 border-gray-200 focus:border-blue-500 text-lg text-gray-800 transition-colors py-1 bg-transparent focus:outline-none focus:ring-0" id="id_representative_identity_card" name="representative_identity_card" type="text" value="{{ form.representative_identity_card.value|default:'' }}" placeholder="Número de carnet de identidad"/>
+                            </div>
+                            {% if form.representative_identity_card.errors %}
+                            <p class="text-red-500 text-sm mt-1">{{ form.representative_identity_card.errors.as_text }}</p>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
+                
+
+                
+                <!-- Section 4: Declaration -->
+                <div class="mb-8">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">Declaración</h3>
+                    <div class="p-6 bg-blue-50 rounded-xl border border-blue-100">
+                        <p class="text-gray-700 mb-4" id="declaration-text">
+                            Al marcar esta declaración, doy mi consentimiento para que mis datos médicos sean utilizados exclusivamente para mi segunda opinión médica.
+                        </p>
+                        <div class="flex items-start">
+                            <div class="flex items-center h-5">
+                                <input type="checkbox" id="id_declaration" name="declaration" class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500" required>
+                            </div>
+                            <div class="ml-3">
+                                <label for="id_declaration" class="text-sm font-medium text-gray-700">
+                                    Acepto la declaración y confirmo que los datos son correctos *
+                                </label>
+                            </div>
+                        </div>
+                        {% if form.declaration.errors %}
+                        <p class="text-red-500 text-sm mt-2">{{ form.declaration.errors.as_text }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Hidden fields for form submission -->
+                <input type="hidden" id="id_is_patient_holder" name="is_patient_holder" value="{% if form.is_patient_holder.value %}true{% else %}false{% endif %}">
+                <input type="hidden" id="id_responsible_declaration" name="responsible_declaration" value="{% if form.responsible_declaration.value %}true{% else %}false{% endif %}">
             </div>
             <!-- END: Form Card -->
             
@@ -157,5 +280,69 @@
     </main>
     <!-- END: Main Content Area -->
 </div>
+
+<script>
+    // Calcular edad automáticamente desde fecha de nacimiento
+    document.addEventListener('DOMContentLoaded', function() {
+        const dateOfBirthInput = document.getElementById('id_date_of_birth');
+        const ageInput = document.getElementById('id_age');
+        const form = document.querySelector('form');
+        const declarationCheckbox = document.getElementById('id_declaration');
+        
+        // Validar checkbox antes de enviar
+        form.addEventListener('submit', function(e) {
+            if (!declarationCheckbox.checked) {
+                e.preventDefault();
+                alert('Debe aceptar la declaración para continuar.');
+                return false;
+            }
+        });
+        
+        dateOfBirthInput.addEventListener('change', function() {
+            const dob = new Date(this.value);
+            const today = new Date();
+            let age = today.getFullYear() - dob.getFullYear();
+            const monthDiff = today.getMonth() - dob.getMonth();
+            
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+                age--;
+            }
+            
+            if (age >= 0 && age <= 120) {
+                ageInput.value = age;
+            }
+        });
+        
+        // Toggle role fields
+        const roleRadios = document.querySelectorAll('input[name="role_selection"]');
+        const representativeDataSection = document.getElementById('representative-data-section');
+        const isPatientHolderInput = document.getElementById('id_is_patient_holder');
+        const responsibleDeclarationInput = document.getElementById('id_responsible_declaration');
+        const declarationText = document.getElementById('declaration-text');
+        
+        roleRadios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                if (this.value === 'patient') {
+                    representativeDataSection.classList.add('hidden');
+                    isPatientHolderInput.value = 'true';
+                    responsibleDeclarationInput.value = 'true';
+                    declarationText.textContent = 'Al marcar esta declaración, doy mi consentimiento para que mis datos médicos sean utilizados exclusivamente para mi segunda opinión médica.';
+                } else {
+                    representativeDataSection.classList.remove('hidden');
+                    isPatientHolderInput.value = 'false';
+                    responsibleDeclarationInput.value = 'true';
+                    declarationText.textContent = 'Al marcar esta declaración, confirmo que cuento con el consentimiento del paciente para gestionar sus datos médicos y otorgo mi consentimiento para que dichos datos sean utilizados exclusivamente para la segunda opinión médica.';
+                    // Limpiar los campos de datos del paciente para representar
+                    document.getElementById('id_full_name').value = '';
+                    document.getElementById('id_identity_card').value = '';
+                    document.getElementById('id_age').value = '';
+                    document.getElementById('id_date_of_birth').value = '';
+                    document.getElementById('id_email').value = '';
+                    document.getElementById('id_phone').value = '';
+                }
+            });
+        });
+    });
+</script>
 </body>
 </html>

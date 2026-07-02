@@ -65,16 +65,13 @@
         <div class="grid md:grid-cols-2 gap-4">
             <div>
                 <p class="text-sm text-slate-500 dark:text-slate-400">Nombre</p>
-                <p class="font-medium text-slate-900 dark:text-white">{{ case.patient.get_full_name|default:case.patient.email }}</p>
+                <p class="font-medium text-slate-900 dark:text-white">{{ case.patient.patient_profile.full_name|default:case.patient.email }}</p>
             </div>
             <div>
                 <p class="text-sm text-slate-500 dark:text-slate-400">Email</p>
                 <p class="font-medium text-slate-900 dark:text-white">{{ case.patient.email }}</p>
             </div>
-            <div>
-                <p class="text-sm text-slate-500 dark:text-slate-400">Teléfono</p>
-                <p class="font-medium text-slate-900 dark:text-white">{{ case.patient.phone_number|default:'No proporcionado' }}</p>
-            </div>
+
         </div>
     </div>
 
@@ -85,18 +82,12 @@
             Diagnóstico y Antecedentes
         </h2>
         <div class="grid md:grid-cols-2 gap-6">
-            <div>
-                <p class="text-sm text-slate-500 dark:text-slate-400">Diagnóstico Principal</p>
-                <p class="font-medium text-slate-900 dark:text-white">{{ case.primary_diagnosis }}</p>
-            </div>
+
             <div>
                 <p class="text-sm text-slate-500 dark:text-slate-400">Tipo de Cancer</p>
                 <p class="font-medium text-slate-900 dark:text-white">{% if case.tipo_cancer %}{{ case.tipo_cancer.nombre }}{% else %}No especificado{% endif %}</p>
             </div>
-            <div>
-                <p class="text-sm text-slate-500 dark:text-slate-400">Estadio</p>
-                <p class="font-medium text-slate-900 dark:text-white">{% if case.estadio %}{{ case.estadio }}{% else %}No especificado{% endif %}</p>
-            </div>
+
             <div>
                 <p class="text-sm text-slate-500 dark:text-slate-400">Localidad de la enfermedad</p>
                 <p class="font-medium text-slate-900 dark:text-white">{% if case.localidad %}{{ case.localidad.nombre }}{% elif case.tipo_cancer %}{{ case.tipo_cancer.nombre }}{% else %}No especificado{% endif %}</p>
@@ -112,14 +103,7 @@
         </div>
     </div>
 
-    <!-- Síntomas y Descripción -->
-    <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-6 mb-6">
-        <h2 class="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-            <span class="material-icons-round text-primary">description</span>
-            Síntomas y Descripción
-        </h2>
-        <p class="text-slate-600 dark:text-slate-300">{{ case.description }}</p>
-    </div>
+
 
     <!-- Información Adicional -->
     {% if case.objetivo_consulta or case.tratamiento_propuesto_original %}

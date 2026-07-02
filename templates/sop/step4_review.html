@@ -24,7 +24,7 @@
     <!-- BEGIN: Sidebar -->
     <aside class="sidebar-gradient w-full md:w-1/4 lg:w-1/5 p-8 flex flex-col text-white">
         <div class="mb-8">
-            <img src="/static/images/logo.png" alt="OncoMDT" class="h-20 w-auto mb-6">
+            <img src="/static/images/logo.png" alt="Segunda Opinión Médica" class="h-20 w-auto mb-6">
             <h1 class="text-3xl font-bold leading-tight mb-4">Segunda Opinión Médica</h1>
             <p class="text-blue-100 text-lg opacity-90">Solicitud de Segunda Opinión</p>
         </div>
@@ -82,7 +82,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <!-- Información del paciente -->
                 <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-                    <div class="bg-gray-800 px-6 py-4 text-white">
+                    <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4 text-white">
                         <div class="flex items-center gap-3">
                             <svg class="h-6 w-6" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                             <h6 class="font-bold">Información del paciente</h6>
@@ -93,34 +93,22 @@
                             {% if p %}
                                 <div class="space-y-4">
                                     <div>
-                                        <p class="text-xs font-medium text-gray-400 uppercase">Nombre</p>
-                                        <p class="text-gray-800 font-semibold">{{ p.full_name }}</p>
+                                        <p class="text-xs font-medium text-gray-400 uppercase tracking-wide">Nombre completo</p>
+                                        <p class="text-gray-800 font-semibold text-lg">{{ p.full_name }}</p>
                                     </div>
                                     <div class="grid grid-cols-2 gap-4">
                                         <div>
-                                            <p class="text-xs font-medium text-gray-400 uppercase">Edad</p>
+                                            <p class="text-xs font-medium text-gray-400 uppercase tracking-wide">Edad</p>
                                             <p class="text-gray-800 font-semibold">{{ p.age }} años</p>
                                         </div>
                                         <div>
-                                            <p class="text-xs font-medium text-gray-400 uppercase">Teléfono</p>
+                                            <p class="text-xs font-medium text-gray-400 uppercase tracking-wide">Teléfono</p>
                                             <p class="text-gray-800 font-semibold">{{ p.phone }}</p>
                                         </div>
                                     </div>
                                     <div>
-                                        <p class="text-xs font-medium text-gray-400 uppercase">Email</p>
+                                        <p class="text-xs font-medium text-gray-400 uppercase tracking-wide">Email</p>
                                         <p class="text-gray-800 font-semibold">{{ p.email }}</p>
-                                    </div>
-                                    <div>
-                                        <p class="text-xs font-medium text-gray-400 uppercase">Enfermedades</p>
-                                        <p class="text-gray-800 {% if not p.medical_history %}text-gray-400 italic{% endif %}">{{ p.medical_history|default:"No especificadas" }}</p>
-                                    </div>
-                                    <div>
-                                        <p class="text-xs font-medium text-gray-400 uppercase">Medicaciones</p>
-                                        <p class="text-gray-800 {% if not p.current_medications %}text-gray-400 italic{% endif %}">{{ p.current_medications|default:"No especificadas" }}</p>
-                                    </div>
-                                    <div>
-                                        <p class="text-xs font-medium text-gray-400 uppercase">Alergias</p>
-                                        <p class="text-gray-800 {% if not p.known_allergies %}text-gray-400 italic{% endif %}">{{ p.known_allergies|default:"No especificadas" }}</p>
                                     </div>
                                 </div>
                             {% else %}
@@ -132,7 +120,7 @@
 
                 <!-- Detalles del caso -->
                 <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-                    <div class="bg-gray-800 px-6 py-4 text-white">
+                    <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4 text-white">
                         <div class="flex items-center gap-3">
                             <svg class="h-6 w-6" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                             <h6 class="font-bold">Detalles del caso</h6>
@@ -143,28 +131,20 @@
                             {% if c %}
                                 <div class="space-y-4">
                                     <div>
-                                        <p class="text-xs font-medium text-gray-400 uppercase">Diagnóstico principal</p>
-                                        <p class="text-gray-800 font-semibold {% if not c.primary_diagnosis %}text-gray-400 italic{% endif %}">{{ c.primary_diagnosis|default:"No especificado" }}</p>
+                                        <p class="text-xs font-medium text-gray-400 uppercase tracking-wide">Localización de la enfermedad</p>
+                                        <p class="text-gray-800 font-semibold text-lg">
+                                            {% if c.tipo_cancer %}{{ c.tipo_cancer_nombre|default:c.tipo_cancer }}{% else %}<span class="text-gray-400 italic">No seleccionada</span>{% endif %}
+                                        </p>
                                     </div>
                                     <div class="grid grid-cols-2 gap-4">
                                         <div>
-                                            <p class="text-xs font-medium text-gray-400 uppercase">Fecha de diagnóstico</p>
-                                            <p class="text-gray-800 font-semibold {% if not c.diagnosis_date %}text-gray-400 italic{% endif %}">{{ c.diagnosis_date|default:"No especificada" }}</p>
+                                            <p class="text-xs font-medium text-gray-400 uppercase tracking-wide">Fecha de diagnóstico</p>
+                                            <p class="text-gray-800 font-semibold">{% if c.diagnosis_date %}{{ c.diagnosis_date }}{% else %}<span class="text-gray-400 italic">No especificada</span>{% endif %}</p>
                                         </div>
                                         <div>
-                                            <p class="text-xs font-medium text-gray-400 uppercase">Tipo de cáncer</p>
-                                            <p class="text-gray-800 font-semibold {% if not c.tipo_cancer %}text-gray-400 italic{% endif %}">
-                                                {% if c.tipo_cancer %}{{ c.tipo_cancer_nombre|default:c.tipo_cancer }}{% else %}No seleccionado{% endif %}
-                                            </p>
+                                            <p class="text-xs font-medium text-gray-400 uppercase tracking-wide">Hospital</p>
+                                            <p class="text-gray-800 font-semibold">{% if c.referring_institution %}{{ c.referring_institution }}{% else %}<span class="text-gray-400 italic">No especificado</span>{% endif %}</p>
                                         </div>
-                                    </div>
-                                    <div>
-                                        <p class="text-xs font-medium text-gray-400 uppercase">Hospital</p>
-                                        <p class="text-gray-800 font-semibold {% if not c.referring_institution %}text-gray-400 italic{% endif %}">{{ c.referring_institution|default:"No especificado" }}</p>
-                                    </div>
-                                    <div>
-                                        <p class="text-xs font-medium text-gray-400 uppercase">Síntomas principales</p>
-                                        <p class="text-gray-800 {% if not c.main_symptoms %}text-gray-400 italic{% endif %}">{{ c.main_symptoms|default:"No especificados" }}</p>
                                     </div>
                                 </div>
                             {% else %}

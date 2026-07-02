@@ -43,16 +43,49 @@ def sop_step1(request):
             'full_name': profile.full_name,
             'email': user.email,
             'phone': profile.phone_number,
-            'medical_history': profile.medical_history,
-            'current_medications': profile.current_treatment,
-            'known_allergies': '',
+            'is_patient_holder': True,  # Por defecto, asumimos que es el titular
+            'declaration': False,
         }
+        # Si tiene fecha de nacimiento, calcular la edad
+        if profile.date_of_birth:
+            from datetime import date
+            today = date.today()
+            initial['date_of_birth'] = profile.date_of_birth
+            initial['age'] = today.year - profile.date_of_birth.year - ((today.month, today.day) < (profile.date_of_birth.month, profile.date_of_birth.day))
     except Exception:
         pass
 
     if request.method == 'POST':
         form = PatientProfileForm(request.POST)
         if form.is_valid():
+            # Obtener valores del formulario
+            is_holder = form.cleaned_data.get('is_patient_holder', True)
+            # Convertir string a boolean si es necesario
+            if isinstance(is_holder, str):
+                is_holder = is_holder.lower() == 'true'
+            responsible = form.cleaned_data.get('responsible_declaration', False)
+            if isinstance(responsible, str):
+                responsible = responsible.lower() == 'true'
+            declaration = form.cleaned_data.get('declaration', False)
+            
+            # Validar según el rol
+            if not is_holder and not responsible:
+                form.add_error('responsible_declaration', 'Debe confirmar que tiene el consentimiento del paciente.')
+                return render(request, 'sop/step1_patient.html', {'form': form, 'current_step': 1})
+            
+            if not declaration:
+                form.add_error('declaration', 'Debe aceptar la declaración para continuar.')
+                return render(request, 'sop/step1_patient.html', {'form': form, 'current_step': 1})
+            
+            # Calcular edad automáticamente desde fecha de nacimiento
+            age = form.cleaned_data.get('age')
+            date_of_birth = form.cleaned_data.get('date_of_birth')
+            if date_of_birth and not age:
+                from datetime import date
+                today = date.today()
+                age = today.year - date_of_birth.year - ((today.month, today.day) < (date_of_birth.month, date_of_birth.day))
+                form.cleaned_data['age'] = age
+            
             draft = request.session.get(SESSION_KEY, {})
             draft.update({'patient_profile': _serialize_for_session(form.cleaned_data)})
             request.session[SESSION_KEY] = draft
@@ -66,21 +99,12 @@ def sop_step1(request):
                     profile.full_name = pdata.get('full_name')
                 if pdata.get('phone'):
                     profile.phone_number = pdata.get('phone')
-                if pdata.get('medical_history'):
-                    profile.medical_history = pdata.get('medical_history')
-                if pdata.get('current_medications'):
-                    profile.current_treatment = pdata.get('current_medications')
-                if pdata.get('known_allergies'):
-                    profile.medical_history = (profile.medical_history or '') + '\n\nAlergias:\n' + pdata.get('known_allergies')
-                # Guardar edad si se proporciona (como fecha de nacimiento calculada)
+                # Guardar fecha de nacimiento
+                if pdata.get('date_of_birth'):
+                    profile.date_of_birth = pdata.get('date_of_birth')
+                # Guardar edad calculada desde fecha de nacimiento
                 if pdata.get('age'):
-                    from datetime import date
-                    try:
-                        birth_year = date.today().year - int(pdata.get('age'))
-                        profile.date_of_birth = date(birth_year, 1, 1)  # Fecha aproximada
-                    except:
-                        pass
-                profile.save()
+                    profile.save()
             except Exception as e:
                 print(f"Error saving patient profile: {e}")
                 pass
@@ -105,9 +129,6 @@ def sop_step2(request):
             cleaned['tipo_cancer'] = tipo_cancer.pk if tipo_cancer else None
             cleaned['tipo_cancer_nombre'] = tipo_cancer.nombre if tipo_cancer else None
             
-            # Guardar el estadio
-            cleaned['estadio'] = cleaned.get('estadio', '')
-            
             draft.update({'case_draft': _serialize_for_session(cleaned)})
             request.session[SESSION_KEY] = draft
             request.session.modified = True
@@ -120,17 +141,13 @@ def sop_step2(request):
                 if case_pk:
                     case = Case.objects.filter(pk=case_pk, patient=request.user).first()
                     if case:
-                        case.primary_diagnosis = cleaned.get('primary_diagnosis')
                         case.diagnosis_date = cleaned.get('diagnosis_date') or None
-                        case.description = cleaned.get('main_symptoms', '')
                         # Guardar la institucion que refiere
                         case.referring_institution = cleaned.get('referring_institution', '')
                         # Guardar tipo de cancer
                         tipo_cancer_pk = cleaned.get('tipo_cancer')
                         if tipo_cancer_pk:
                             case.tipo_cancer = TipoCancer.objects.get(pk=tipo_cancer_pk)
-                        # Guardar estadio
-                        case.estadio = cleaned.get('estadio', '')
                         case.status = 'DRAFT'
                         case.save()
                 else:
@@ -143,12 +160,9 @@ def sop_step2(request):
                     case = Case.objects.create(
                         patient=request.user,
                         case_id=case_id,
-                        primary_diagnosis=cleaned.get('primary_diagnosis', ''),
                         diagnosis_date=cleaned.get('diagnosis_date') or None,
                         specialty_required='',  # Ya no se usa, se eliminó el campo especialidad
-                        description=cleaned.get('main_symptoms', ''),
                         tipo_cancer=tipo_cancer_obj,
-                        estadio=cleaned.get('estadio', ''),
                         referring_institution=cleaned.get('referring_institution', ''),
                         status='DRAFT'
                     )
@@ -184,6 +198,19 @@ def sop_step3(request):
     
     # we allow multiple uploads by repeating the form
     if request.method == 'POST':
+        # Verificar si el usuario está intentando ir al siguiente paso
+        if 'continue_to_step4' in request.POST:
+            draft = request.session.get(SESSION_KEY, {})
+            documents = draft.get('documents', [])
+            # Verificar si hay un documento de resumen de historia clínica
+            has_resumen = any(doc.get('type') == 'Resumen de Historia Clínica' or doc.get('type') == 'resumen_historia_clinica' for doc in documents)
+            
+            if not has_resumen:
+                messages.error(request, 'Debe subir el Resumen de Historia Clínica para continuar.')
+                return render(request, 'sop/step3_documents.html', {'form': CaseDocumentForm(), 'documents': documents, 'current_step': 3})
+            
+            return redirect('cases:sop_step4')
+        
         form = CaseDocumentForm(request.POST, request.FILES)
         if form.is_valid():
             # Register metadata in session and rely on presigned upload endpoint
@@ -198,7 +225,9 @@ def sop_step3(request):
                 CaseDocument = django_apps.get_model('cases', 'CaseDocument')
                 Case = django_apps.get_model('cases', 'Case')
                 case_pk = draft.get('case_pk')
+                print(f"[sop_step3] case_pk from session: {case_pk}")
                 case = Case.objects.filter(pk=case_pk, patient=request.user).first() if case_pk else None
+                print(f"[sop_step3] case found: {case}, case_id: {case.case_id if case else 'N/A'}")
                 if case:
                     # save file to media storage and create CaseDocument
                     cd = CaseDocument.objects.create(
@@ -208,10 +237,13 @@ def sop_step3(request):
                         file_name=f.name,
                         uploaded_by=request.user
                     )
+                    print(f"[sop_step3] CaseDocument created: {cd.id}")
+                    print(f"[sop_step3] CaseDocument file: {cd.file}, url: {cd.file.url if cd.file else 'N/A'}")
                     # keep metadata in session for display in review
                     docs.append({'name': cd.file_name, 'type': cd.get_document_type_display(), 'id': cd.pk})
                 else:
                     # fallback: keep metadata only
+                    print(f"[sop_step3] No case found, using session fallback")
                     docs.append({'name': f.name, 'content_type': f.content_type, 'type': doc_type_label})
                 draft['documents'] = docs
                 request.session[SESSION_KEY] = draft
@@ -315,10 +347,8 @@ def sop_step4(request):
                         case.diagnosis_date = c.get('diagnosis_date', case.diagnosis_date)
                         # Usar la especialidad guardada en lugar de la institucion
                         case.specialty_required = c.get('especialidad_nombre', c.get('referring_institution', case.specialty_required))
-                        case.description = c.get('main_symptoms', case.description)
                         # Guardar la institucion que refiere
                         case.referring_institution = c.get('referring_institution', case.referring_institution)
-                        case.description = c.get('main_symptoms', case.description)
                         # Guardar tipo de cancer
                         tipo_cancer_pk = c.get('tipo_cancer')
                         if tipo_cancer_pk:

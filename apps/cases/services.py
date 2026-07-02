@@ -75,26 +75,33 @@ def create_case(patient, case_id, primary_diagnosis, specialty_required, descrip
         case = Case.objects.create(
             patient=user,
             case_id=case_id,
-            primary_diagnosis=case_draft.get('primary_diagnosis', '') if case_draft else '',
+            primary_diagnosis=case_draft.get('primary_diagnosis', '') if case_draft else None,
             # Usar el nombre de la especialidad en lugar de la institucion
             specialty_required=case_draft.get('especialidad_nombre', case_draft.get('referring_institution', '')) if case_draft else '',
-            description=case_draft.get('main_symptoms', '') if case_draft else '',
+
             tipo_cancer=tipo_cancer_obj,
-            estadio=case_draft.get('estadio', '') if case_draft else '',
         )
 
         # Link documents: create CaseDocument rows if session contains metadata
+        # Solo crear documentos que ya tengan archivo (los creados en sop_step3)
         for d in documents:
-            try:
-                CaseDocument.objects.create(
-                    case=case,
-                    document_type=d.get('type', 'other'),
-                    file_name=d.get('name', ''),
-                    uploaded_by=user,
-                    s3_file_path=d.get('s3_key', d.get('s3_file_path', ''))
-                )
-            except Exception:
+            # Solo crear si tiene ID (significa que ya se persistió con archivo en sop_step3)
+            doc_id = d.get('id')
+            if doc_id:
+                # Ya existe un CaseDocument con archivo, no hacer nada
                 continue
+            # Solo crear si tiene archivo real o es un documento con metadata válida
+            if d.get('name') and (d.get('s3_key') or d.get('s3_file_path')):
+                try:
+                    CaseDocument.objects.create(
+                        case=case,
+                        document_type=d.get('type', 'otros_documentos'),
+                        file_name=d.get('name', ''),
+                        uploaded_by=user,
+                        s3_file_path=d.get('s3_key', d.get('s3_file_path', ''))
+                    )
+                except Exception:
+                    continue
 
         # Transition FSM to SUBMITTED (or fallback)
         try:
@@ -381,10 +388,9 @@ class CaseService:
             primary_diagnosis=case_draft.get('primary_diagnosis', ''),
             # Usar el nombre de la especialidad en lugar de la institucion
             specialty_required=case_draft.get('especialidad_nombre', case_draft.get('referring_institution', '')),
-            description=case_draft.get('main_symptoms', ''),
+
             diagnosis_date=case_draft.get('diagnosis_date', None) if case_draft.get('diagnosis_date') else None,
             tipo_cancer=tipo_cancer_obj,
-            estadio=case_draft.get('estadio', ''),
             referring_institution=case_draft.get('referring_institution', ''),
             status='SUBMITTED'
         )
