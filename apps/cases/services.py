@@ -15,6 +15,121 @@ ACTIVE_CASE_STATUSES = PENDING_CASE_STATUSES + [
 COMPLETED_CASE_STATUSES = ['OPINION_COMPLETE', 'CLOSED', 'REPORT_COMPLETED']
 
 
+def _diagnosis_from_draft(case_draft, tipo_cancer_obj=None):
+    """Deriva el texto de diagnóstico desde el borrador o el tipo de cáncer."""
+    primary = (case_draft or {}).get('primary_diagnosis')
+    if primary:
+        return primary
+    if tipo_cancer_obj is not None:
+        return tipo_cancer_obj.nombre
+    nombre = (case_draft or {}).get('tipo_cancer_nombre')
+    if nombre:
+        return nombre
+    tipo_cancer_pk = (case_draft or {}).get('tipo_cancer')
+    if tipo_cancer_pk:
+        try:
+            from medicos.models import TipoCancer
+            tc = TipoCancer.objects.filter(pk=tipo_cancer_pk).first()
+            if tc:
+                return tc.nombre
+        except Exception:
+            pass
+    return ''
+
+
+def es_lider_del_caso(medico, case):
+    """
+    Indica si el médico es el líder responsable del caso
+    (cierra el caso y envía la respuesta al paciente).
+    """
+    if not medico or not case:
+        return False
+
+    if case.responsable_id and case.responsable_id == medico.pk:
+        return True
+
+    if case.medical_group_id:
+        lider = case.medical_group.get_lider()
+        if lider and lider.pk == medico.pk:
+            return True
+
+    localidad = getattr(case, 'localidad', None)
+    comite = getattr(localidad, 'comite', None) if localidad else None
+    if comite:
+        lider_comite = comite.get_lider()
+        if lider_comite and lider_comite.pk == medico.pk:
+            return True
+
+    return False
+
+
+def user_can_access_case_document(user, doc):
+    """Paciente, médico asignado, líder o miembro del grupo/comité pueden ver documentos."""
+    if not user or not user.is_authenticated or not doc:
+        return False
+
+    case = doc.case
+    if getattr(user, 'is_staff', False) or getattr(user, 'is_superuser', False):
+        return True
+    if case.patient_id == user.id:
+        return True
+    if case.doctor_id == user.id:
+        return True
+    if case.responsable_id and getattr(case.responsable, 'usuario_id', None) == user.id:
+        return True
+
+    try:
+        medico = user.medico
+    except Exception:
+        return False
+
+    if case.medical_group_id:
+        from medicos.models import DoctorGroupMembership
+        if DoctorGroupMembership.objects.filter(
+            medico=medico, grupo=case.medical_group, activo=True
+        ).exists():
+            return True
+
+    localidad = getattr(case, 'localidad', None)
+    comite = getattr(localidad, 'comite', None) if localidad else None
+    if comite and comite.medicos_miembros.filter(pk=medico.pk).exists():
+        return True
+
+    return False
+
+
+def _attach_session_documents(case, user, session_data):
+    """
+    Vincula al caso los documentos ya subidos en el paso 3
+    y elimina registros huérfanos sin archivo.
+    """
+    from .models import CaseDocument
+
+    documents = session_data.get('documents', []) or []
+    linked_ids = []
+
+    for meta in documents:
+        doc_id = meta.get('id')
+        if not doc_id:
+            continue
+        doc = CaseDocument.objects.filter(pk=doc_id, case__patient=user).first()
+        if not doc:
+            doc = CaseDocument.objects.filter(pk=doc_id, uploaded_by=user).first()
+        if not doc:
+            continue
+        if doc.case_id != case.id:
+            doc.case = case
+            doc.save(update_fields=['case'])
+        linked_ids.append(doc.pk)
+
+    ghosts = CaseDocument.objects.filter(case=case).exclude(pk__in=linked_ids)
+    for ghost in ghosts:
+        if not ghost.has_stored_file:
+            ghost.delete()
+
+    return linked_ids
+
+
 class CaseService:
     """
     Servicio de gestión de casos.
@@ -199,6 +314,7 @@ class CaseService:
         from django.apps import apps as django_apps
         PatientProfile = django_apps.get_model('authentication', 'PatientProfile')
         CaseDocument = django_apps.get_model('cases', 'CaseDocument')
+        TipoCancer = django_apps.get_model('medicos', 'TipoCancer')
 
         # Create or update patient profile
         profile, created = PatientProfile.objects.get_or_create(user=user)
@@ -216,31 +332,43 @@ class CaseService:
                 profile.medical_history = (profile.medical_history or '') + '\n\nAlergias:\n' + patient_profile_data.get('known_allergies')
             profile.save()
 
-        # Create Case
-        case_id = f"CASO-{uuid.uuid4().hex[:12].upper()}"
-        
-        # Obtener el tipo de cancer
-        tipo_cancer_pk = case_draft.get('tipo_cancer')
         tipo_cancer_obj = None
+        tipo_cancer_pk = case_draft.get('tipo_cancer')
         if tipo_cancer_pk:
             try:
-                TipoCancer = django_apps.get_model('medicos', 'TipoCancer')
                 tipo_cancer_obj = TipoCancer.objects.get(pk=tipo_cancer_pk)
-            except Exception:
+            except (TipoCancer.DoesNotExist, ValueError, TypeError):
                 pass
-        
-        case = Case.objects.create(
-            patient=user,
-            case_id=case_id,
-            primary_diagnosis=case_draft.get('primary_diagnosis', ''),
-            # Usar el nombre de la especialidad en lugar de la institucion
-            specialty_required=case_draft.get('especialidad_nombre', case_draft.get('referring_institution', '')),
 
-            diagnosis_date=case_draft.get('diagnosis_date', None) if case_draft.get('diagnosis_date') else None,
-            tipo_cancer=tipo_cancer_obj,
-            referring_institution=case_draft.get('referring_institution', ''),
-            status='SUBMITTED'
-        )
+        case_pk = session_data.get('case_pk')
+        existing_case = Case.objects.filter(pk=case_pk, patient=user).first() if case_pk else None
+
+        if existing_case:
+            case = existing_case
+            case.primary_diagnosis = _diagnosis_from_draft(case_draft, tipo_cancer_obj) or case.primary_diagnosis
+            case.specialty_required = case_draft.get(
+                'especialidad_nombre', case_draft.get('referring_institution', case.specialty_required)
+            )
+            if case_draft.get('diagnosis_date'):
+                case.diagnosis_date = case_draft.get('diagnosis_date')
+            case.tipo_cancer = tipo_cancer_obj or case.tipo_cancer
+            case.referring_institution = case_draft.get('referring_institution', case.referring_institution)
+            case.status = 'SUBMITTED'
+            case.save()
+        else:
+            case_id = f"CASO-{uuid.uuid4().hex[:12].upper()}"
+            case = Case.objects.create(
+                patient=user,
+                case_id=case_id,
+                primary_diagnosis=_diagnosis_from_draft(case_draft, tipo_cancer_obj),
+                specialty_required=case_draft.get(
+                    'especialidad_nombre', case_draft.get('referring_institution', '')
+                ),
+                diagnosis_date=case_draft.get('diagnosis_date', None) if case_draft.get('diagnosis_date') else None,
+                tipo_cancer=tipo_cancer_obj,
+                referring_institution=case_draft.get('referring_institution', ''),
+                status='SUBMITTED'
+            )
 
         # If a localidad id was provided in the draft, try to assign the corresponding Medico
         try:
@@ -255,19 +383,17 @@ class CaseService:
                         case.save()
                     except Exception:
                         pass
-                
+
                 # Asignar al líder del comité si existe, o al médico de la localidad
                 if loc:
-                    # Primero verificar si hay un comité asignado a la localidad
-                    if loc.comite and loc.comite.medicos_miembros.exists():
-                        # Asignar al primer miembro del comité (el líder)
-                        primer_medico = loc.comite.medicos_miembros.first()
-                        if primer_medico and primer_medico.usuario:
+                    # Asignar al líder del comité si existe, o al médico de la localidad
+                    if loc.comite:
+                        lider = loc.comite.get_lider()
+                        if lider and lider.usuario:
                             try:
-                                CaseService.assign_case_to_doctor(case, primer_medico.usuario)
+                                CaseService.assign_case_to_doctor(case, lider.usuario, responsable=lider)
                             except Exception:
                                 pass
-                    # Si no hay comité, usar el médico de la localidad
                     elif loc.medico and getattr(loc.medico, 'usuario', None):
                         try:
                             CaseService.assign_case_to_doctor(case, loc.medico.usuario)
@@ -276,18 +402,8 @@ class CaseService:
         except Exception:
             pass
 
-        # Link documents: create CaseDocument rows if session contains metadata
-        for d in documents:
-            try:
-                CaseDocument.objects.create(
-                    case=case,
-                    document_type=d.get('type', 'other'),
-                    file_name=d.get('name', ''),
-                    uploaded_by=user,
-                    s3_file_path=d.get('s3_key', d.get('s3_file_path', ''))
-                )
-            except Exception:
-                continue
+        # Vincular documentos reales subidos en el paso 3 y limpiar registros vacíos
+        _attach_session_documents(case, user, session_data)
 
         # Audit
         try:
@@ -312,15 +428,22 @@ class CaseService:
     
     @staticmethod
     @transaction.atomic
-    def assign_case_to_doctor(case, doctor):
+    def assign_case_to_doctor(case, doctor, responsable=None):
         """
         Asigna un caso a un médico.
         
         Args:
             case (Case): El caso a asignar
             doctor (CustomUser): El médico asignado
+            responsable (Medico): Líder responsable del caso (opcional)
         """
         case.doctor = doctor
+        if responsable is not None:
+            case.responsable = responsable
+        elif case.medical_group_id:
+            lider = case.medical_group.get_lider()
+            if lider:
+                case.responsable = lider
         case.status = 'IN_REVIEW'
         # Solo actualizar assigned_at si no ha sido establecido antes
         if not case.assigned_at:
@@ -441,7 +564,7 @@ def asignar_caso_automatico(case):
     
     Este servicio:
     1. Determina el MedicalGroup según el tipo_cancer del caso
-    2. Selecciona un responsable (round-robin o por defecto)
+    2. Asigna al líder del grupo como responsable del caso
     3. Asigna el caso al grupo y responsable
     4. Envía notificaciones a los miembros del grupo
     
@@ -500,29 +623,8 @@ def asignar_caso_automatico(case):
 
 
 def _seleccionar_responsable(grupo):
-    """Selecciona el médico responsable usando algoritmo round-robin."""
-    from medicos.models import Medico
-    from django.db.models import Count, Q
-    
-    if grupo.responsable_por_defecto:
-        if (grupo.responsable_por_defecto.estado == 'activo' and 
-            grupo.responsable_por_defecto.disponible_segundas_opiniones):
-            return grupo.responsable_por_defecto
-    
-    miembros = grupo.miembros.filter(
-        activo=True,
-        disponible_asignacion_auto=True
-    ).annotate(
-        casos_activos=Count(
-            'medico__cases_responsable',
-            filter=Q(medico__cases_responsable__status__in=['PROCESSING', 'IN_REVIEW'])
-        )
-    ).order_by('casos_activos', 'fecha_union')
-    
-    miembro = miembros.first()
-    if miembro:
-        return miembro.medico
-    return None
+    """El responsable del caso es siempre el líder del grupo MDT."""
+    return grupo.get_lider()
 
 
 def _notificar_asignacion_caso(case, grupo):

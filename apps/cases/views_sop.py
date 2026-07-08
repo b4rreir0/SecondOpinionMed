@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.urls import reverse
 from .forms import PatientProfileForm, CaseDraftForm, CaseDocumentForm, ReviewConsentForm
-from .services import CaseService
+from .services import CaseService, _diagnosis_from_draft
 from django.conf import settings
 import datetime
 from django.apps import apps as django_apps
@@ -148,6 +148,7 @@ def sop_step2(request):
                         tipo_cancer_pk = cleaned.get('tipo_cancer')
                         if tipo_cancer_pk:
                             case.tipo_cancer = TipoCancer.objects.get(pk=tipo_cancer_pk)
+                        case.primary_diagnosis = _diagnosis_from_draft(cleaned, case.tipo_cancer)
                         case.status = 'DRAFT'
                         case.save()
                 else:
@@ -163,6 +164,7 @@ def sop_step2(request):
                         diagnosis_date=cleaned.get('diagnosis_date') or None,
                         specialty_required='',  # Ya no se usa, se eliminó el campo especialidad
                         tipo_cancer=tipo_cancer_obj,
+                        primary_diagnosis=_diagnosis_from_draft(cleaned, tipo_cancer_obj),
                         referring_institution=cleaned.get('referring_institution', ''),
                         status='DRAFT'
                     )
@@ -240,7 +242,12 @@ def sop_step3(request):
                     print(f"[sop_step3] CaseDocument created: {cd.id}")
                     print(f"[sop_step3] CaseDocument file: {cd.file}, url: {cd.file.url if cd.file else 'N/A'}")
                     # keep metadata in session for display in review
-                    docs.append({'name': cd.file_name, 'type': cd.get_document_type_display(), 'id': cd.pk})
+                    docs.append({
+                        'name': cd.file_name,
+                        'type': cd.get_document_type_display(),
+                        'document_type': doc_type,
+                        'id': cd.pk,
+                    })
                 else:
                     # fallback: keep metadata only
                     print(f"[sop_step3] No case found, using session fallback")
@@ -325,75 +332,18 @@ def sop_step4(request):
                 'tipo_cancer': request.POST.get('case_tipo_cancer', c.get('tipo_cancer')),
                 'especialidad': especialidad_pk,
                 'especialidad_nombre': especialidad_nombre,
-                'estadio': request.POST.get('case_estadio', c.get('estadio')),
             })
             draft['case_draft'] = c
 
             request.session[SESSION_KEY] = draft
             request.session.modified = True
 
-            # finalize: create PatientProfile and Case atomically in service
-            # If we have a draft case persisted, update it and finalize instead of creating a duplicate
             try:
-                Case = django_apps.get_model('cases', 'Case')
-                TipoCancer = django_apps.get_model('medicos', 'TipoCancer')
-                case_pk = draft.get('case_pk')
-                if case_pk:
-                    case = Case.objects.filter(pk=case_pk, patient=request.user).first()
-                    if case:
-                        # Update from draft
-                        c = draft.get('case_draft', {}) or {}
-                        case.primary_diagnosis = c.get('primary_diagnosis', case.primary_diagnosis)
-                        case.diagnosis_date = c.get('diagnosis_date', case.diagnosis_date)
-                        # Usar la especialidad guardada en lugar de la institucion
-                        case.specialty_required = c.get('especialidad_nombre', c.get('referring_institution', case.specialty_required))
-                        # Guardar la institucion que refiere
-                        case.referring_institution = c.get('referring_institution', case.referring_institution)
-                        # Guardar tipo de cancer
-                        tipo_cancer_pk = c.get('tipo_cancer')
-                        if tipo_cancer_pk:
-                            try:
-                                case.tipo_cancer = TipoCancer.objects.get(pk=tipo_cancer_pk)
-                            except TipoCancer.DoesNotExist:
-                                pass
-                        # Guardar estadio
-                        case.estadio = c.get('estadio', case.estadio)
-                        # ensure it's submitted
-                        case.status = 'SUBMITTED'
-                        case.save()
-                        
-                        # Asignar automáticamente al grupo médico basado en tipo_cancer
-                        try:
-                            from cases.services import asignar_caso_automatico
-                            resultado = asignar_caso_automatico(case)
-                            if resultado:
-                                print(f"Asignación automática: {resultado}")
-                        except Exception as e:
-                            print(f"Error en asignación automática: {e}")
-                        
-                        # Ensure localidad is linked if present
-                        loc_id = c.get('localidad')
-                        if loc_id:
-                            from medicos.models import Localidad
-                            loc = Localidad.objects.filter(pk=loc_id).first()
-                            if loc:
-                                case.localidad = loc
-                                case.save()
-                                # If the localidad has a medico assigned, assign case to that medico's user
-                                try:
-                                    if getattr(loc, 'medico', None) and getattr(loc.medico, 'usuario', None):
-                                        CaseService.assign_case_to_doctor(case, loc.medico.usuario)
-                                except Exception:
-                                    pass
-                        final_case = case
-                    else:
-                        final_case = CaseService.finalize_submission(request.user, draft, explicit_consent=explicit)
-                else:
-                    final_case = CaseService.finalize_submission(request.user, draft, explicit_consent=explicit)
-                case = final_case
-            except Exception:
                 case = CaseService.finalize_submission(request.user, draft, explicit_consent=explicit)
-            
+            except Exception:
+                messages.error(request, 'No se pudo enviar la solicitud. Intente nuevamente.')
+                return render(request, 'sop/step4_review.html', {'form': form, 'draft': draft, 'current_step': 4, 'case': case})
+
             # Asignar automáticamente al grupo médico basado en tipo_cancer
             try:
                 from cases.services import asignar_caso_automatico

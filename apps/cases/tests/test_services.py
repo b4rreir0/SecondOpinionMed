@@ -64,3 +64,21 @@ class CaseServiceFinalizeSubmissionTests(TestCase):
             CaseService.finalize_submission(self.user, self.session_data, explicit_consent=False)
 
         self.assertFalse(Case.objects.filter(patient=self.user).exists())
+
+    def test_finalize_submission_reuses_existing_draft_case(self):
+        draft_case = Case.objects.create(
+            patient=self.user,
+            case_id='CASO-DRAFTTEST01',
+            status='DRAFT',
+            referring_institution='Hospital Test',
+        )
+        session_data = dict(self.session_data)
+        session_data['case_pk'] = draft_case.pk
+        session_data['case_draft']['tipo_cancer_nombre'] = 'Pulmón'
+
+        case = CaseService.finalize_submission(self.user, session_data, explicit_consent=True)
+
+        self.assertEqual(case.pk, draft_case.pk)
+        self.assertEqual(case.case_id, 'CASO-DRAFTTEST01')
+        self.assertEqual(case.status, 'SUBMITTED')
+        self.assertEqual(Case.objects.filter(patient=self.user).count(), 1)

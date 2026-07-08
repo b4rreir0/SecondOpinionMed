@@ -76,7 +76,7 @@ class Case(models.Model):
         null=True,
         blank=True,
         related_name='cases_responsable',
-        help_text="Médico responsable del caso"
+        help_text="Líder del grupo MDT: redacta y envía la respuesta final al paciente"
     )
     
     # Datos del caso
@@ -429,6 +429,10 @@ class CaseDocument(models.Model):
     
     def __str__(self):
         return f"{self.file_name} - Caso {self.case.case_id}"
+
+    @property
+    def has_stored_file(self):
+        return bool(self.file and self.file.name)
 
 
 class SecondOpinion(models.Model):

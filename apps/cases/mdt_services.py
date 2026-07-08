@@ -220,9 +220,11 @@ class AssignmentService:
                 config=config
             )
         
-        # Asignar al caso
-        caso.doctor = medico.usuario
-        caso.responsable = medico
+        # Asignar al caso: el responsable es siempre el líder del grupo
+        lider = grupo.get_lider() if grupo else None
+        responsable = lider or medico
+        caso.responsable = responsable
+        caso.doctor = responsable.usuario
         # Solo actualizar assigned_at si no ha sido establecido antes
         if not caso.assigned_at:
             caso.assigned_at = timezone.now()

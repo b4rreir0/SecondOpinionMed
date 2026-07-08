@@ -11,6 +11,7 @@ urlpatterns = [
     # Gestión de Casos
     path('casos/', portal_views.GestionCasosView.as_view(), name='portal_casos'),
     path('casos/<str:case_id>/', portal_views.CasoDetalleView.as_view(), name='portal_caso_detalle'),
+    path('casos/<str:case_id>/eliminar/', portal_views.CasoEliminarView.as_view(), name='portal_caso_eliminar'),
     path('casos/<str:case_id>/asignar/', portal_views.AsignarCasoView.as_view(), name='portal_caso_asignar'),
     
     # Gestión de Médicos
@@ -37,6 +38,7 @@ urlpatterns = [
     path('grupos/<int:grupo_id>/editar/', portal_views.GrupoEditarView.as_view(), name='portal_grupo_editar'),
     path('grupos/<int:grupo_id>/eliminar/', portal_views.GrupoEliminarView.as_view(), name='portal_grupo_eliminar'),
     path('grupos/<int:grupo_id>/agregar-miembro/', portal_views.GrupoAgregarMiembroView.as_view(), name='portal_grupo_agregar_miembro'),
+    path('grupos/<int:grupo_id>/designar-lider/', portal_views.GrupoDesignarLiderView.as_view(), name='portal_grupo_designar_lider'),
     path('grupos/<int:grupo_id>/eliminar-miembro/', portal_views.GrupoEliminarMiembroView.as_view(), name='portal_grupo_eliminar_miembro'),
     path('grupos/<int:grupo_id>/asignar-tipo/', portal_views.GrupoAsignarTipoCancerView.as_view(), name='portal_grupo_asignar_tipo'),
     path('grupos/<int:grupo_id>/quitar-tipo/', portal_views.GrupoQuitarTipoCancerView.as_view(), name='portal_grupo_quitar_tipo'),

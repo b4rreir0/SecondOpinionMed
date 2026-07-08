@@ -1,3 +1,4 @@
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -7,7 +8,7 @@ from django.utils import timezone
 
 from .models import Case
 from .mdt_models import MDTMessage
-from .services import CaseService, PENDING_CASE_STATUSES, COMPLETED_CASE_STATUSES
+from .services import CaseService, PENDING_CASE_STATUSES, COMPLETED_CASE_STATUSES, es_lider_del_caso, user_can_access_case_document
 
 
 class PatientDashboardView(LoginRequiredMixin, View):
@@ -342,34 +343,8 @@ class DoctorCaseDetailView(LoginRequiredMixin, View):
             medico_actual = Medico.objects.get(usuario=request.user)
             opinion_medico_actual = MedicalOpinion.objects.filter(case=case, doctor=medico_actual).first()
             
-            # Verificar si es el responsable del caso
-            es_responsable = False
-            
-            # 1. Si es el doctor asignado
-            if case.doctor == request.user:
-                es_responsable = True
-            
-            # 2. Si es responsable del grupo médico del caso
-            if not es_responsable and case.medical_group:
-                if hasattr(medico_actual, 'doctorgroupmembership_set'):
-                    memberships = medico_actual.doctorgroupmembership_set.filter(grupo=case.medical_group)
-                    es_responsable = any(m.es_responsable for m in memberships)
-            
-            # 3. Si es el coordinador del comité de la localidad
-            if not es_responsable and case.localidad and case.localidad.comite:
-                comite = case.localidad.comite
-                # Verificar si es miembro del comité Y coordinador
-                if hasattr(medico_actual, 'comites'):
-                    comites_medico = medico_actual.comites.all()
-                    if comite in comites_medico:
-                        # Es miembro - ahora verificar si es coordinador
-                        if comite.coordinador == medico_actual:
-                            es_responsable = True
-            
-            # 4. Si es el coordinador del grupo médico (responsable_por_defecto)
-            if not es_responsable and case.medical_group:
-                if case.medical_group.responsable_por_defecto == medico_actual:
-                    es_responsable = True
+            # Solo el líder del grupo/comité puede cerrar y enviar la respuesta final
+            es_responsable = es_lider_del_caso(medico_actual, case)
         except Exception:
             opinion_medico_actual = None
             es_responsable = False
@@ -406,8 +381,6 @@ class DoctorCaseDetailView(LoginRequiredMixin, View):
             'opinion': getattr(case, 'second_opinion', None),
             'informe_final': informe_final,
             'caso_completado': caso_completado,  # Indica si el caso está completado
-            # Debug info
-            'debug_docs': [{'id': d.id, 'file_name': d.file_name, 'has_file': bool(d.file), 'file': str(d.file) if d.file else 'None'} for d in case.documents.all()],
             # Antecedentes médicos
             'antecedentes_personales': antecedentes_personales,
             'antecedentes_familiares': antecedentes_familiares,
@@ -415,9 +388,6 @@ class DoctorCaseDetailView(LoginRequiredMixin, View):
             'alergias': alergias,
             'medicamentos': medicamentos,
         }
-        print(f"[DoctorCaseDetailView] Documents for case {case.case_id}:")
-        for d in case.documents.all():
-            print(f"  - Doc {d.id}: {d.file_name}, has_file={bool(d.file)}, file={d.file}")
         return render(request, self.template_name, context)
 
     def post(self, request, case_id):
@@ -460,43 +430,27 @@ class DoctorCaseDetailView(LoginRequiredMixin, View):
         return redirect('cases:doctor_dashboard')
 
 
+@login_required
 def download_document(request, doc_id):
-    """Serve CaseDocument file to authorized users (patient, assigned doctor or staff)."""
-    from django.contrib.auth.decorators import login_required
-    from django.utils.decorators import method_decorator
+    """Sirve el archivo del caso a usuarios autorizados."""
     from .models import CaseDocument
 
-    @login_required
-    def _inner(request, doc_id):
-        doc = get_object_or_404(CaseDocument, pk=doc_id)
-        case = doc.case
-        user = request.user
-        allowed = False
-        try:
-            if user.is_staff:
-                allowed = True
-            elif hasattr(user, 'patient_cases') and case.patient == user:
-                allowed = True
-            elif hasattr(user, 'doctor_cases') and case.doctor == user:
-                allowed = True
-        except Exception:
-            allowed = False
+    doc = get_object_or_404(CaseDocument, pk=doc_id)
+    if not user_can_access_case_document(request.user, doc):
+        raise Http404('No tienes permiso para descargar este documento.')
+    if not doc.has_stored_file:
+        raise Http404('Archivo no disponible')
 
-        if not allowed:
-            raise Http404('No tienes permiso para descargar este documento.')
-
-        try:
-            f = doc.file.open('rb')
-            # Usar el nombre original del archivo y el tipo MIME
-            response = FileResponse(f, as_attachment=True, filename=doc.file_name)
-            # Establecer el content-type correcto si está disponible
-            if doc.mime_type:
-                response['Content-Type'] = doc.mime_type
-            return response
-        except Exception:
-            raise Http404('Archivo no disponible')
-
-    return _inner(request, doc_id)
+    try:
+        content_type = doc.mime_type or None
+        return FileResponse(
+            doc.file.open('rb'),
+            as_attachment=True,
+            filename=doc.file_name,
+            content_type=content_type,
+        )
+    except Exception:
+        raise Http404('Archivo no disponible')
 
 
 # =============================================================================
@@ -965,38 +919,19 @@ class MDTFinalResponseView(LoginRequiredMixin, View):
         case = get_object_or_404(Case, case_id=case_id)
         medico = request.user.medico
         
-        # Verificar que es responsable
-        es_responsable = False
-        
-        # Primero verificar si es el médico asignado al caso
-        if case.doctor == request.user:
-            es_responsable = True
-        
-        # Si no, verificar si es responsable del grupo médico del caso
-        if not es_responsable and case.medical_group:
-            if hasattr(medico, 'doctorgroupmembership_set'):
-                memberships = medico.doctorgroupmembership_set.filter(grupo=case.medical_group)
-                es_responsable = any(m.es_responsable for m in memberships)
-        
-        # Verificar si es el responsable por defecto del grupo
-        if not es_responsable and case.medical_group:
-            if case.medical_group.responsable_por_defecto == medico:
-                es_responsable = True
-        
-        # Si tampoco, verificar si es el coordinador del comité de la localidad
-        if not es_responsable and case.localidad and case.localidad.comite:
-            comite = case.localidad.comite
-            # Verificar si es miembro del comité Y coordinador
-            if hasattr(medico, 'comites'):
-                comites_medico = medico.comites.all()
-                if comite in comites_medico:
-                    # Es miembro - ahora verificar si es coordinador
-                    if comite.coordinador == medico:
-                        es_responsable = True
-        
+        # Solo el líder del grupo/comité puede enviar la respuesta final
+        es_responsable = es_lider_del_caso(medico, case)
+
         if not es_responsable:
-            raise Http404("Solo el responsable del comité puede enviar la respuesta final.")
+            raise Http404("Solo el líder del grupo o comité puede enviar la respuesta final.")
         
+        lider = case.responsable or (
+            case.medical_group.get_lider() if case.medical_group else None
+        )
+        if not lider and case.localidad and case.localidad.comite:
+            lider = case.localidad.comite.get_lider()
+        responsable = lider or medico
+
         # Procesar respuesta
         conformidad = request.POST.get('conformidad', '')
         explicacion = request.POST.get('explicacion', '').strip() if conformidad == 'no_conformidad' else ''
@@ -1005,7 +940,7 @@ class MDTFinalResponseView(LoginRequiredMixin, View):
         from .mdt_services import MDTResponseService
         result = MDTResponseService.generar_y_enviar_respuesta(
             caso=case,
-            responsable=medico,
+            responsable=responsable,
             conformidad=conformidad,
             explicacion=explicacion
         )

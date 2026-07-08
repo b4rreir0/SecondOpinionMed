@@ -209,7 +209,11 @@ class ComiteMultidisciplinario(TimeStampedModel):
     
     def puede_asignar_caso(self):
         return self.activo and self.miembros_activos.count() >= self.min_medicos and self.capacidad_disponible > 0
-    
+
+    def get_lider(self):
+        """Coordinador/líder del comité multidisciplinario."""
+        return self.coordinador
+
     def __str__(self):
         return f"Comité {self.nombre}"
 
@@ -273,6 +277,41 @@ class MedicalGroup(TimeStampedModel):
     def puede_asignar_caso(self):
         """Verifica si el grupo puede recibir nuevos casos"""
         return self.activo and self.numero_miembros >= self.quorum_config
+
+    def get_lider(self):
+        """
+        Líder / experto responsable del grupo MDT.
+        Es quien redacta y envía la respuesta final al paciente.
+        """
+        if self.responsable_por_defecto_id:
+            return self.responsable_por_defecto
+        lider_membership = (
+            self.miembros.filter(activo=True)
+            .filter(models.Q(es_responsable=True) | models.Q(rol='coordinador'))
+            .select_related('medico')
+            .order_by('-es_responsable', 'fecha_union')
+            .first()
+        )
+        if lider_membership:
+            return lider_membership.medico
+        return None
+
+    def set_lider(self, medico):
+        """Designa al líder del grupo y sincroniza la membresía."""
+        self.responsable_por_defecto = medico
+        self.save(update_fields=['responsable_por_defecto', 'actualizado_en'])
+        if medico is None:
+            return
+        membership, _ = DoctorGroupMembership.objects.get_or_create(
+            medico=medico,
+            grupo=self,
+            defaults={'rol': 'coordinador', 'es_responsable': True, 'activo': True},
+        )
+        membership.rol = 'coordinador'
+        membership.es_responsable = True
+        membership.activo = True
+        membership.save(update_fields=['rol', 'es_responsable', 'activo', 'actualizado_en'])
+        self.miembros.exclude(medico=medico).update(es_responsable=False)
     
     def get_tipos_cancer_names(self):
         """Retorna los nombres de los tipos de cancer como string"""

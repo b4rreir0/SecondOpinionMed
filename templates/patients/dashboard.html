@@ -515,7 +515,7 @@
                 <div class="latest-case">
                     <div class="latest-case-info">
                         <h4>Última Solicitud: <span>{{ latest_case.case_id }}</span></h4>
-                        <p>{{ latest_case.primary_diagnosis }}</p>
+                        <p>{{ latest_case.primary_diagnosis|default:latest_case.tipo_cancer.nombre|default:"—" }}</p>
                         <div class="case-meta">
                             <span class="status-badge status-{{ latest_case.status|lower }}">
                                 {{ latest_case.get_status_display }}
@@ -560,7 +560,7 @@
                             {% for case in cases %}
                             <tr>
                                 <td><strong style="color: #1392ec;">{{ case.case_id }}</strong></td>
-                                <td>{{ case.primary_diagnosis }}</td>
+                                <td>{{ case.primary_diagnosis|default:case.tipo_cancer.nombre|default:"—" }}</td>
                                 <td>{{ case.referring_institution|default:"-" }}</td>
                                 <td>
                                     <span class="status-badge status-{{ case.status|lower }}">

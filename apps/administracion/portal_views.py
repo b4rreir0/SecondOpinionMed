@@ -91,9 +91,10 @@ class CasoDetalleView(View):
         opiniones = MedicalOpinion.objects.filter(case=caso).select_related('doctor', 'doctor__usuario')
         documentos = CaseDocument.objects.filter(case=caso).order_by('-uploaded_at')
         
-        # Obtener el informe final si existe
         from cases.models import FinalReport
         informe_final = FinalReport.objects.filter(case=caso).first()
+        if informe_final and not (informe_final.pdf_file and informe_final.pdf_file.name):
+            informe_final = None
         
         context = {
             'caso': caso,
@@ -102,6 +103,27 @@ class CasoDetalleView(View):
             'informe_final': informe_final,
         }
         return render(request, self.template_name, context)
+
+
+class CasoEliminarView(View):
+    """Elimina un caso y sus archivos asociados."""
+
+    @method_decorator(admin_required)
+    def post(self, request, case_id):
+        caso = get_object_or_404(CasoMDT, case_id=case_id)
+        case_id_str = caso.case_id
+        caso.delete()
+
+        media_dir = os.path.join(settings.MEDIA_ROOT, 'cases', case_id_str)
+        if os.path.isdir(media_dir):
+            import shutil
+            shutil.rmtree(media_dir, ignore_errors=True)
+
+        messages.success(
+            request,
+            f'Caso {case_id_str} eliminado. El paciente puede crear una nueva solicitud.',
+        )
+        return redirect(reverse('administracion:portal_casos'))
 
 
 class AsignarCasoView(View):
@@ -486,10 +508,12 @@ class GrupoCrearView(View):
             messages.error(request, 'Ya existe un grupo con ese nombre')
             return redirect(reverse('administracion:portal_grupos'))
         
-        responsable = None
-        if responsable_id:
-            responsable = get_object_or_404(Medico, id=responsable_id)
-        
+        if not responsable_id:
+            messages.error(request, 'Debe designar un líder / responsable del grupo')
+            return redirect(reverse('administracion:portal_grupos'))
+
+        responsable = get_object_or_404(Medico, id=responsable_id)
+
         grupo = MedicalGroup.objects.create(
             nombre=nombre,
             descripcion=descripcion,
@@ -497,9 +521,10 @@ class GrupoCrearView(View):
             quorum_config=quorum,
             activo=activo
         )
+        grupo.set_lider(responsable)
         
-        messages.success(request, f'Grupo médico "{nombre}" creado exitosamente')
-        return redirect(reverse('administracion:portal_grupos'))
+        messages.success(request, f'Grupo médico "{nombre}" creado exitosamente. Agregue miembros y tipos de cáncer.')
+        return redirect(reverse('administracion:portal_grupo_detalle', args=[grupo.id]))
 
 
 class GrupoEditarView(View):
@@ -539,16 +564,17 @@ class GrupoEditarView(View):
         grupo.descripcion = descripcion
         grupo.quorum_config = quorum
         grupo.activo = activo
-        
+        grupo.save()
+
         if responsable_id:
-            grupo.responsable_por_defecto = get_object_or_404(Medico, id=responsable_id)
+            responsable = get_object_or_404(Medico, id=responsable_id)
+            grupo.set_lider(responsable)
         else:
             grupo.responsable_por_defecto = None
-        
-        grupo.save()
+            grupo.save(update_fields=['responsable_por_defecto', 'actualizado_en'])
         
         messages.success(request, f'Grupo médico "{nombre}" actualizado exitosamente')
-        return redirect(reverse('administracion:portal_grupos'))
+        return redirect(reverse('administracion:portal_grupo_detalle', args=[grupo_id]))
 
 
 class GrupoDetalleView(View):
@@ -569,10 +595,13 @@ class GrupoDetalleView(View):
             id__in=tipos_asignados.values('id')
         ).exclude(grupo_medico__isnull=False)
         
+        medicos_activos = Medico.objects.filter(estado='activo').select_related('usuario')
+        
         context = {
             'grupo': grupo,
             'membresias': membresias,
             'medicos_no_members': medicos_no_members,
+            'medicos_activos': medicos_activos,
             'tipos_asignados': tipos_asignados,
             'tipos_disponibles': tipos_disponibles,
         }
@@ -595,6 +624,8 @@ class GrupoAgregarMiembroView(View):
         if DoctorGroupMembership.objects.filter(medico=medico, grupo=grupo).exists():
             messages.error(request, f'{medico.nombre_completo} ya es miembro del grupo')
         else:
+            if rol == 'coordinador':
+                es_responsable = True
             DoctorGroupMembership.objects.create(
                 medico=medico,
                 grupo=grupo,
@@ -602,8 +633,26 @@ class GrupoAgregarMiembroView(View):
                 es_responsable=es_responsable,
                 activo=True
             )
+            if es_responsable or rol == 'coordinador':
+                grupo.set_lider(medico)
             messages.success(request, f'{medico.nombre_completo} agregado al grupo')
         
+        return redirect(reverse('administracion:portal_grupo_detalle', args=[grupo_id]))
+
+
+class GrupoDesignarLiderView(View):
+    """Designa o cambia el líder del grupo MDT."""
+
+    @method_decorator(admin_required)
+    def post(self, request, grupo_id):
+        grupo = get_object_or_404(MedicalGroup, id=grupo_id)
+        medico_id = request.POST.get('lider_id')
+        if not medico_id:
+            messages.error(request, 'Debe seleccionar un líder para el grupo')
+        else:
+            medico = get_object_or_404(Medico, id=medico_id, estado='activo')
+            grupo.set_lider(medico)
+            messages.success(request, f'Dr. {medico.nombre_completo} designado como líder del grupo')
         return redirect(reverse('administracion:portal_grupo_detalle', args=[grupo_id]))
 
 
